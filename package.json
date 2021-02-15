@@ -1,0 +1,43 @@
+{
+  "name": "bridge-playground",
+  "private": "true",
+  "version": "1.0.0",
+  "license": "MIT",
+  "scripts": {
+    "build": "yarn build:contracts:l1 && yarn build:contracts:l2",
+    "build:contracts:l1": "hardhat compile",
+    "build:contracts:l2": "rm -rf artifacts-l2 && ./node_modules/@eth-optimism/solc/solcjs --bin --abi -o ./artifacts-l2 --base-path /Users/krzkaczor/Maker/Workspace/optimism/bridge-playground/contracts-l2/ ./contracts-l2/**/*.sol ./contracts-l2/*.sol",
+    "format": "prettier --check \"./**/*.ts\"",
+    "format:fix": "prettier --write \"./**/*.ts\"",
+    "lint": "eslint --ext .ts test",
+    "lint:fix": "yarn lint --fix",
+    "typecheck": "tsc --noEmit",
+    "test": "mocha --config .mocharc.js",
+    "test:fix": "yarn lint:fix && yarn format:fix && yarn test && yarn typecheck"
+  },
+  "dependencies": {
+    "@eth-optimism/contracts": "^0.1.4",
+    "@eth-optimism/solc": "0.5.16-alpha.7",
+    "@nomiclabs/hardhat-ethers": "^2.0.1",
+    "@nomiclabs/hardhat-waffle": "^2.0.1",
+    "@types/chai": "^4.2.12",
+    "@types/mocha": "^8.0.3",
+    "@types/node": "^14.6.0",
+    "chai": "^4.2.0",
+    "earljs": "^0.1.10",
+    "ethers": "^5.0.0",
+    "hardhat": "^2.0.2",
+    "mocha": "^8.1.1",
+    "prettier": "^2.2.1",
+    "ts-node": "^9.0.0",
+    "typescript": "^4.0.2",
+    "eslint": "^7.15.0",
+    "@typescript-eslint/eslint-plugin": "^4.9.0",
+    "@typescript-eslint/parser": "^4.9.0",
+    "eslint-config-typestrict": "^1.0.1",
+    "eslint-plugin-no-only-tests": "^2.4.0",
+    "eslint-plugin-simple-import-sort": "^6.0.1",
+    "eslint-plugin-sonarjs": "^0.5.0",
+    "eslint-plugin-unused-imports": "^1.0.1"
+  }
+}
