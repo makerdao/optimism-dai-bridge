@@ -10,7 +10,8 @@ cd optimism-integration
 
 # in other terminal window run this project
 yarn
-yarn test # runs tests
+yarn build # build l1 & l2 contracts
+yarn test  # runs tests
 ```
 
 Currently `moves l2 tokens to l1` test fails.
