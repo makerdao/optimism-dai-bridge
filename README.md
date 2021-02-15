@@ -1,12 +1,16 @@
-# Buidler-Deposit-Withdraw-Example
-A simple ERC20 token project in Buidler to get started testing L1 <->L2 communication.
-To get started:
+# Optimism Bridge Playground
+
+## Run
 
 ```
+# start optimism-integration
+git clone https://github.com/ethereum-optimism/optimism-integration.git
+cd optimism-integration
+./up.sh
+
+# in other terminal window run this project
 yarn
-yarn test
+yarn test # runs tests
 ```
 
-## Model
-
-![Message Passing Diagram](./images/message-passing-diagram.png)
+Currently `moves l2 tokens to l1` test fails.
