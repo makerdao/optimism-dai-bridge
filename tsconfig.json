@@ -3,7 +3,10 @@
     "outDir": "./build",
     "baseUrl": "./",
     "resolveJsonModule": true,
-    "strict": true
+    "moduleResolution": "Node",
+    "strict": true,
+    "sourceMap": true,
+    "target": "ES2018"
   },
   "include": ["*.ts", "**/*.ts", "artifacts/*.json"],
   "exclude": ["./build", "node_modules"],

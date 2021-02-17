@@ -1,9 +1,10 @@
 import { Contract, ethers, providers, Signer, Wallet } from 'ethers'
 
 import { artifacts } from './artifacts'
-import { getL1Provider, getL1Signers } from './l1'
-import { getL2Provider, getL2Signers } from './l2'
+import { getL1Provider } from './l1'
+import { getL2Provider } from './l2'
 import { optimismConfig } from './optimismConfig'
+import { connectWallets, getAdminWallet, getRandomWallets } from './wallets'
 
 export function q18(n: number) {
   return ethers.BigNumber.from(10).pow(18).mul(n).toString()
@@ -94,11 +95,14 @@ export async function setupTest(): Promise<{
   l1Signer: Wallet
   l2Signer: Wallet
 }> {
+  const randomWallets = getRandomWallets(3)
+
   const l1Provider = getL1Provider()
-  const [l1Admin, l1Deployer] = getL1Signers(l1Provider)
+  const l1Admin = getAdminWallet().connect(l1Provider)
+  const [l1Deployer] = connectWallets(randomWallets, l1Provider)
 
   const l2Provider = getL2Provider()
-  const [l2Deployer] = getL2Signers(l2Provider)
+  const [l2Deployer] = connectWallets(randomWallets, l2Provider)
 
   console.log('Seeding L1 account')
   await waitForTx(l1Admin.sendTransaction({ value: ethers.utils.parseEther('1'), to: l1Deployer.address }))
