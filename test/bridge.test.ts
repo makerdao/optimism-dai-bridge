@@ -79,7 +79,6 @@ describe('bridge', () => {
     await printRollupStatus(l1Provider)
     await waitForTx(l2Dai.approve(l2Minter.address, depositAmount))
 
-
     await waitToRelayMessageToL1(
       l2Minter.withdraw(depositAmount),
       watcher
