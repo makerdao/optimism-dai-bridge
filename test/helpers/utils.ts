@@ -40,7 +40,7 @@ export async function waitToRelayMessageToL1(l2OriginatingTx: Promise<any>, watc
 
   const [l2ToL1XDomainMsgHash] = await watcher.getMessageHashesFromL2Tx(res.hash)
   console.log(`Found cross-domain message ${l2ToL1XDomainMsgHash} in L2 tx.  Waiting for relay to L1...`)
-  await watcher.getL1TransactionReceipt(l2ToL1XDomainMsgHash) 
+  await watcher.getL1TransactionReceipt(l2ToL1XDomainMsgHash)
 }
 
 export async function printRollupStatus(l1Provider: providers.BaseProvider) {
