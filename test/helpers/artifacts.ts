@@ -1,12 +1,14 @@
 import { readFileSync } from 'fs'
 import { join } from 'path'
 
+import { getContractDefinition } from '@eth-optimism/contracts'
+
 export const artifacts = {
   l1: {
     token: require('../../artifacts/contracts/ERC20.sol/ERC20.json'),
     tokenDeposit: require('../../artifacts/contracts/L1ERC20Deposit.sol/L1ERC20Deposit.json'),
-    canonicalTxChain: require('../../../contracts-v2/build/artifacts/OVM_CanonicalTransactionChain.json'),
-    stateCommitmentChain: require('../../../contracts-v2/build/artifacts/OVM_StateCommitmentChain.json'),
+    canonicalTxChain: getContractDefinition('OVM_CanonicalTransactionChain'),
+    stateCommitmentChain: getContractDefinition('OVM_StateCommitmentChain'),
   },
   l2: {
     dai: {

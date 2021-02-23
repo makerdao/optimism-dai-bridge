@@ -4,7 +4,7 @@
     "baseUrl": "./",
     "resolveJsonModule": true,
     "moduleResolution": "Node",
-    "strict": true,
+    "strict": false,
     "sourceMap": true,
     "target": "ES2018"
   },
