@@ -1,3 +1,4 @@
+import { Watcher } from '@eth-optimism/watcher'
 import { Contract, ethers, providers, Signer, Wallet } from 'ethers'
 
 import { artifacts } from './artifacts'
@@ -5,7 +6,6 @@ import { getL1Provider } from './l1'
 import { getL2Provider } from './l2'
 import { optimismConfig } from './optimismConfig'
 import { connectWallets, getAdminWallet, getRandomWallets } from './wallets'
-import { Watcher } from '@eth-optimism/watcher'
 
 export function q18(n: number) {
   return ethers.BigNumber.from(10).pow(18).mul(n).toString()
@@ -105,7 +105,7 @@ export async function setupTest(): Promise<{
   l1Provider: providers.BaseProvider
   l2Provider: providers.BaseProvider
   l1Signer: Wallet
-  l2Signer: Wallet,
+  l2Signer: Wallet
   watcher: Watcher
 }> {
   const randomWallets = getRandomWallets(3)
@@ -123,12 +123,12 @@ export async function setupTest(): Promise<{
   const watcher = new Watcher({
     l1: {
       provider: l1Provider,
-      messengerAddress: optimismConfig.Proxy__OVM_L1CrossDomainMessenger // this sits behind a proxy right now
+      messengerAddress: optimismConfig.Proxy__OVM_L1CrossDomainMessenger, // this sits behind a proxy right now
     },
     l2: {
       provider: l2Provider,
-      messengerAddress: optimismConfig._L2_OVM_L2CrossDomainMessenger
-    }
+      messengerAddress: optimismConfig._L2_OVM_L2CrossDomainMessenger,
+    },
   })
 
   return {
@@ -136,6 +136,6 @@ export async function setupTest(): Promise<{
     l2Provider,
     l1Signer: l1Deployer,
     l2Signer: l2Deployer,
-    watcher
+    watcher,
   }
 }

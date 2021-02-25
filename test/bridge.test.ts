@@ -1,5 +1,5 @@
-import { Wallet } from '@ethersproject/wallet'
 import { Watcher } from '@eth-optimism/watcher'
+import { Wallet } from '@ethersproject/wallet'
 import { expect } from 'chai'
 import { Contract, providers } from 'ethers'
 
@@ -9,11 +9,10 @@ import {
   deployContract,
   printRollupStatus,
   q18,
-  retry,
   setupTest,
   waitForTx,
+  waitToRelayMessageToL1,
   waitToRelayTxsToL2,
-  waitToRelayMessageToL1
 } from './helpers/utils'
 
 describe('bridge', () => {
@@ -28,7 +27,6 @@ describe('bridge', () => {
   let l2Dai: Contract
   let l2Minter: Contract
   const initialL1DaiNumber = q18(10000)
-
 
   beforeEach(async () => {
     ;({ l1Provider, l2Provider, l1Signer, l2Signer, watcher } = await setupTest())
@@ -79,10 +77,7 @@ describe('bridge', () => {
     await printRollupStatus(l1Provider)
     await waitForTx(l2Dai.approve(l2Minter.address, depositAmount))
 
-    await waitToRelayMessageToL1(
-      l2Minter.withdraw(depositAmount),
-      watcher
-    )
+    await waitToRelayMessageToL1(l2Minter.withdraw(depositAmount), watcher)
 
     const balanceAfterWithdrawal = await l2Dai.balanceOf(l1Signer.address)
     expect(balanceAfterWithdrawal.toString()).to.be.eq('0')

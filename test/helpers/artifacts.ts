@@ -1,7 +1,6 @@
+import { getContractDefinition } from '@eth-optimism/contracts'
 import { readFileSync } from 'fs'
 import { join } from 'path'
-
-import { getContractDefinition } from '@eth-optimism/contracts'
 
 export const artifacts = {
   l1: {
