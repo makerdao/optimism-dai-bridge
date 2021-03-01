@@ -13,5 +13,3 @@ yarn
 yarn build # build l1 & l2 contracts
 yarn test  # runs tests
 ```
-
-Currently `moves l2 tokens to l1` test fails.
