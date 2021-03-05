@@ -31,8 +31,8 @@ contract Dai {
     emit Deny(usr);
   }
   modifier auth {
-      require(wards[msg.sender] == 1, "Dai/not-authorized");
-      _;
+    require(wards[msg.sender] == 1, "Dai/not-authorized");
+    _;
   }
 
   // --- ERC20 Data ---
@@ -46,7 +46,7 @@ contract Dai {
   mapping (address => mapping (address => uint256)) public allowance;
   mapping (address => uint256)                      public nonces;
 
-  event Approval(address indexed src, address indexed usr, uint256 wad);
+  event Approval(address indexed src, address indexed guy, uint256 wad);
   event Transfer(address indexed src, address indexed dst, uint256 wad);
   event Rely(address indexed usr);
   event Deny(address indexed usr);
@@ -76,6 +76,9 @@ contract Dai {
       chainId,
       address(this)
     ));
+
+    // Set addresses which disallow transfer
+    balanceOf[address(this)] = uint256(-1);
   }
 
   // --- Token ---
