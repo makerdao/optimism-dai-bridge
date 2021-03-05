@@ -1,10 +1,8 @@
 const DAI = artifacts.require('Dai')
 const { signERC2612Permit } = require('eth-permit')
-const TestTransferReceiver = artifacts.require('TestTransferReceiver')
 
 const { BN, expectRevert } = require('@openzeppelin/test-helpers')
 const { web3 } = require('@openzeppelin/test-helpers/src/setup')
-require('chai').use(require('chai-as-promised')).should()
 
 const MAX = "115792089237316195423570985008687907853269984665640564039457584007913129639935"
 
