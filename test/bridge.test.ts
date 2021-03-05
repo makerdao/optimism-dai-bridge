@@ -17,7 +17,6 @@ import {
 
 describe('bridge', () => {
   let l1Provider: providers.BaseProvider
-  let l2Provider: providers.BaseProvider
   let l1Signer: Wallet
   let l2Signer: Wallet
   let watcher: Watcher
@@ -29,7 +28,7 @@ describe('bridge', () => {
   const initialL1DaiNumber = q18(10000)
 
   beforeEach(async () => {
-    ;({ l1Provider, l2Provider, l1Signer, l2Signer, watcher } = await setupTest())
+    ;({ l1Provider, l1Signer, l2Signer, watcher } = await setupTest())
     l1Dai = await deployContract(l1Signer, await l1.getContractFactory('Dai'), [])
     console.log('L1 DAI: ', l1Dai.address)
     await waitForTx(l1Dai.mint(l1Signer.address, initialL1DaiNumber))
@@ -58,9 +57,7 @@ describe('bridge', () => {
   it('moves l1 tokens to l2', async () => {
     const depositAmount = q18(500)
     await waitForTx(l1Dai.approve(l1DaiDeposit.address, depositAmount))
-    await waitForTx(l1DaiDeposit.deposit(depositAmount))
-
-    await waitToRelayTxsToL2(l1Provider)
+    await waitToRelayTxsToL2(l1DaiDeposit.deposit(depositAmount), watcher)
 
     const balance = await l2Dai.balanceOf(l1Signer.address)
     expect(balance.toString()).to.be.eq(depositAmount)
@@ -69,10 +66,8 @@ describe('bridge', () => {
   it('moves l2 tokens to l1', async () => {
     const depositAmount = q18(500)
     await waitForTx(l1Dai.approve(l1DaiDeposit.address, depositAmount))
-    await waitForTx(l1DaiDeposit.deposit(depositAmount))
+    await waitToRelayTxsToL2(l1DaiDeposit.deposit(depositAmount), watcher)
 
-    await printRollupStatus(l1Provider)
-    await waitToRelayTxsToL2(l1Provider)
     await printRollupStatus(l1Provider)
     const balance = await l2Dai.balanceOf(l1Signer.address)
     expect(balance.toString()).to.be.eq(depositAmount)
