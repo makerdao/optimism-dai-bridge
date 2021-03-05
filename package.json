@@ -4,7 +4,6 @@
   "version": "1.0.0",
   "license": "MIT",
   "scripts": {
-    "postinstall": "node ./scripts/fix-osolc.js",
     "build": "hardhat compile",
     "clean": "hardhat clean",
     "format": "prettier --check \"./**/*.ts\"",
