@@ -33,8 +33,7 @@ describe('bridge', () => {
     l1Dai = await deployContract(l1Signer, await l1.getContractFactory('ERC20'), [initialL1DaiNumber, 'DAI', 18, 'DAI'])
     console.log('L1 DAI: ', l1Dai.address)
 
-    const chainId = (await l2Provider.getNetwork()).chainId
-    l2Dai = await deployContract(l2Signer, await l2.getContractFactory('Dai'), [chainId])
+    l2Dai = await deployContract(l2Signer, await l2.getContractFactory('Dai'), [])
     console.log('L2 DAI: ', l2Dai.address)
 
     l2Minter = await deployContract(l2Signer, await l2.getContractFactory('L2ERC20Minter'), [l2Dai.address])
