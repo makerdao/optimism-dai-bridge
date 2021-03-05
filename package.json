@@ -4,7 +4,6 @@
   "version": "1.0.0",
   "license": "MIT",
   "scripts": {
-    "postinstall": "node ./scripts/fix-osolc.js",
     "build": "hardhat compile",
     "clean": "hardhat clean",
     "format": "prettier --check \"./**/*.ts\"",
@@ -16,7 +15,7 @@
     "test:fix": "yarn lint:fix && yarn format:fix && yarn test && yarn typecheck"
   },
   "dependencies": {
-    "@eth-optimism/contracts": "^0.1.9",
+    "@eth-optimism/contracts": "^0.1.10",
     "@eth-optimism/plugins": "^0.0.16",
     "@eth-optimism/solc": "0.5.16-alpha.7",
     "@eth-optimism/watcher": "^0.0.1-alpha.9",
