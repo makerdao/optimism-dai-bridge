@@ -121,6 +121,7 @@ contract Dai {
   // --- Approve by signature ---
   function permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external {
     require(block.timestamp <= deadline, "Dai/permit-expired");
+    require(owner != address(0), "Dai/permit-expired");
 
     bytes32 digest =
       keccak256(abi.encodePacked(
@@ -136,7 +137,7 @@ contract Dai {
           ))
       ));
 
-    require(owner == ecrecover(digest, v, r, s), "Dai/invalid-permit");
+    require(owner != address(0) && owner == ecrecover(digest, v, r, s), "Dai/invalid-permit");
 
     allowance[owner][spender] = value;
     emit Approval(owner, spender, value);
