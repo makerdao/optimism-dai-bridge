@@ -16,7 +16,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-pragma solidity >=0.5.12;
+pragma solidity 0.7.6;
 
 contract Dai {
     
@@ -38,7 +38,7 @@ contract Dai {
   // --- ERC20 Data ---
   string  public constant name     = "Dai Stablecoin";
   string  public constant symbol   = "DAI";
-  string  public constant version  = "1";
+  string  public constant version  = "2";
   uint8   public constant decimals = 18;
   uint256 public totalSupply;
 
