@@ -2,8 +2,8 @@ import { Watcher } from '@eth-optimism/watcher'
 import { Wallet } from '@ethersproject/wallet'
 import { expect } from 'chai'
 import { Contract, providers } from 'ethers'
+import { ethers as l1, l2ethers as l2 } from 'hardhat'
 
-import { artifacts } from './helpers/artifacts'
 import { optimismConfig } from './helpers/optimismConfig'
 import {
   deployContract,
@@ -30,18 +30,18 @@ describe('bridge', () => {
 
   beforeEach(async () => {
     ;({ l1Provider, l2Provider, l1Signer, l2Signer, watcher } = await setupTest())
-    l1Dai = await deployContract(l1Signer, artifacts.l1.token, [initialL1DaiNumber, 'DAI', 18, 'DAI'])
+    l1Dai = await deployContract(l1Signer, await l1.getContractFactory('ERC20'), [initialL1DaiNumber, 'DAI', 18, 'DAI'])
     console.log('L1 DAI: ', l1Dai.address)
 
     const chainId = (await l2Provider.getNetwork()).chainId
-    l2Dai = await deployContract(l2Signer, artifacts.l2.dai, [chainId])
+    l2Dai = await deployContract(l2Signer, await l2.getContractFactory('Dai'), [chainId])
     console.log('L2 DAI: ', l2Dai.address)
 
-    l2Minter = await deployContract(l2Signer, artifacts.l2.minter, [l2Dai.address])
+    l2Minter = await deployContract(l2Signer, await l2.getContractFactory('L2ERC20Minter'), [l2Dai.address])
     console.log('L2 Minter: ', l2Minter.address)
     await waitForTx(l2Dai.rely(l2Minter.address))
 
-    l1DaiDeposit = await deployContract(l1Signer, artifacts.l1.tokenDeposit, [
+    l1DaiDeposit = await deployContract(l1Signer, await l1.getContractFactory('L1ERC20Deposit'), [
       l1Dai.address,
       l2Minter.address,
       optimismConfig.Proxy__OVM_L1CrossDomainMessenger,

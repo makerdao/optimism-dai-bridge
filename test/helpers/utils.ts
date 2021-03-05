@@ -88,7 +88,7 @@ async function sleep(n: number) {
 }
 
 export async function deployContract(signer: Signer, artifact: any, args: any[] = []): Promise<Contract> {
-  const contractFactory = new ethers.ContractFactory(artifact.abi, artifact.bytecode, signer)
+  const contractFactory = new ethers.ContractFactory(artifact.interface, artifact.bytecode, signer)
   const contractDeployed = await contractFactory.deploy(...args)
 
   await contractDeployed.deployed()
