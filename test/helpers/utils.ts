@@ -13,23 +13,14 @@ export function q18(n: number) {
 
 export const DUMMY_ADDRESS = '0x' + '1234'.repeat(10)
 
-export async function waitToRelayTxsToL2(l1Provider: providers.BaseProvider) {
-  console.log('Waiting to relay txs to L2...')
+export async function waitToRelayTxsToL2(l1OriginatingTx: Promise<any>, watcher: Watcher) {
+  console.log('Using watcher to wait for L1->L2 relay...')
+  const res = await l1OriginatingTx
+  await res.wait()
 
-  const CTC = new ethers.Contract(
-    optimismConfig.OVM_CanonicalTransactionChain,
-    artifacts.l1.canonicalTxChain.abi,
-    l1Provider,
-  )
-
-  await retry(async () => {
-    const ctcQueuedElement = await CTC.getNumPendingQueueElements()
-
-    if (ctcQueuedElement > 0) {
-      throw new Error('Queue not empty!')
-    }
-  })
-  console.log('All txs relayed!')
+  const [l2ToL1XDomainMsgHash] = await watcher.getMessageHashesFromL1Tx(res.hash)
+  console.log(`Found cross-domain message ${l2ToL1XDomainMsgHash} in L1 tx.  Waiting for relay to L2...`)
+  await watcher.getL2TransactionReceipt(l2ToL1XDomainMsgHash)
 }
 
 // uses eth-optimism watcher tool to pick up events on both chains
@@ -62,29 +53,6 @@ export async function printRollupStatus(l1Provider: providers.BaseProvider) {
   console.log('Canonical Tx Chain all elements: ', ctcAllElements.toString())
   console.log('Canonical Tx Chain queued elements: ', ctcQueuedElement.toString())
   console.log('State Commitment Chain all elements: ', stcAllElements.toString())
-}
-
-export async function retry<T>(fn: () => Promise<T>) {
-  let retries = 0
-  let lastError
-
-  while (retries++ < 60) {
-    try {
-      await fn()
-      return
-    } catch (e) {
-      lastError = e
-      await sleep(1000)
-    }
-  }
-
-  throw lastError
-}
-
-async function sleep(n: number) {
-  return new Promise((resolve) => {
-    setInterval(resolve, n)
-  })
 }
 
 export async function deployContract(signer: Signer, artifact: any, args: any[] = []): Promise<Contract> {
