@@ -60,7 +60,7 @@ contract Dai {
   }
 
   // --- EIP712 niceties ---
-  bytes32 public DOMAIN_SEPARATOR;
+  bytes32 public immutable DOMAIN_SEPARATOR;
   bytes32 public constant PERMIT_TYPEHASH = keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
 
   constructor() public {
