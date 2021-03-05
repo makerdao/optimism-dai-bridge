@@ -7,21 +7,7 @@ pragma experimental ABIEncoderV2;
 import {Abs_L1TokenGateway} from '@eth-optimism/contracts/build/contracts/OVM/bridge/tokens/Abs_L1TokenGateway.sol';
 import {iOVM_ERC20} from '@eth-optimism/contracts/build/contracts/iOVM/precompiles/iOVM_ERC20.sol';
 
-/**
- * @title OVM_L1ERC20Gateway
- * @dev The L1 ERC20 Gateway is a contract which stores deposited L1 funds that are in use on L2.
- * It synchronizes a corresponding L2 ERC20 Gateway, informing it of deposits, and listening to it
- * for newly finalized withdrawals.
- *
- * NOTE: This contract extends Abs_L1TokenGateway, which is where we
- * takes care of most of the initialization and the cross-chain logic.
- * If you are looking to implement your own deposit/withdrawal contracts, you
- * may also want to extend the abstract contract in a similar manner.
- *
- * Compiler used: solc
- * Runtime target: EVM
- */
-contract OVM_L1ERC20Gateway is Abs_L1TokenGateway {
+contract L1ERC20Deposit is Abs_L1TokenGateway {
   /********************************
    * External Contract References *
    ********************************/

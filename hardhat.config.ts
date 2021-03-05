@@ -17,7 +17,7 @@ const config: HardhatUserConfig = {
     },
   },
   ovm: {
-    solcVersion: '0.7.6-alpha.1',
+    solcVersion: '0.7.6',
   },
   networks: {
     hardhat: {
