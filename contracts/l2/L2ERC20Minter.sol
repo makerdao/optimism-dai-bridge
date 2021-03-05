@@ -1,14 +1,9 @@
-pragma solidity ^0.5.0;
+// SPDX-License-Identifier: MIT
+pragma solidity >0.5.0 <0.8.0;
+pragma experimental ABIEncoderV2;
 
-interface iOVM_BaseCrossDomainMessenger {
-  function xDomainMessageSender() external view returns (address);
-
-  function sendMessage(
-    address _target,
-    bytes calldata _message,
-    uint32 _gasLimit
-  ) external;
-}
+/* Library Imports */
+import {Abs_L2DepositedToken} from '@eth-optimism/contracts/build/contracts/OVM/bridge/tokens/Abs_L2DepositedToken.sol';
 
 interface Mintable {
   function mint(address usr, uint256 wad) external;
@@ -16,34 +11,40 @@ interface Mintable {
   function burn(address usr, uint256 wad) external;
 }
 
-contract L2ERC20Minter {
-  address l1ERC20DepositAddress;
-  iOVM_BaseCrossDomainMessenger internal messenger;
-  Mintable token;
+/**
+ * @title OVM_L2DepositedERC20
+ * @dev The L2 Deposited ERC20 is an ERC20 implementation which represents L1 assets deposited into L2.
+ * This contract mints new tokens when it hears about deposits into the L1 ERC20 gateway.
+ * This contract also burns the tokens intended for withdrawal, informing the L1 gateway to release L1 funds.
+ *
+ * NOTE: This contract implements the Abs_L2DepositedToken contract using Uniswap's ERC20 as the implementation.
+ * Alternative implementations can be used in this similar manner.
+ *
+ * Compiler used: optimistic-solc
+ * Runtime target: OVM
+ */
+contract OVM_L2DepositedERC20 is Abs_L2DepositedToken {
+  Mintable public token;
 
-  constructor(address _token) public {
+  /***************
+   * Constructor *
+   ***************/
+
+  /**
+   * @param _l2CrossDomainMessenger Cross-domain messenger used by this contract.
+   * @param _token address
+   */
+  constructor(address _l2CrossDomainMessenger, address _token) public Abs_L2DepositedToken(_l2CrossDomainMessenger) {
     token = Mintable(_token);
   }
 
-  function init(address _messenger, address _L1ERC20DepositAddress) public {
-    require(l1ERC20DepositAddress == address(0), 'L2ERC20 instance has already been initalized');
-    messenger = iOVM_BaseCrossDomainMessenger(_messenger);
-    l1ERC20DepositAddress = _L1ERC20DepositAddress;
-  }
-
-  function mint(address _depositor, uint256 _amount) public returns (bool success) {
-    require(messenger.xDomainMessageSender() == l1ERC20DepositAddress);
-    require(msg.sender == address(messenger), 'Only messages relayed by L2CrossDomainMessenger can mint');
-    token.mint(_depositor, _amount);
-    return true;
-  }
-
-  function withdraw(uint256 _amount) public {
+  // When a withdrawal is initiated, we burn the withdrawer's funds to prevent subsequent L2 usage.
+  function _handleInitiateWithdrawal(address _to, uint256 _amount) internal override {
     token.burn(msg.sender, _amount);
-    // generate encoded calldata to be executed on L1
-    bytes memory message = abi.encodeWithSignature('withdraw(address,uint256)', msg.sender, _amount);
+  }
 
-    // send the message over to the L1CrossDomainMessenger!
-    messenger.sendMessage(l1ERC20DepositAddress, message, 1000000);
+  // When a deposit is finalized, we credit the account on L2 with the same amount of tokens.
+  function _handleFinalizeDeposit(address _to, uint256 _amount) internal override {
+    token.mint(_to, _amount);
   }
 }

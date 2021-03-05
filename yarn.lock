@@ -68,10 +68,10 @@
     ethers "5.0.0"
     ganache-core "^2.12.1"
 
-"@eth-optimism/contracts@^0.1.9":
-  version "0.1.9"
-  resolved "https://registry.yarnpkg.com/@eth-optimism/contracts/-/contracts-0.1.9.tgz#01a8b7816b2fcc8408c102d81e455868e4a09bc3"
-  integrity sha512-vLW6vnFymdSWveF7qMUwYNFGSOYI90qosOJLxalOLi2dvJ6Glh7wtnCF6GvXMb3bNQ1fS5eFwHzjhWIbBMvWRA==
+"@eth-optimism/contracts@^0.1.10":
+  version "0.1.10"
+  resolved "https://registry.yarnpkg.com/@eth-optimism/contracts/-/contracts-0.1.10.tgz#4f03d9d4a6ed4ff6c277b439adb109e09bb2a7a5"
+  integrity sha512-6d26oCnywfqo181vetS6oEzvZyxhvSVRfkWx7sA1gySuxfZMIhwsvUWIebOsPpT/VQwmx2BwkPeu60ms4pgoXg==
   dependencies:
     "@ethersproject/abstract-provider" "^5.0.8"
     "@ethersproject/contracts" "^5.0.5"
