@@ -6,14 +6,10 @@
     "moduleResolution": "Node",
     "strict": true,
     "sourceMap": true,
-    "target": "ES2018"
+    "target": "ES2018",
+    "skipLibCheck": true
   },
   "include": ["*.ts", "**/*.ts", "artifacts/*.json"],
   "exclude": ["./build", "node_modules"],
-  "files": [
-    "./buidler.config.ts",
-    "./buidler-env.d.ts",
-    "./node_modules/@nomiclabs/buidler-ethers/src/type-extensions.d.ts",
-    "./node_modules/@nomiclabs/buidler-waffle/src/type-extensions.d.ts"
-  ]
+  "files": ["./hardhat.config.ts", "./modules.d.ts"]
 }
