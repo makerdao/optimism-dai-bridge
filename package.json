@@ -12,6 +12,7 @@
     "lint:fix": "yarn lint --fix",
     "typecheck": "tsc --noEmit",
     "test": "mocha --config .mocharc.js",
+    "test-e2e": "mocha --config .mocharc-e2e.js",
     "test:fix": "yarn lint:fix && yarn format:fix && yarn test && yarn typecheck"
   },
   "dependencies": {
@@ -29,6 +30,7 @@
     "@typescript-eslint/eslint-plugin": "^4.9.0",
     "@typescript-eslint/parser": "^4.9.0",
     "chai": "^4.2.0",
+    "chai-as-promised": "^7.1.1",
     "earljs": "^0.1.10",
     "eslint": "^7.15.0",
     "eslint-config-typestrict": "^1.0.1",
@@ -43,6 +45,8 @@
     "mocha": "^8.1.1",
     "prettier": "^2.2.1",
     "ts-node": "^9.0.0",
-    "typescript": "^4.0.2"
+    "typescript": "^4.0.2",
+    "@nomiclabs/hardhat-web3": "^2.0.0",
+    "web3": "^1.3.4"
   }
 }

@@ -1,6 +1,15 @@
 # Optimism Bridge Playground
 
-## Run
+## Running
+
+```
+# in other terminal window run this project
+yarn
+yarn build
+yarn test  # runs unit tests
+```
+
+## Running E2E tests
 
 ```
 # start optimism-integration
@@ -10,6 +19,6 @@ cd optimism-integration
 
 # in other terminal window run this project
 yarn
-yarn build # build l1 & l2 contracts
-yarn test  # runs tests
+yarn build
+yarn test-e2e  # runs unit tests
 ```
