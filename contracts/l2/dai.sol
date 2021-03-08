@@ -38,7 +38,7 @@ contract Dai {
   // --- ERC20 Data ---
   string  public constant name     = "Dai Stablecoin";
   string  public constant symbol   = "DAI";
-  string  public constant version  = "2";
+  string  public constant version  = "1";
   uint8   public constant decimals = 18;
   uint256 public totalSupply;
 
@@ -134,7 +134,6 @@ contract Dai {
   // --- Approve by signature ---
   function permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external {
     require(block.timestamp <= deadline, "Dai/permit-expired");
-    require(owner != address(0), "Dai/permit-expired");
 
     bytes32 digest =
       keccak256(abi.encodePacked(
