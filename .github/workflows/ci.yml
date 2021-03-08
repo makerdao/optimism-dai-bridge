@@ -61,4 +61,10 @@ jobs:
       - run: yarn --no-progress --non-interactive --frozen-lockfile
 
       - run: yarn build
-      - run: yarn test
+      - run: |
+          git clone https://github.com/ethereum-optimism/optimism-integration.git
+          cd optimism-integration
+          docker-compose pull
+          ./up.sh&
+          sleep 60
+          yarn test
