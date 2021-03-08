@@ -1,5 +1,5 @@
+import { expect } from 'chai'
 import { ethers, web3 } from 'hardhat'
-import { expect } from 'chai';
 
 const { signERC2612Permit } = require('eth-permit')
 
