@@ -1,8 +1,8 @@
 import { ethers, web3 } from 'hardhat'
+import { expect } from 'chai';
 
 const { signERC2612Permit } = require('eth-permit')
 
-const { BN, expectRevert } = require('@openzeppelin/test-helpers')
 require('chai').use(require('chai-as-promised')).should()
 
 const MAX = '115792089237316195423570985008687907853269984665640564039457584007913129639935'
@@ -49,10 +49,8 @@ describe('Counter', () => {
       })
 
       it('should not transfer beyond balance', async () => {
-        await expectRevert.unspecified(dai.connect(signers.user1).transfer(signers.user2.address, 100))
-        await expectRevert.unspecified(
-          dai.connect(signers.user1).transferFrom(signers.user1.address, signers.user2.address, 100),
-        )
+        await expect(dai.connect(signers.user1).transfer(signers.user2.address, 100)).to.be.reverted
+        await expect(dai.connect(signers.user1).transferFrom(signers.user1.address, signers.user2.address, 100)).to.be.reverted
       })
 
       it('approves to increase allowance', async () => {
@@ -91,7 +89,7 @@ describe('Counter', () => {
           signers.user2.address,
           '1',
         )
-        await expectRevert(
+        await expect(
           dai.permit(
             signers.user1.address,
             signers.user2.address,
@@ -100,9 +98,8 @@ describe('Counter', () => {
             permitResult.v,
             permitResult.r,
             permitResult.s,
-          ),
-          'Dai/permit-expired',
-        )
+          )
+        ).to.be.revertedWith('Dai/permit-expired')
       })
 
       it('does not approve with invalid permit', async () => {
@@ -113,7 +110,7 @@ describe('Counter', () => {
           signers.user2.address,
           '1',
         )
-        await expectRevert(
+        await expect(
           dai.permit(
             signers.user1.address,
             signers.user2.address,
@@ -124,7 +121,7 @@ describe('Counter', () => {
             permitResult.s,
           ),
           'Dai/invalid-permit',
-        )
+        ).to.be.revertedWith('Dai/invalid-permit')
       })
 
       describe('with a positive allowance', async () => {
@@ -140,9 +137,9 @@ describe('Counter', () => {
         })
 
         it('should not transfer beyond allowance', async () => {
-          await expectRevert.unspecified(
+          await expect(
             dai.connect(signers.user2).transferFrom(signers.user1.address, signers.user2.address, 2),
-          )
+          ).to.be.reverted
         })
       })
 
