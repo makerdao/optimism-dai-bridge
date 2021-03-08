@@ -1,9 +1,8 @@
-import { ethers } from 'hardhat'
+import { ethers, web3 } from 'hardhat'
 
 const { signERC2612Permit } = require('eth-permit')
 
 const { BN, expectRevert } = require('@openzeppelin/test-helpers')
-const { web3 } = require('@openzeppelin/test-helpers/src/setup')
 require('chai').use(require('chai-as-promised')).should()
 
 const MAX = '115792089237316195423570985008687907853269984665640564039457584007913129639935'
@@ -51,7 +50,9 @@ describe('Counter', () => {
 
       it('should not transfer beyond balance', async () => {
         await expectRevert.unspecified(dai.connect(signers.user1).transfer(signers.user2.address, 100))
-        await expectRevert.unspecified(dai.connect(signers.user1).transferFrom(signers.user1.address, signers.user2.address, 100))
+        await expectRevert.unspecified(
+          dai.connect(signers.user1).transferFrom(signers.user1.address, signers.user2.address, 100),
+        )
       })
 
       it('approves to increase allowance', async () => {
@@ -91,7 +92,15 @@ describe('Counter', () => {
           '1',
         )
         await expectRevert(
-          dai.permit(signers.user1.address, signers.user2.address, '1', 0, permitResult.v, permitResult.r, permitResult.s),
+          dai.permit(
+            signers.user1.address,
+            signers.user2.address,
+            '1',
+            0,
+            permitResult.v,
+            permitResult.r,
+            permitResult.s,
+          ),
           'Dai/permit-expired',
         )
       })
@@ -131,7 +140,9 @@ describe('Counter', () => {
         })
 
         it('should not transfer beyond allowance', async () => {
-          await expectRevert.unspecified(dai.connect(signers.user2).transferFrom(signers.user1.address, signers.user2.address, 2))
+          await expectRevert.unspecified(
+            dai.connect(signers.user2).transferFrom(signers.user1.address, signers.user2.address, 2),
+          )
         })
       })
 
