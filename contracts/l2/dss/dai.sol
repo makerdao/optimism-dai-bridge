@@ -191,7 +191,7 @@ contract Dai {
     emit Approval(owner, spender, value);
   }
 
-  // --- ERC 3156 Spec ---
+  // --- ERC3156 Spec ---
   function maxFlashLoan(
     address token
   ) external view returns (uint256) {
