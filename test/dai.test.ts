@@ -1,4 +1,4 @@
-const DAI = artifacts.require('Dai')
+/*const DAI = artifacts.require('Dai')
 const { signERC2612Permit } = require('eth-permit')
 
 const { BN, expectRevert } = require('@openzeppelin/test-helpers')
@@ -115,4 +115,4 @@ contract('DAI', (accounts) => {
       })
     })
   })
-})
+})*/
