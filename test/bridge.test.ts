@@ -1,4 +1,3 @@
-import { Watcher } from '@eth-optimism/watcher'
 import { Wallet } from '@ethersproject/wallet'
 import { expect } from 'chai'
 import { Contract, providers } from 'ethers'
@@ -19,7 +18,7 @@ describe('bridge', () => {
   let l1Provider: providers.BaseProvider
   let l1Signer: Wallet
   let l2Signer: Wallet
-  let watcher: Watcher
+  let watcher: any
 
   let l1Dai: Contract
   let l1DaiDeposit: Contract

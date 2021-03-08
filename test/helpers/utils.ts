@@ -13,7 +13,7 @@ export function q18(n: number) {
 
 export const DUMMY_ADDRESS = '0x' + '1234'.repeat(10)
 
-export async function waitToRelayTxsToL2(l1OriginatingTx: Promise<any>, watcher: Watcher) {
+export async function waitToRelayTxsToL2(l1OriginatingTx: Promise<any>, watcher: any) {
   console.log('Using watcher to wait for L1->L2 relay...')
   const res = await l1OriginatingTx
   await res.wait()
@@ -24,7 +24,7 @@ export async function waitToRelayTxsToL2(l1OriginatingTx: Promise<any>, watcher:
 }
 
 // uses eth-optimism watcher tool to pick up events on both chains
-export async function waitToRelayMessageToL1(l2OriginatingTx: Promise<any>, watcher: Watcher) {
+export async function waitToRelayMessageToL1(l2OriginatingTx: Promise<any>, watcher: any) {
   console.log('Using watcher to wait for L2->L1 relay...')
   const res = await l2OriginatingTx
   await res.wait()
@@ -74,7 +74,7 @@ export async function setupTest(): Promise<{
   l2Provider: providers.BaseProvider
   l1Signer: Wallet
   l2Signer: Wallet
-  watcher: Watcher
+  watcher: any
 }> {
   const randomWallets = getRandomWallets(3)
 
