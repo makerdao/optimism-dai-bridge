@@ -21,7 +21,7 @@ describe('Counter', () => {
 
   describe('deployment', async () => {
     it('returns the name', async () => {
-      let name = await dai.name()
+      const name = await dai.name()
       name.should.equal('Dai Stablecoin')
     })
 
