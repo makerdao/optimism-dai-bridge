@@ -18,6 +18,27 @@
 
 pragma solidity 0.7.6;
 
+interface IERC3156FlashBorrower {
+
+    /**
+     * @dev Receive a flash loan.
+     * @param initiator The initiator of the loan.
+     * @param token The loan currency.
+     * @param amount The amount of tokens lent.
+     * @param fee The additional amount of tokens to repay.
+     * @param data Arbitrary data structure, intended to contain user-defined parameters.
+     * @return The keccak256 hash of "ERC3156FlashBorrower.onFlashLoan"
+     */
+    function onFlashLoan(
+        address initiator,
+        address token,
+        uint256 amount,
+        uint256 fee,
+        bytes calldata data
+    ) external returns (bytes32);
+
+}
+
 contract Dai {
     
   // --- Auth ---
@@ -50,6 +71,7 @@ contract Dai {
   event Transfer(address indexed src, address indexed dst, uint256 wad);
   event Rely(address indexed usr);
   event Deny(address indexed usr);
+  event FlashLoan(address indexed receiver, uint256 amount);
 
   // --- Math ---
   function add(uint256 x, uint256 y) internal pure returns (uint256 z) {
@@ -59,11 +81,21 @@ contract Dai {
     require((z = x - y) <= x);
   }
 
+  uint256 private locked;
+  modifier lock {
+    require(locked == 0, "Dai/reentrancy-guard");
+    locked = 1;
+    _;
+    locked = 0;
+  }
+
+  bytes32 public constant CALLBACK_SUCCESS = keccak256("ERC3156FlashBorrower.onFlashLoan");
+
   // --- EIP712 niceties ---
   bytes32 public immutable DOMAIN_SEPARATOR;
   bytes32 public constant PERMIT_TYPEHASH = keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
 
-  constructor() public {
+  constructor() {
     wards[msg.sender] = 1;
     emit Rely(msg.sender);
 
@@ -111,12 +143,15 @@ contract Dai {
   
   // --- Mint/Burn ---
   function mint(address usr, uint256 wad) external auth {
+    _mint(usr, wad);
+  }
+  function _mint(address usr, uint256 wad) internal {
     balanceOf[usr] = add(balanceOf[usr], wad);
     totalSupply    = add(totalSupply, wad);
 
     emit Transfer(address(0), usr, wad);
   }
-  function burn(address usr, uint256 wad) external {
+  function burn(address usr, uint256 wad) public {
     require(balanceOf[usr] >= wad, "Dai/insufficient-balance");
 
     if (usr != msg.sender && allowance[usr][msg.sender] != type(uint256).max) {
@@ -155,4 +190,46 @@ contract Dai {
     allowance[owner][spender] = value;
     emit Approval(owner, spender, value);
   }
+
+  // --- ERC 3156 Spec ---
+  function maxFlashLoan(
+    address token
+  ) external view returns (uint256) {
+    if (token == address(this) && locked == 0) {
+      return type(uint112).max;
+    } else {
+      return 0;
+    }
+  }
+  function flashFee(
+    address token,
+    uint256
+  ) external view returns (uint256) {
+    require(token == address(this), "Dai/token-unsupported");
+
+    return 0;
+  }
+  function flashLoan(
+    address receiver,
+    address token,
+    uint256 amount,
+    bytes calldata data
+  ) external lock returns (bool) {
+    require(token == address(this), "Dai/token-unsupported");
+    require(amount <= type(uint112).max, "Dai/ceiling-exceeded");
+
+    _mint(receiver, amount);
+
+    emit FlashLoan(address(receiver), amount);
+
+    require(
+      IERC3156FlashBorrower(receiver).onFlashLoan(msg.sender, token, amount, 0, data) == CALLBACK_SUCCESS,
+      "Dai/callback-failed"
+    );
+    
+    burn(receiver, amount);
+
+    return true;
+  }
+
 }
