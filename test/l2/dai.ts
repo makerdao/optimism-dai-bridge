@@ -50,7 +50,8 @@ describe('Counter', () => {
 
       it('should not transfer beyond balance', async () => {
         await expect(dai.connect(signers.user1).transfer(signers.user2.address, 100)).to.be.reverted
-        await expect(dai.connect(signers.user1).transferFrom(signers.user1.address, signers.user2.address, 100)).to.be.reverted
+        await expect(dai.connect(signers.user1).transferFrom(signers.user1.address, signers.user2.address, 100)).to.be
+          .reverted
       })
 
       it('approves to increase allowance', async () => {
@@ -98,7 +99,7 @@ describe('Counter', () => {
             permitResult.v,
             permitResult.r,
             permitResult.s,
-          )
+          ),
         ).to.be.revertedWith('Dai/permit-expired')
       })
 
@@ -137,9 +138,8 @@ describe('Counter', () => {
         })
 
         it('should not transfer beyond allowance', async () => {
-          await expect(
-            dai.connect(signers.user2).transferFrom(signers.user1.address, signers.user2.address, 2),
-          ).to.be.reverted
+          await expect(dai.connect(signers.user2).transferFrom(signers.user1.address, signers.user2.address, 2)).to.be
+            .reverted
         })
       })
 
