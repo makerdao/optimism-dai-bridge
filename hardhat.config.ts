@@ -6,6 +6,7 @@ import '@nomiclabs/hardhat-web3'
 
 import '@eth-optimism/plugins/hardhat/compiler'
 import '@eth-optimism/plugins/hardhat/ethers'
+import '@eth-optimism/smock/build/src/plugins/hardhat-storagelayout'
 
 const config: HardhatUserConfig = {
   mocha: {
