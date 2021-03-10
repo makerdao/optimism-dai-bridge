@@ -2,7 +2,7 @@ pragma solidity >0.5.0 <0.8.0;
 pragma experimental ABIEncoderV2;
 
 /**
-ONLY PURPOSE FOR THIS FILE IS TO FORCE HARDHAT TO COMPILE CONTRACT FROM @eth-optmism/contracts
+ONLY PURPOSE OF THIS FILE IS TO FORCE HARDHAT TO COMPILE CONTRACT FROM @eth-optmism/contracts.
  */
 
 import {

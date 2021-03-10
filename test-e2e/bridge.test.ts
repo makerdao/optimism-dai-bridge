@@ -12,11 +12,13 @@ import {
   waitForTx,
   waitToRelayMessageToL1,
   waitToRelayTxsToL2,
+  MAX_UINT256,
 } from './helpers/utils'
 
 describe('bridge', () => {
   let l1Provider: providers.BaseProvider
   let l1Signer: Wallet
+  let l1Escrow: Wallet
   let l2Signer: Wallet
   let watcher: any
 
@@ -27,7 +29,7 @@ describe('bridge', () => {
   const initialL1DaiNumber = q18(10000)
 
   beforeEach(async () => {
-    ;({ l1Provider, l1Signer, l2Signer, watcher } = await setupTest())
+    ;({ l1Provider, l1Signer, l2Signer, watcher, l1User: l1Escrow } = await setupTest())
     l1Dai = await deployContract(l1Signer, await l1.getContractFactory('Dai'), [])
     console.log('L1 DAI: ', l1Dai.address)
     await waitForTx(l1Dai.mint(l1Signer.address, initialL1DaiNumber))
@@ -46,7 +48,9 @@ describe('bridge', () => {
       l1Dai.address,
       l2Minter.address,
       optimismConfig.Proxy__OVM_L1CrossDomainMessenger,
+      l1Escrow.address,
     ])
+    await l1Dai.connect(l1Escrow).approve(l1DaiDeposit.address, MAX_UINT256)
     console.log('L1 DAI Deposit: ', l1DaiDeposit.address)
 
     await waitForTx(l2Minter.init(l1DaiDeposit.address))
@@ -62,22 +66,19 @@ describe('bridge', () => {
     expect(balance.toString()).to.be.eq(depositAmount)
   })
 
-  it('moves l2 tokens to l1', async () => {
+  it.only('moves l2 tokens to l1', async () => {
     const depositAmount = q18(500)
     await waitForTx(l1Dai.approve(l1DaiDeposit.address, depositAmount))
     await waitToRelayTxsToL2(l1DaiDeposit.deposit(depositAmount), watcher)
 
-    await printRollupStatus(l1Provider)
     const balance = await l2Dai.balanceOf(l1Signer.address)
     expect(balance.toString()).to.be.eq(depositAmount)
 
-    await printRollupStatus(l1Provider)
     await waitForTx(l2Dai.approve(l2Minter.address, depositAmount))
-
     await waitToRelayMessageToL1(l2Minter.withdraw(depositAmount), watcher)
 
-    const balanceAfterWithdrawal = await l2Dai.balanceOf(l1Signer.address)
-    expect(balanceAfterWithdrawal.toString()).to.be.eq('0')
+    const l2BalanceAfterWithdrawal = await l2Dai.balanceOf(l1Signer.address)
+    expect(l2BalanceAfterWithdrawal.toString()).to.be.eq('0')
     const l1Balance = await l1Dai.balanceOf(l1Signer.address)
     expect(l1Balance.toString()).to.be.eq(initialL1DaiNumber)
   })
