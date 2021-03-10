@@ -1,7 +1,7 @@
+import { MockContract, smockit, smoddit } from '@eth-optimism/smock'
 import { expect } from 'chai'
+import { Contract, ContractFactory, Signer } from 'ethers'
 import { ethers } from 'hardhat'
-import { Signer, ContractFactory, Contract } from 'ethers'
-import { smockit, MockContract, smoddit } from '@eth-optimism/smock'
 
 import { NON_ZERO_ADDRESS, ZERO_ADDRESS } from '../helpers'
 
@@ -84,7 +84,7 @@ describe('L1ERC20Deposit', () => {
 
     it('should credit funds to the withdrawer and not use too much gas', async () => {
       // make sure no balance at start of test
-      await expect(await L1ERC20.balanceOf(NON_ZERO_ADDRESS)).to.be.equal(0)
+      expect(await L1ERC20.balanceOf(NON_ZERO_ADDRESS)).to.be.equal(0)
 
       const withdrawalAmount = 100
       Mock__OVM_L1CrossDomainMessenger.smocked.xDomainMessageSender.will.return.with(
@@ -97,7 +97,7 @@ describe('L1ERC20Deposit', () => {
         from: Mock__OVM_L1CrossDomainMessenger.address,
       })
 
-      await expect(await L1ERC20.balanceOf(NON_ZERO_ADDRESS)).to.be.equal(withdrawalAmount)
+      expect(await L1ERC20.balanceOf(NON_ZERO_ADDRESS)).to.be.equal(withdrawalAmount)
 
       const gasUsed = (await OVM_L1ERC20Gateway.provider.getTransactionReceipt(res.hash)).gasUsed
 
@@ -106,7 +106,7 @@ describe('L1ERC20Deposit', () => {
         ZERO_ADDRESS,
       )
       const defaultFinalizeWithdrawalGas = await OVM_L2DepositedERC20.getFinalizeWithdrawalL1Gas()
-      await expect(gasUsed.gt((defaultFinalizeWithdrawalGas * 11) / 10))
+      expect(gasUsed.gt((defaultFinalizeWithdrawalGas * 11) / 10))
     })
 
     it.skip('finalizeWithdrawalAndCall(): should should credit funds to the withdrawer, and forward from and data', async () => {
