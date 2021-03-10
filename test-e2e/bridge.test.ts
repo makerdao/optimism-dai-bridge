@@ -1,22 +1,20 @@
 import { Wallet } from '@ethersproject/wallet'
 import { expect } from 'chai'
-import { Contract, providers } from 'ethers'
+import { Contract } from 'ethers'
 import { ethers as l1, l2ethers as l2 } from 'hardhat'
 
 import { optimismConfig } from './helpers/optimismConfig'
 import {
   deployContract,
-  printRollupStatus,
+  MAX_UINT256,
   q18,
   setupTest,
   waitForTx,
   waitToRelayMessageToL1,
   waitToRelayTxsToL2,
-  MAX_UINT256,
 } from './helpers/utils'
 
 describe('bridge', () => {
-  let l1Provider: providers.BaseProvider
   let l1Signer: Wallet
   let l1Escrow: Wallet
   let l2Signer: Wallet
@@ -29,7 +27,7 @@ describe('bridge', () => {
   const initialL1DaiNumber = q18(10000)
 
   beforeEach(async () => {
-    ;({ l1Provider, l1Signer, l2Signer, watcher, l1User: l1Escrow } = await setupTest())
+    ;({ l1Signer, l2Signer, watcher, l1User: l1Escrow } = await setupTest())
     l1Dai = await deployContract(l1Signer, await l1.getContractFactory('Dai'), [])
     console.log('L1 DAI: ', l1Dai.address)
     await waitForTx(l1Dai.mint(l1Signer.address, initialL1DaiNumber))
@@ -66,7 +64,7 @@ describe('bridge', () => {
     expect(balance.toString()).to.be.eq(depositAmount)
   })
 
-  it.only('moves l2 tokens to l1', async () => {
+  it('moves l2 tokens to l1', async () => {
     const depositAmount = q18(500)
     await waitForTx(l1Dai.approve(l1DaiDeposit.address, depositAmount))
     await waitToRelayTxsToL2(l1DaiDeposit.deposit(depositAmount), watcher)
