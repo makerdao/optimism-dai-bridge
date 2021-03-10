@@ -6,16 +6,20 @@ const { signERC2612Permit } = require('eth-permit')
 require('chai').use(require('chai-as-promised')).should()
 
 const MAX = '115792089237316195423570985008687907853269984665640564039457584007913129639935'
+const MAX_FLASH_PLUS_ONE = '5192296858534827628530496329220096'
 
 describe('Counter', () => {
   let signers: any
   let dai: any
+  let flash: any
 
   beforeEach(async () => {
     const [deployer, user1, user2, user3] = await ethers.getSigners()
     signers = { deployer, user1, user2, user3 }
     const daiFactory = await ethers.getContractFactory('Dai', deployer)
     dai = await daiFactory.deploy()
+    const testFlashFactory = await ethers.getContractFactory('TestFlashLender', deployer)
+    flash = await testFlashFactory.deploy()
   })
 
   describe('deployment', async () => {
@@ -154,6 +158,31 @@ describe('Counter', () => {
           allowanceAfter.toString().should.equal(MAX)
         })
       })
+    })
+
+    it('should do a simple flash mint', async () => {
+      await flash.connect(signers.user1).flashLoan(dai.address, 1)
+
+      const balanceAfter = await dai.balanceOf(signers.user1.address)
+      balanceAfter.toString().should.equal('0')
+      const flashBalance = await flash.flashBalance()
+      flashBalance.toString().should.equal('1')
+      const flashValue = await flash.flashValue()
+      flashValue.toString().should.equal('1')
+      const flashSender = await flash.flashSender()
+      flashSender.toString().should.equal(flash.address)
+    })
+
+    it('cannot flash mint beyond the total supply limit', async () => {
+      await expect(flash.connect(signers.user1).flashLoan(dai.address, MAX_FLASH_PLUS_ONE)).to.be.revertedWith('Dai/ceiling-exceeded')
+    })
+
+    it('needs to return funds after a flash mint', async () => {
+      await expect(flash.connect(signers.deployer).flashLoanAndSteal(dai.address, 1)).to.be.reverted
+    })
+
+    it('should not allow nested flash loans', async () => {
+      await expect(flash.connect(signers.deployer).flashLoanAndReenter(dai.address, 1)).to.be.revertedWith('Dai/reentrancy-guard')
     })
   })
 })

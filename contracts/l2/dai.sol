@@ -118,11 +118,7 @@ contract Dai {
     return transferFrom(msg.sender, dst, wad);
   }
   function transferFrom(address src, address dst, uint256 wad) public returns (bool) {
-    require(balanceOf[src] >= wad, "Dai/insufficient-balance");
-
     if (src != msg.sender && allowance[src][msg.sender] != type(uint256).max) {
-        require(allowance[src][msg.sender] >= wad, "Dai/insufficient-allowance");
-
         allowance[src][msg.sender] = sub(allowance[src][msg.sender], wad);
     }
 
@@ -151,13 +147,12 @@ contract Dai {
 
     emit Transfer(address(0), usr, wad);
   }
-  function burn(address usr, uint256 wad) public {
-    require(balanceOf[usr] >= wad, "Dai/insufficient-balance");
-
-    if (usr != msg.sender && allowance[usr][msg.sender] != type(uint256).max) {
-      require(allowance[usr][msg.sender] >= wad, "Dai/insufficient-allowance");
-
-      allowance[usr][msg.sender] = sub(allowance[usr][msg.sender], wad);
+  function burn(address usr, uint256 wad) external {
+    _burn(usr, wad, msg.sender);
+  }
+  function _burn(address usr, uint256 wad, address msgSender) internal {
+    if (usr != msgSender && allowance[usr][msgSender] != type(uint256).max) {
+      allowance[usr][msgSender] = sub(allowance[usr][msgSender], wad);
     }
 
     balanceOf[usr] = sub(balanceOf[usr], wad);
@@ -226,7 +221,7 @@ contract Dai {
       "Dai/callback-failed"
     );
     
-    burn(receiver, amount);
+    _burn(receiver, amount, address(this));
 
     return true;
   }
