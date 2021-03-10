@@ -174,7 +174,9 @@ describe('Counter', () => {
     })
 
     it('cannot flash mint beyond the total supply limit', async () => {
-      await expect(flash.connect(signers.user1).flashLoan(dai.address, MAX_FLASH_PLUS_ONE)).to.be.revertedWith('Dai/ceiling-exceeded')
+      await expect(flash.connect(signers.user1).flashLoan(dai.address, MAX_FLASH_PLUS_ONE)).to.be.revertedWith(
+        'Dai/ceiling-exceeded',
+      )
     })
 
     it('needs to return funds after a flash mint', async () => {
@@ -182,7 +184,9 @@ describe('Counter', () => {
     })
 
     it('should not allow nested flash loans', async () => {
-      await expect(flash.connect(signers.deployer).flashLoanAndReenter(dai.address, 1)).to.be.revertedWith('Dai/reentrancy-guard')
+      await expect(flash.connect(signers.deployer).flashLoanAndReenter(dai.address, 1)).to.be.revertedWith(
+        'Dai/reentrancy-guard',
+      )
     })
   })
 })
