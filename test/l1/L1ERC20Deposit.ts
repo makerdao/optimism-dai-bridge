@@ -3,7 +3,7 @@ import { expect } from 'chai'
 import { Contract, ContractFactory, Signer } from 'ethers'
 import { ethers } from 'hardhat'
 
-import { NON_ZERO_ADDRESS, ZERO_ADDRESS } from '../helpers'
+import { MAX_UINT256, NON_ZERO_ADDRESS, ZERO_ADDRESS } from '../helpers'
 
 const INITIAL_TOTAL_L1_SUPPLY = 3000
 
@@ -13,13 +13,14 @@ const ERR_INVALID_X_DOMAIN_MSG_SENDER = 'OVM_XCHAIN: wrong sender of cross-domai
 describe('L1ERC20Deposit', () => {
   let alice: Signer
   let bob: Signer
+  let escrow: Signer
 
   let Mock__OVM_L2DepositedERC20: MockContract
   let Factory__L1ERC20: ContractFactory
   let L1ERC20: Contract
 
   before(async () => {
-    ;[alice, bob] = await ethers.getSigners()
+    ;[alice, bob, escrow] = await ethers.getSigners()
 
     Mock__OVM_L2DepositedERC20 = await smockit(await ethers.getContractFactory('L2ERC20Minter'))
 
@@ -55,7 +56,9 @@ describe('L1ERC20Deposit', () => {
       L1ERC20.address,
       Mock__OVM_L2DepositedERC20.address,
       Mock__OVM_L1CrossDomainMessenger.address,
+      escrow.getAddress(),
     )
+    await L1ERC20.connect(escrow).approve(OVM_L1ERC20Gateway.address, MAX_UINT256)
 
     finalizeDepositGasLimit = await OVM_L1ERC20Gateway.DEFAULT_FINALIZE_DEPOSIT_L2_GAS()
   })
@@ -67,7 +70,9 @@ describe('L1ERC20Deposit', () => {
         L1ERC20.address,
         Mock__OVM_L2DepositedERC20.address,
         NON_ZERO_ADDRESS,
+        escrow.getAddress(),
       )
+      L1ERC20.approve(OVM_L1ERC20Gateway.address, MAX_UINT256)
 
       await expect(OVM_L1ERC20Gateway.finalizeWithdrawal(ZERO_ADDRESS, 1)).to.be.revertedWith(ERR_INVALID_MESSENGER)
     })
@@ -91,7 +96,8 @@ describe('L1ERC20Deposit', () => {
         () => Mock__OVM_L2DepositedERC20.address,
       )
 
-      await L1ERC20.transfer(OVM_L1ERC20Gateway.address, withdrawalAmount)
+      // seed some funds
+      await L1ERC20.transfer(await escrow.getAddress(), withdrawalAmount)
 
       const res = await OVM_L1ERC20Gateway.finalizeWithdrawal(NON_ZERO_ADDRESS, withdrawalAmount, {
         from: Mock__OVM_L1CrossDomainMessenger.address,
@@ -132,7 +138,9 @@ describe('L1ERC20Deposit', () => {
         L1ERC20.address,
         Mock__OVM_L2DepositedERC20.address,
         Mock__OVM_L1CrossDomainMessenger.address,
+        escrow.getAddress(),
       )
+      await L1ERC20.connect(escrow).approve(OVM_L1ERC20Gateway.address, MAX_UINT256)
 
       // the Signer sets approve for the L1 Gateway
       await L1ERC20.approve(OVM_L1ERC20Gateway.address, depositAmount)
@@ -153,9 +161,9 @@ describe('L1ERC20Deposit', () => {
       const depositerBalance = await L1ERC20.balanceOf(depositer)
       expect(depositerBalance).to.equal(INITIAL_DEPOSITER_BALANCE - depositAmount)
 
-      // gateway's balance is increased
-      const gatewayBalance = await L1ERC20.balanceOf(OVM_L1ERC20Gateway.address)
-      expect(gatewayBalance).to.equal(depositAmount)
+      // escrow's balance is increased
+      const escrowBalance = await L1ERC20.balanceOf(await escrow.getAddress())
+      expect(escrowBalance).to.equal(depositAmount)
 
       // Check the correct cross-chain call was sent:
       // Message should be sent to the L2ERC20Gateway on L2
@@ -178,9 +186,9 @@ describe('L1ERC20Deposit', () => {
       const depositerBalance = await L1ERC20.balanceOf(depositer)
       expect(depositerBalance).to.equal(INITIAL_DEPOSITER_BALANCE - depositAmount)
 
-      // gateway's balance is increased
-      const gatewayBalance = await L1ERC20.balanceOf(OVM_L1ERC20Gateway.address)
-      expect(gatewayBalance).to.equal(depositAmount)
+      // escrow's balance is increased
+      const escrowBalance = await L1ERC20.balanceOf(await escrow.getAddress())
+      expect(escrowBalance).to.equal(depositAmount)
 
       // Check the correct cross-chain call was sent:
       // Message should be sent to the L2ERC20Gateway on L2

@@ -13,6 +13,7 @@ contract L1ERC20Deposit is Abs_L1TokenGateway {
    ********************************/
 
   iOVM_ERC20 public l1ERC20;
+  address public escrow;
 
   /***************
    * Constructor *
@@ -25,9 +26,11 @@ contract L1ERC20Deposit is Abs_L1TokenGateway {
   constructor(
     iOVM_ERC20 _l1ERC20,
     address _l2DepositedERC20,
-    address _l1messenger
+    address _l1messenger,
+    address _escrow
   ) Abs_L1TokenGateway(_l2DepositedERC20, _l1messenger) {
     l1ERC20 = _l1ERC20;
+    escrow = _escrow;
   }
 
   /**************
@@ -48,7 +51,7 @@ contract L1ERC20Deposit is Abs_L1TokenGateway {
     uint256 _amount
   ) internal override {
     // Hold on to the newly deposited funds
-    l1ERC20.transferFrom(_from, address(this), _amount);
+    l1ERC20.transferFrom(_from, escrow, _amount);
   }
 
   /**
@@ -60,6 +63,6 @@ contract L1ERC20Deposit is Abs_L1TokenGateway {
    */
   function _handleFinalizeWithdrawal(address _to, uint256 _amount) internal override {
     // Transfer withdrawn funds out to withdrawer
-    l1ERC20.transfer(_to, _amount);
+    l1ERC20.transferFrom(escrow, _to, _amount);
   }
 }
