@@ -11,6 +11,8 @@ export function q18(n: number) {
   return ethers.BigNumber.from(10).pow(18).mul(n).toString()
 }
 
+export const MAX_UINT256 = ethers.BigNumber.from(2).pow(256).sub(1)
+
 export const DUMMY_ADDRESS = '0x' + '1234'.repeat(10)
 
 export async function waitToRelayTxsToL2(l1OriginatingTx: Promise<any>, watcher: any) {
@@ -73,6 +75,7 @@ export async function setupTest(): Promise<{
   l1Provider: providers.BaseProvider
   l2Provider: providers.BaseProvider
   l1Signer: Wallet
+  l1User: Wallet
   l2Signer: Wallet
   watcher: any
 }> {
@@ -80,13 +83,14 @@ export async function setupTest(): Promise<{
 
   const l1Provider = getL1Provider()
   const l1Admin = getAdminWallet().connect(l1Provider)
-  const [l1Deployer] = connectWallets(randomWallets, l1Provider)
+  const [l1Deployer, l1User] = connectWallets(randomWallets, l1Provider)
 
   const l2Provider = getL2Provider()
   const [l2Deployer] = connectWallets(randomWallets, l2Provider)
 
   console.log('Seeding L1 account')
   await waitForTx(l1Admin.sendTransaction({ value: ethers.utils.parseEther('1'), to: l1Deployer.address }))
+  await waitForTx(l1Admin.sendTransaction({ value: ethers.utils.parseEther('1'), to: l1User.address }))
 
   const watcher = new Watcher({
     l1: {
@@ -103,6 +107,7 @@ export async function setupTest(): Promise<{
     l1Provider,
     l2Provider,
     l1Signer: l1Deployer,
+    l1User,
     l2Signer: l2Deployer,
     watcher,
   }
