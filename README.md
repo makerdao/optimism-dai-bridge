@@ -22,3 +22,9 @@ yarn
 yarn build
 yarn test-e2e  # runs unit tests
 ```
+
+## Development
+
+Run `yarn test:fix` to run linting in fix mode, auto-formatting and unit tests.
+
+Running `yarn test` makes sure that contracts are compiled. Running `yarn test-e2e` doesn't.
