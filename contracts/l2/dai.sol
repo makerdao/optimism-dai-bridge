@@ -119,6 +119,24 @@ contract Dai {
 
     return true;
   }
+  function increaseAllowance(address spender, uint256 addedValue) external returns (bool) {
+    uint256 newValue = add(allowance[msg.sender][spender], addedValue);
+    allowance[msg.sender][spender] = newValue;
+
+    emit Approval(msg.sender, spender, newValue);
+
+    return true;
+  }
+  function decreaseAllowance(address spender, uint256 subtractedValue) external returns (bool) {
+    uint256 allowed = allowance[msg.sender][spender];
+    require(allowed >= subtractedValue, "Dai/insufficient-allowance");
+    allowed = allowed - subtractedValue;
+    allowance[msg.sender][spender] = allowed;
+
+    emit Approval(msg.sender, spender, allowed);
+
+    return true;
+  }
   
   // --- Mint/Burn ---
   function mint(address to, uint256 value) external auth {

@@ -57,8 +57,9 @@ describe('Dai', () => {
 
       it('should not transfer beyond balance', async () => {
         await expect(dai.connect(signers.user1).transfer(signers.user2.address, 100)).to.be.reverted
-        await expect(dai.connect(signers.user1).transferFrom(signers.user1.address, signers.user2.address, 100)).to.be
-          .revertedWith('Dai/insufficient-balanc')
+        await expect(
+          dai.connect(signers.user1).transferFrom(signers.user1.address, signers.user2.address, 100),
+        ).to.be.revertedWith('Dai/insufficient-balanc')
       })
 
       it('approves to increase allowance', async () => {
