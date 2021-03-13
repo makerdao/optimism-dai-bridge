@@ -212,8 +212,9 @@ describe('Dai', () => {
         })
 
         it('should not transfer beyond allowance', async () => {
-          await expect(dai.connect(signers.user2).transferFrom(signers.user1.address, signers.user2.address, 2)).to.be
-            .revertedWith('Dai/insufficient-allowance')
+          await expect(
+            dai.connect(signers.user2).transferFrom(signers.user1.address, signers.user2.address, 2),
+          ).to.be.revertedWith('Dai/insufficient-allowance')
         })
 
         it('burns dai using burn and allowance', async () => {
@@ -224,8 +225,9 @@ describe('Dai', () => {
         })
 
         it('should not burn beyond allowance', async () => {
-          await expect(dai.connect(signers.user2).burn(signers.user1.address, 2)).to.be
-            .revertedWith('Dai/insufficient-allowance')
+          await expect(dai.connect(signers.user2).burn(signers.user1.address, 2)).to.be.revertedWith(
+            'Dai/insufficient-allowance',
+          )
         })
 
         it('increaseAllowance should increase allowance', async () => {
@@ -236,8 +238,7 @@ describe('Dai', () => {
         })
 
         it('should not increaseAllowance beyond MAX', async () => {
-          await expect(dai.connect(signers.user1).increaseAllowance(signers.user2.address, MAX)).to.be
-            .revertedWith('')
+          await expect(dai.connect(signers.user1).increaseAllowance(signers.user2.address, MAX)).to.be.revertedWith('')
         })
 
         it('decreaseAllowance should decrease allowance', async () => {
@@ -248,8 +249,9 @@ describe('Dai', () => {
         })
 
         it('should not decreaseAllowance beyond allowance', async () => {
-          await expect(dai.connect(signers.user1).decreaseAllowance(signers.user2.address, 2)).to.be
-            .revertedWith('Dai/insufficient-allowance')
+          await expect(dai.connect(signers.user1).decreaseAllowance(signers.user2.address, 2)).to.be.revertedWith(
+            'Dai/insufficient-allowance',
+          )
         })
       })
 
