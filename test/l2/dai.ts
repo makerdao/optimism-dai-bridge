@@ -6,6 +6,7 @@ const { signERC2612Permit } = require('eth-permit')
 require('chai').use(require('chai-as-promised')).should()
 
 const MAX = '115792089237316195423570985008687907853269984665640564039457584007913129639935'
+import { ZERO_ADDRESS } from '../helpers'
 
 describe('Dai', () => {
   let signers: any
@@ -41,7 +42,7 @@ describe('Dai', () => {
         balanceAfter.toString().should.equal(balanceBefore.add(1).toString())
       })
 
-      it('transfers to yourself', async () => {
+      it('transfers dai to yourself', async () => {
         const balanceBefore = await dai.balanceOf(signers.user1.address)
         await dai.connect(signers.user1).transfer(signers.user1.address, 1)
         const balanceAfter = await dai.balanceOf(signers.user1.address)
@@ -55,16 +56,81 @@ describe('Dai', () => {
         balanceAfter.toString().should.equal(balanceBefore.add(1).toString())
       })
 
+      it('transfers dai to yourself using transferFrom', async () => {
+        const balanceBefore = await dai.balanceOf(signers.user1.address)
+        await dai.connect(signers.user1).transferFrom(signers.user1.address, signers.user1.address, 1)
+        const balanceAfter = await dai.balanceOf(signers.user1.address)
+        balanceAfter.toString().should.equal(balanceBefore.toString())
+      })
+
       it('should not transfer beyond balance', async () => {
-        await expect(dai.connect(signers.user1).transfer(signers.user2.address, 100)).to.be.reverted
+        await expect(dai.connect(signers.user1).transfer(signers.user2.address, 100)).to.be.revertedWith(
+          'Dai/insufficient-balance',
+        )
         await expect(
           dai.connect(signers.user1).transferFrom(signers.user1.address, signers.user2.address, 100),
-        ).to.be.revertedWith('Dai/insufficient-balanc')
+        ).to.be.revertedWith('Dai/insufficient-balance')
+      })
+
+      it('should not transfer to zero address', async () => {
+        await expect(dai.connect(signers.user1).transfer(ZERO_ADDRESS, 1)).to.be.revertedWith('')
+        await expect(
+          dai.connect(signers.user1).transferFrom(signers.user1.address, ZERO_ADDRESS, 1),
+        ).to.be.revertedWith('')
+      })
+
+      it('should not transfer to dai address', async () => {
+        await expect(dai.connect(signers.user1).transfer(dai.address, 1)).to.be.revertedWith('')
+        await expect(dai.connect(signers.user1).transferFrom(signers.user1.address, dai.address, 1)).to.be.revertedWith(
+          '',
+        )
+      })
+
+      it('should not allow minting from non-authed user', async () => {
+        await expect(dai.connect(signers.user1).mint(signers.user1.address, 1)).to.be.revertedWith('Dai/not-authorized')
+      })
+
+      it('should not allow minting to zero address', async () => {
+        await expect(dai.mint(ZERO_ADDRESS, 1)).to.be.revertedWith('')
+      })
+
+      it('should not allow minting to dai address', async () => {
+        await expect(dai.mint(dai.address, 1)).to.be.revertedWith('')
+      })
+
+      it('should not allow minting to address beyond MAX', async () => {
+        await expect(dai.mint(signers.user1.address, MAX)).to.be.revertedWith('')
+      })
+
+      it('burns own dai', async () => {
+        const balanceBefore = await dai.balanceOf(signers.user1.address)
+        await dai.connect(signers.user1).burn(signers.user1.address, 1)
+        const balanceAfter = await dai.balanceOf(signers.user1.address)
+        balanceAfter.toString().should.equal(balanceBefore.sub(1).toString())
+      })
+
+      it('should not burn beyond balance', async () => {
+        await expect(dai.connect(signers.user1).burn(signers.user1.address, 100)).to.be.revertedWith(
+          'Dai/insufficient-balance',
+        )
+      })
+
+      it('should not burn other', async () => {
+        await expect(dai.connect(signers.user2).burn(signers.user1.address, 1)).to.be.revertedWith(
+          'Dai/insufficient-allowance',
+        )
       })
 
       it('approves to increase allowance', async () => {
         const allowanceBefore = await dai.allowance(signers.user1.address, signers.user2.address)
         await dai.connect(signers.user1).approve(signers.user2.address, 1)
+        const allowanceAfter = await dai.allowance(signers.user1.address, signers.user2.address)
+        allowanceAfter.toString().should.equal(allowanceBefore.add(1).toString())
+      })
+
+      it('increaseAllowance to increase allowance', async () => {
+        const allowanceBefore = await dai.allowance(signers.user1.address, signers.user2.address)
+        await dai.connect(signers.user1).increaseAllowance(signers.user2.address, 1)
         const allowanceAfter = await dai.allowance(signers.user1.address, signers.user2.address)
         allowanceAfter.toString().should.equal(allowanceBefore.add(1).toString())
       })
@@ -147,7 +213,43 @@ describe('Dai', () => {
 
         it('should not transfer beyond allowance', async () => {
           await expect(dai.connect(signers.user2).transferFrom(signers.user1.address, signers.user2.address, 2)).to.be
-            .reverted
+            .revertedWith('Dai/insufficient-allowance')
+        })
+
+        it('burns dai using burn and allowance', async () => {
+          const balanceBefore = await dai.balanceOf(signers.user1.address)
+          await dai.connect(signers.user2).burn(signers.user1.address, 1)
+          const balanceAfter = await dai.balanceOf(signers.user1.address)
+          balanceAfter.toString().should.equal(balanceBefore.sub(1).toString())
+        })
+
+        it('should not burn beyond allowance', async () => {
+          await expect(dai.connect(signers.user2).burn(signers.user1.address, 2)).to.be
+            .revertedWith('Dai/insufficient-allowance')
+        })
+
+        it('increaseAllowance should increase allowance', async () => {
+          const balanceBefore = await dai.allowance(signers.user1.address, signers.user2.address)
+          await dai.connect(signers.user1).increaseAllowance(signers.user2.address, 1)
+          const balanceAfter = await dai.allowance(signers.user1.address, signers.user2.address)
+          balanceAfter.toString().should.equal(balanceBefore.add(1).toString())
+        })
+
+        it('should not increaseAllowance beyond MAX', async () => {
+          await expect(dai.connect(signers.user1).increaseAllowance(signers.user2.address, MAX)).to.be
+            .revertedWith('')
+        })
+
+        it('decreaseAllowance should decrease allowance', async () => {
+          const balanceBefore = await dai.allowance(signers.user1.address, signers.user2.address)
+          await dai.connect(signers.user1).decreaseAllowance(signers.user2.address, 1)
+          const balanceAfter = await dai.allowance(signers.user1.address, signers.user2.address)
+          balanceAfter.toString().should.equal(balanceBefore.sub(1).toString())
+        })
+
+        it('should not decreaseAllowance beyond allowance', async () => {
+          await expect(dai.connect(signers.user1).decreaseAllowance(signers.user2.address, 2)).to.be
+            .revertedWith('Dai/insufficient-allowance')
         })
       })
 
@@ -158,6 +260,12 @@ describe('Dai', () => {
 
         it('does not decrease allowance using transferFrom', async () => {
           await dai.connect(signers.user2).transferFrom(signers.user1.address, signers.user2.address, 1)
+          const allowanceAfter = await dai.allowance(signers.user1.address, signers.user2.address)
+          allowanceAfter.toString().should.equal(MAX)
+        })
+
+        it('does not decrease allowance using burn', async () => {
+          await dai.connect(signers.user2).burn(signers.user1.address, 1)
           const allowanceAfter = await dai.allowance(signers.user1.address, signers.user2.address)
           allowanceAfter.toString().should.equal(MAX)
         })
