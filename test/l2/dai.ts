@@ -7,7 +7,7 @@ require('chai').use(require('chai-as-promised')).should()
 
 const MAX = '115792089237316195423570985008687907853269984665640564039457584007913129639935'
 
-describe('Counter', () => {
+describe('Dai', () => {
   let signers: any
   let dai: any
 
@@ -41,6 +41,13 @@ describe('Counter', () => {
         balanceAfter.toString().should.equal(balanceBefore.add(1).toString())
       })
 
+      it('transfers to yourself', async () => {
+        const balanceBefore = await dai.balanceOf(signers.user1.address)
+        await dai.connect(signers.user1).transfer(signers.user1.address, 1)
+        const balanceAfter = await dai.balanceOf(signers.user1.address)
+        balanceAfter.toString().should.equal(balanceBefore.toString())
+      })
+
       it('transfers dai using transferFrom', async () => {
         const balanceBefore = await dai.balanceOf(signers.user2.address)
         await dai.connect(signers.user1).transferFrom(signers.user1.address, signers.user2.address, 1)
@@ -51,7 +58,7 @@ describe('Counter', () => {
       it('should not transfer beyond balance', async () => {
         await expect(dai.connect(signers.user1).transfer(signers.user2.address, 100)).to.be.reverted
         await expect(dai.connect(signers.user1).transferFrom(signers.user1.address, signers.user2.address, 100)).to.be
-          .reverted
+          .revertedWith('Dai/insufficient-balanc')
       })
 
       it('approves to increase allowance', async () => {

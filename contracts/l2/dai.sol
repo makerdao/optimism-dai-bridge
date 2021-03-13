@@ -38,7 +38,6 @@ contract Dai {
   // --- ERC20 Data ---
   string  public constant name     = "Dai Stablecoin";
   string  public constant symbol   = "DAI";
-  string  public constant version  = "1";
   uint8   public constant decimals = 18;
   uint256 public totalSupply;
 
@@ -46,8 +45,8 @@ contract Dai {
   mapping (address => mapping (address => uint256)) public allowance;
   mapping (address => uint256)                      public nonces;
 
-  event Approval(address indexed src, address indexed guy, uint256 wad);
-  event Transfer(address indexed src, address indexed dst, uint256 wad);
+  event Approval(address indexed owner, address indexed spender, uint256 value);
+  event Transfer(address indexed from, address indexed to, uint256 value);
   event Rely(address indexed usr);
   event Deny(address indexed usr);
 
@@ -72,7 +71,7 @@ contract Dai {
     DOMAIN_SEPARATOR = keccak256(abi.encode(
       keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
       keccak256(bytes(name)),
-      keccak256(bytes(version)),
+      keccak256(bytes("1")),
       chainId,
       address(this)
     ));
@@ -82,53 +81,69 @@ contract Dai {
   }
 
   // --- ERC20 Mutations ---
-  function transfer(address dst, uint256 wad) external returns (bool) {
-    return transferFrom(msg.sender, dst, wad);
-  }
-  function transferFrom(address src, address dst, uint256 wad) public returns (bool) {
-    require(balanceOf[src] >= wad, "Dai/insufficient-balance");
+  function transfer(address to, uint256 value) external returns (bool) {
+    uint256 balance = balanceOf[msg.sender];
+    require(balance >= value, "Dai/insufficient-balance");
 
-    if (src != msg.sender && allowance[src][msg.sender] != type(uint256).max) {
-        require(allowance[src][msg.sender] >= wad, "Dai/insufficient-allowance");
+    balanceOf[msg.sender] = balance - value;
+    balanceOf[to] = add(balanceOf[to], value);
 
-        allowance[src][msg.sender] = sub(allowance[src][msg.sender], wad);
-    }
-
-    balanceOf[src] = sub(balanceOf[src], wad);
-    balanceOf[dst] = add(balanceOf[dst], wad);
-
-    emit Transfer(src, dst, wad);
+    emit Transfer(msg.sender, to, value);
 
     return true;
   }
-  function approve(address usr, uint256 wad) external returns (bool) {
-    allowance[msg.sender][usr] = wad;
+  function transferFrom(address from, address to, uint256 value) external returns (bool) {
+    uint256 balance = balanceOf[from];
+    require(balance >= value, "Dai/insufficient-balance");
 
-    emit Approval(msg.sender, usr, wad);
+    if (from != msg.sender) {
+      uint256 allowed = allowance[from][msg.sender];
+      if (allowed != type(uint256).max) {
+        require(allowed >= value, "Dai/insufficient-allowance");
+
+        allowance[from][msg.sender] = allowed - value;
+      }
+    }
+
+    balanceOf[from] = balance - value;
+    balanceOf[to] = add(balanceOf[to], value);
+
+    emit Transfer(from, to, value);
+
+    return true;
+  }
+  function approve(address spender, uint256 value) external returns (bool) {
+    allowance[msg.sender][spender] = value;
+
+    emit Approval(msg.sender, spender, value);
 
     return true;
   }
   
   // --- Mint/Burn ---
-  function mint(address usr, uint256 wad) external auth {
-    balanceOf[usr] = add(balanceOf[usr], wad);
-    totalSupply    = add(totalSupply, wad);
+  function mint(address to, uint256 value) external auth {
+    balanceOf[to] = add(balanceOf[to], value);
+    totalSupply   = add(totalSupply, value);
 
-    emit Transfer(address(0), usr, wad);
+    emit Transfer(address(0), to, value);
   }
-  function burn(address usr, uint256 wad) external {
-    require(balanceOf[usr] >= wad, "Dai/insufficient-balance");
+  function burn(address from, uint256 value) external {
+    uint256 balance = balanceOf[from];
+    require(balance >= value, "Dai/insufficient-balance");
 
-    if (usr != msg.sender && allowance[usr][msg.sender] != type(uint256).max) {
-      require(allowance[usr][msg.sender] >= wad, "Dai/insufficient-allowance");
+    if (from != msg.sender) {
+      uint256 allowed = allowance[from][msg.sender];
+      if (allowed != type(uint256).max) {
+        require(allowed >= value, "Dai/insufficient-allowance");
 
-      allowance[usr][msg.sender] = sub(allowance[usr][msg.sender], wad);
+        allowance[from][msg.sender] = allowed - value;
+      }
     }
 
-    balanceOf[usr] = sub(balanceOf[usr], wad);
-    totalSupply    = sub(totalSupply, wad);
+    balanceOf[from] = balance - value;
+    totalSupply     = sub(totalSupply, value);
 
-    emit Transfer(usr, address(0), wad);
+    emit Transfer(from, address(0), value);
   }
 
   // --- Approve by signature ---
