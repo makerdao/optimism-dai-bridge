@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 pragma solidity 0.7.6;
 
-import "../dai.sol";
+import "../l2/dai.sol";
 
 /// @dev A contract that will receive Dai, and allows for it to be retrieved.
 contract MockHolder {
