@@ -1,7 +1,8 @@
 import { MockContract, smockit, smoddit } from '@eth-optimism/smock'
 import { expect } from 'chai'
-import { Contract, ContractFactory, Signer } from 'ethers'
+import { Signer } from 'ethers'
 import { ethers } from 'hardhat'
+import { Dai, Dai__factory, L1ERC20Deposit, L1ERC20Deposit__factory } from 'typechain'
 
 import { MAX_UINT256, NON_ZERO_ADDRESS, ZERO_ADDRESS } from '../helpers'
 
@@ -16,8 +17,8 @@ describe('L1ERC20Deposit', () => {
   let escrow: Signer
 
   let Mock__OVM_L2DepositedERC20: MockContract
-  let Factory__L1ERC20: ContractFactory
-  let L1ERC20: Contract
+  let Factory__L1ERC20: Dai__factory
+  let L1ERC20: Dai
 
   before(async () => {
     ;[alice, bob, escrow] = await ethers.getSigners()
@@ -38,7 +39,7 @@ describe('L1ERC20Deposit', () => {
     })
   })
 
-  let OVM_L1ERC20Gateway: Contract
+  let OVM_L1ERC20Gateway: L1ERC20Deposit
   let Mock__OVM_L1CrossDomainMessenger: MockContract
   let finalizeDepositGasLimit: number
   beforeEach(async () => {
@@ -52,11 +53,12 @@ describe('L1ERC20Deposit', () => {
     )
 
     // Deploy the contract under test
-    OVM_L1ERC20Gateway = await (await ethers.getContractFactory('L1ERC20Deposit')).deploy(
+    const L1ERC20DepositFactory = (await ethers.getContractFactory('L1ERC20Deposit')) as L1ERC20Deposit__factory
+    OVM_L1ERC20Gateway = await L1ERC20DepositFactory.deploy(
       L1ERC20.address,
       Mock__OVM_L2DepositedERC20.address,
       Mock__OVM_L1CrossDomainMessenger.address,
-      escrow.getAddress(),
+      await escrow.getAddress(),
     )
     await L1ERC20.connect(escrow).approve(OVM_L1ERC20Gateway.address, MAX_UINT256)
 
@@ -66,13 +68,14 @@ describe('L1ERC20Deposit', () => {
   describe('finalizeWithdrawal', () => {
     it('onlyFromCrossDomainAccount: should revert on calls from a non-crossDomainMessenger L1 account', async () => {
       // Deploy new gateway, initialize with random messenger
-      OVM_L1ERC20Gateway = await (await ethers.getContractFactory('L1ERC20Deposit')).deploy(
+      const L1ERC20DepositFactory = (await ethers.getContractFactory('L1ERC20Deposit')) as L1ERC20Deposit__factory
+      OVM_L1ERC20Gateway = await L1ERC20DepositFactory.deploy(
         L1ERC20.address,
         Mock__OVM_L2DepositedERC20.address,
         NON_ZERO_ADDRESS,
-        escrow.getAddress(),
+        await escrow.getAddress(),
       )
-      L1ERC20.approve(OVM_L1ERC20Gateway.address, MAX_UINT256)
+      await L1ERC20.approve(OVM_L1ERC20Gateway.address, MAX_UINT256)
 
       await expect(OVM_L1ERC20Gateway.finalizeWithdrawal(ZERO_ADDRESS, 1)).to.be.revertedWith(ERR_INVALID_MESSENGER)
     })
@@ -134,11 +137,12 @@ describe('L1ERC20Deposit', () => {
       Mock__OVM_L1CrossDomainMessenger = await smockit(await ethers.getContractFactory('OVM_L1CrossDomainMessenger'))
 
       // Deploy the contract under test:
-      OVM_L1ERC20Gateway = await (await ethers.getContractFactory('L1ERC20Deposit')).deploy(
+      const L1ERC20DepositFactory = (await ethers.getContractFactory('L1ERC20Deposit')) as L1ERC20Deposit__factory
+      OVM_L1ERC20Gateway = await L1ERC20DepositFactory.deploy(
         L1ERC20.address,
         Mock__OVM_L2DepositedERC20.address,
         Mock__OVM_L1CrossDomainMessenger.address,
-        escrow.getAddress(),
+        await escrow.getAddress(),
       )
       await L1ERC20.connect(escrow).approve(OVM_L1ERC20Gateway.address, MAX_UINT256)
 
