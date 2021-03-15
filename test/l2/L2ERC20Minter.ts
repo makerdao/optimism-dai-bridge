@@ -1,7 +1,8 @@
 import { MockContract, ModifiableContract, smockit, smoddit } from '@eth-optimism/smock'
 import { expect } from 'chai'
-import { Contract, ContractFactory, Signer } from 'ethers'
+import { Signer } from 'ethers'
 import { ethers } from 'hardhat'
+import { Dai, Dai__factory, L1ERC20Deposit__factory, L2ERC20Minter, L2ERC20Minter__factory } from 'typechain'
 
 import { NON_ZERO_ADDRESS, ZERO_ADDRESS } from '../helpers'
 
@@ -12,14 +13,14 @@ const MOCK_L1DEPOSIT_ADDRESS: string = '0x12341234123412341234123412341234123412
 describe('OVM_L2DepositedERC20', () => {
   let alice: Signer
   let bob: Signer
-  let Factory__OVM_L1ERC20Gateway: ContractFactory
+  let Factory__OVM_L1ERC20Gateway: L1ERC20Deposit__factory
   before(async () => {
     ;[alice, bob] = await ethers.getSigners()
-    Factory__OVM_L1ERC20Gateway = await ethers.getContractFactory('L1ERC20Deposit')
+    Factory__OVM_L1ERC20Gateway = (await ethers.getContractFactory('L1ERC20Deposit')) as any
   })
 
-  let DAI: Contract
-  let L2Minter: Contract
+  let DAI: Dai
+  let L2Minter: L2ERC20Minter
   let Mock__OVM_L2CrossDomainMessenger: MockContract
   let finalizeWithdrawalGasLimit: number
   beforeEach(async () => {
@@ -34,8 +35,8 @@ describe('OVM_L2DepositedERC20', () => {
     )
 
     // Deploy the contract under test
-    DAI = await (await ethers.getContractFactory('Dai')).deploy()
-    L2Minter = await (await ethers.getContractFactory('L2ERC20Minter')).deploy(
+    DAI = await ((await ethers.getContractFactory('Dai')) as Dai__factory).deploy()
+    L2Minter = await ((await ethers.getContractFactory('L2ERC20Minter')) as L2ERC20Minter__factory).deploy(
       Mock__OVM_L2CrossDomainMessenger.address,
       DAI.address,
     )
@@ -51,7 +52,10 @@ describe('OVM_L2DepositedERC20', () => {
   describe('finalizeDeposit', () => {
     it('onlyFromCrossDomainAccount: should revert on calls from a non-crossDomainMessenger L2 account', async () => {
       // Deploy new gateway, initialize with random messenger
-      L2Minter = await (await ethers.getContractFactory('L2ERC20Minter')).deploy(NON_ZERO_ADDRESS, DAI.address)
+      L2Minter = await ((await ethers.getContractFactory('L2ERC20Minter')) as L2ERC20Minter__factory).deploy(
+        NON_ZERO_ADDRESS,
+        DAI.address,
+      )
       await L2Minter.init(NON_ZERO_ADDRESS)
 
       const depositAmount = 100
@@ -88,13 +92,13 @@ describe('OVM_L2DepositedERC20', () => {
     const INITIAL_TOTAL_SUPPLY = 100_000
     const ALICE_INITIAL_BALANCE = 50_000
     const withdrawAmount = 1_000
-    let L2Minter: Contract
+    let L2Minter: L2ERC20Minter
     let DAI: ModifiableContract
     beforeEach(async () => {
       // Deploy a smodded gateway so we can give some balances to withdraw
       // Deploy the contract under test
       DAI = await (await smoddit('Dai')).deploy()
-      L2Minter = await (await ethers.getContractFactory('L2ERC20Minter', alice)).deploy(
+      L2Minter = await ((await ethers.getContractFactory('L2ERC20Minter', alice)) as L2ERC20Minter__factory).deploy(
         Mock__OVM_L2CrossDomainMessenger.address,
         DAI.address,
       )
