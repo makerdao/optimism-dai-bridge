@@ -2,3 +2,4 @@ node_modules/
 artifacts/
 cache/
 artifacts-l2
+typechain

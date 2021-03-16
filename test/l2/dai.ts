@@ -1,5 +1,6 @@
 import { expect } from 'chai'
 import { ethers, web3 } from 'hardhat'
+import { Dai, Dai__factory } from 'typechain'
 
 const { signERC2612Permit } = require('eth-permit')
 
@@ -9,12 +10,12 @@ const MAX = '1157920892373161954235709850086879078532699846656405640394575840079
 
 describe('Counter', () => {
   let signers: any
-  let dai: any
+  let dai: Dai
 
   beforeEach(async () => {
     const [deployer, user1, user2, user3] = await ethers.getSigners()
     signers = { deployer, user1, user2, user3 }
-    const daiFactory = await ethers.getContractFactory('Dai', deployer)
+    const daiFactory = (await ethers.getContractFactory('Dai', deployer)) as Dai__factory
     dai = await daiFactory.deploy()
   })
 

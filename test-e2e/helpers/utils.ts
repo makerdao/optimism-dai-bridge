@@ -57,13 +57,17 @@ export async function printRollupStatus(l1Provider: providers.BaseProvider) {
   console.log('State Commitment Chain all elements: ', stcAllElements.toString())
 }
 
-export async function deployContract(signer: Signer, artifact: any, args: any[] = []): Promise<Contract> {
+export async function deployContract<T extends Contract = Contract>(
+  signer: Signer,
+  artifact: any,
+  args: any[] = [],
+): Promise<T> {
   const contractFactory = new ethers.ContractFactory(artifact.interface, artifact.bytecode, signer)
   const contractDeployed = await contractFactory.deploy(...args)
 
   await contractDeployed.deployed()
 
-  return contractDeployed
+  return contractDeployed as any
 }
 
 export async function waitForTx(tx: Promise<any>): Promise<any> {
