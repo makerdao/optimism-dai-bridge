@@ -20,11 +20,6 @@ describe('Dai', () => {
   })
 
   describe('deployment', async () => {
-    it('returns deployer wards', async () => {
-      const wards = await dai.wards(signers.deployer.address)
-      wards.toString().should.equal('1')
-    })
-
     it('returns the name', async () => {
       const name = await dai.name()
       name.should.equal('Dai Stablecoin')
@@ -99,10 +94,6 @@ describe('Dai', () => {
         await expect(dai.connect(signers.user1).transferFrom(signers.user1.address, dai.address, 1)).to.be.revertedWith(
           '',
         )
-      })
-
-      it('should not allow minting from non-authed user', async () => {
-        await expect(dai.connect(signers.user1).mint(signers.user1.address, 1)).to.be.revertedWith('Dai/not-authorized')
       })
 
       it('should not allow minting to zero address', async () => {
@@ -285,6 +276,27 @@ describe('Dai', () => {
           await dai.connect(signers.user2).burn(signers.user1.address, 1)
           const allowanceAfter = await dai.allowance(signers.user1.address, signers.user2.address)
           allowanceAfter.toString().should.equal(MAX)
+        })
+      })
+
+      describe('auth', async () => {
+        it('returns deployer wards', async () => {
+          const wards = await dai.wards(signers.deployer.address)
+          wards.toString().should.equal('1')
+        })
+
+        it('shuold not allow rely from non-authed user', async () => {
+          await expect(dai.connect(signers.user1).rely(signers.user2.address)).to.be.revertedWith('Dai/not-authorized')
+        })
+
+        it('shuold not allow deny from non-authed user', async () => {
+          await expect(dai.connect(signers.user1).deny(signers.user2.address)).to.be.revertedWith('Dai/not-authorized')
+        })
+
+        it('should not allow minting from non-authed user', async () => {
+          await expect(dai.connect(signers.user1).mint(signers.user1.address, 1)).to.be.revertedWith(
+            'Dai/not-authorized',
+          )
         })
       })
 
