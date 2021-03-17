@@ -9,7 +9,7 @@ const INITIAL_TOTAL_L1_SUPPLY = 3000
 
 const errorMessages = {
   invalidMessenger: 'OVM_XCHAIN: messenger contract unauthenticated',
-  invalidXDomainMessageSender: 'OVM_XCHAIN: wrong sender of cross-domain message',
+  invalidXDomainMessageOriginator: 'OVM_XCHAIN: wrong sender of cross-domain message',
   daiInsufficientAllowance: 'Dai/insufficient-allowance',
   daiInsufficientBalance: 'Dai/insufficient-balance',
 }
@@ -124,6 +124,57 @@ describe('L1ERC20Deposit', () => {
       )
     })
   })
+
+  describe('finalizeWithdrawal', () => {
+    const withdrawAmount = 100
+
+    it('sends funds from the escrow', async () => {
+      const [escrow, l1MessengerImpersonator, user1, user2] = await ethers.getSigners()
+      const { l1Dai, l1Erc20Deposit, l1CrossDomainMessengerMock, l2MinterMock } = await setupWithdrawTest({
+        escrow,
+        l1MessengerImpersonator,
+        user1,
+      })
+
+      l1CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l2MinterMock.address)
+
+      await l1Erc20Deposit.connect(l1MessengerImpersonator).finalizeWithdrawal(user2.address, withdrawAmount)
+
+      expect(await l1Dai.balanceOf(user2.address)).to.be.equal(withdrawAmount)
+      expect(await l1Dai.balanceOf(escrow.address)).to.be.equal(INITIAL_TOTAL_L1_SUPPLY - withdrawAmount)
+      // @todo gas check?
+    })
+
+    it('reverts when called not by XDomainMessenger', async () => {
+      const [escrow, l1MessengerImpersonator, user1, user2] = await ethers.getSigners()
+      const { l1Erc20Deposit, l1CrossDomainMessengerMock, l2MinterMock } = await setupWithdrawTest({
+        escrow,
+        l1MessengerImpersonator,
+        user1,
+      })
+
+      l1CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l2MinterMock.address)
+
+      await expect(l1Erc20Deposit.connect(user2).finalizeWithdrawal(user2.address, withdrawAmount)).to.be.revertedWith(
+        errorMessages.invalidMessenger,
+      )
+    })
+
+    it('reverts when called by XDomainMessenger but not relying message from l2Minter', async () => {
+      const [escrow, l1MessengerImpersonator, user1, user2, user3] = await ethers.getSigners()
+      const { l1Erc20Deposit, l1CrossDomainMessengerMock } = await setupWithdrawTest({
+        escrow,
+        l1MessengerImpersonator,
+        user1,
+      })
+
+      l1CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => user3.address)
+
+      await expect(
+        l1Erc20Deposit.connect(l1MessengerImpersonator).finalizeWithdrawal(user2.address, withdrawAmount),
+      ).to.be.revertedWith(errorMessages.invalidXDomainMessageOriginator)
+    })
+  })
 })
 
 async function setupTest(signers: {
@@ -146,4 +197,16 @@ async function setupTest(signers: {
   await l1Dai.mint(signers.user1.address, INITIAL_TOTAL_L1_SUPPLY)
 
   return { l1Dai, l1Erc20Deposit, l1CrossDomainMessengerMock, l2MinterMock }
+}
+
+async function setupWithdrawTest(signers: {
+  l1MessengerImpersonator: SignerWithAddress
+  escrow: SignerWithAddress
+  user1: SignerWithAddress
+}) {
+  const contracts = await setupTest(signers)
+  await contracts.l1Dai.connect(signers.escrow).approve(contracts.l1Erc20Deposit.address, ethers.constants.MaxUint256)
+  await contracts.l1Dai.connect(signers.user1).transfer(await signers.escrow.getAddress(), INITIAL_TOTAL_L1_SUPPLY)
+
+  return contracts
 }
