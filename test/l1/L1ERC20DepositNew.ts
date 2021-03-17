@@ -1,34 +1,13 @@
-import { MockContract, smockit, smoddit } from '@eth-optimism/smock'
 import { expect } from 'chai'
-import { ContractFactory, Signer } from 'ethers'
 import { ethers } from 'hardhat'
-import { Dai, Dai__factory, L1ERC20Deposit, L1ERC20Deposit__factory } from '../../typechain'
 
-import { MAX_UINT256, NON_ZERO_ADDRESS, ZERO_ADDRESS } from '../helpers'
+import { Dai__factory, L1ERC20Deposit__factory } from '../../typechain'
+import { deploy, deployMock } from '../helpers'
 
 const INITIAL_TOTAL_L1_SUPPLY = 3000
 
-const ERR_INVALID_MESSENGER = 'OVM_XCHAIN: messenger contract unauthenticated'
-const ERR_INVALID_X_DOMAIN_MSG_SENDER = 'OVM_XCHAIN: wrong sender of cross-domain message'
-
-async function deploy<T extends ContractFactory>(
-  name: string,
-  args: Parameters<T['deploy']>,
-): Promise<ReturnType<T['deploy']>> {
-  const factory = (await ethers.getContractFactory(name)) as T
-  return factory.deploy(...args)
-}
-
-async function deployMock<T extends ContractFactory>(
-  name: string,
-  opts: {
-    provider?: any
-    address?: string
-  } = {},
-): Promise<ReturnType<T['deploy']> & { smocked: any }> {
-  const factory = (await ethers.getContractFactory(name)) as T
-  return await smockit(factory, opts)
-}
+// const ERR_INVALID_MESSENGER = 'OVM_XCHAIN: messenger contract unauthenticated'
+// const ERR_INVALID_X_DOMAIN_MSG_SENDER = 'OVM_XCHAIN: wrong sender of cross-domain message'
 
 describe('L1ERC20Deposit', () => {
   describe('deposit', () => {
@@ -60,7 +39,7 @@ describe('L1ERC20Deposit', () => {
 
       expect(depositCallToMessengerCall._target).to.equal(l2MinterMock.address)
       expect(depositCallToMessengerCall._message).to.equal(
-        await l2MinterMock.interface.encodeFunctionData('finalizeDeposit', [user1.address, depositAmount]),
+        l2MinterMock.interface.encodeFunctionData('finalizeDeposit', [user1.address, depositAmount]),
       )
     })
   })

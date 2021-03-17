@@ -2,8 +2,8 @@ import { Wallet } from '@ethersproject/wallet'
 import { expect } from 'chai'
 import { Contract } from 'ethers'
 import { ethers as l1, l2ethers as l2 } from 'hardhat'
-import { Dai, L1ERC20Deposit, L2ERC20Minter } from 'typechain'
 
+import { Dai, L1ERC20Deposit, L2ERC20Minter } from '../typechain'
 import { optimismConfig } from './helpers/optimismConfig'
 import {
   deployContract,
