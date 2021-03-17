@@ -2,7 +2,7 @@ import { MockContract, ModifiableContract, smockit, smoddit } from '@eth-optimis
 import { expect } from 'chai'
 import { Signer } from 'ethers'
 import { ethers } from 'hardhat'
-import { Dai, Dai__factory, L1ERC20Deposit__factory, L2ERC20Minter, L2ERC20Minter__factory } from 'typechain'
+import { Dai, Dai__factory, L1ERC20Deposit__factory, L2ERC20Minter, L2ERC20Minter__factory } from '../../typechain'
 
 import { NON_ZERO_ADDRESS, ZERO_ADDRESS } from '../helpers'
 
