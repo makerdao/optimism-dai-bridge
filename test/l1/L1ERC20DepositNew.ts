@@ -39,7 +39,7 @@ describe('L1ERC20Deposit', () => {
       )
     })
 
-    it('fails when approval is too low', async () => {
+    it('reverts when approval is too low', async () => {
       const [escrow, l1MessengerImpersonator, user1] = await ethers.getSigners()
       const { l1Dai, l1Erc20Deposit } = await setupTest({
         escrow,
@@ -54,7 +54,7 @@ describe('L1ERC20Deposit', () => {
       )
     })
 
-    it('fails when funds too low', async () => {
+    it('reverts when funds too low', async () => {
       const [escrow, l1MessengerImpersonator, user1, user2] = await ethers.getSigners()
       const { l1Dai, l1Erc20Deposit } = await setupTest({
         escrow,
@@ -94,7 +94,7 @@ describe('L1ERC20Deposit', () => {
       )
     })
 
-    it('fails when approval is too low', async () => {
+    it('reverts when approval is too low', async () => {
       const [escrow, l1MessengerImpersonator, user1, user2] = await ethers.getSigners()
       const { l1Dai, l1Erc20Deposit } = await setupTest({
         escrow,
@@ -109,7 +109,7 @@ describe('L1ERC20Deposit', () => {
       )
     })
 
-    it('fails when funds too low', async () => {
+    it('reverts when funds too low', async () => {
       const [escrow, l1MessengerImpersonator, user1, user2] = await ethers.getSigners()
       const { l1Dai, l1Erc20Deposit } = await setupTest({
         escrow,
@@ -135,7 +135,6 @@ describe('L1ERC20Deposit', () => {
         l1MessengerImpersonator,
         user1,
       })
-
       l1CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l2MinterMock.address)
 
       await l1Erc20Deposit.connect(l1MessengerImpersonator).finalizeWithdrawal(user2.address, withdrawAmount)
