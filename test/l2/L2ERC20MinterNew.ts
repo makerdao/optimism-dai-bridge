@@ -8,6 +8,8 @@ import { deploy, deployMock } from '../helpers'
 const errorMessages = {
   invalidMessenger: 'OVM_XCHAIN: messenger contract unauthenticated',
   invalidXDomainMessageOriginator: 'OVM_XCHAIN: wrong sender of cross-domain message',
+  alreadyInitialized: 'Contract has already been initialized',
+  notInitialized: 'Contract has not yet been initialized',
   daiInsufficientAllowance: 'Dai/insufficient-allowance',
   daiInsufficientBalance: 'Dai/insufficient-balance',
 }
@@ -149,6 +151,38 @@ describe('OVM_L2ERC20Minter', () => {
       await expect(l2Minter.connect(user2).withdrawTo(receiver.address, withdrawAmount)).to.be.revertedWith(
         errorMessages.daiInsufficientBalance,
       )
+    })
+  })
+
+  describe('init', () => {
+    it('sets token gateway', async () => {
+      const [acc1, acc2, acc3] = await ethers.getSigners()
+
+      const l2Minter = await deploy<L2ERC20Minter__factory>('L2ERC20Minter', [acc1.address, acc2.address])
+
+      await l2Minter.init(acc3.address)
+
+      expect(await l2Minter.l1TokenGateway()).to.eq(acc3.address)
+    })
+
+    it('allows initialization once not multiple times', async () => {
+      const [acc1, acc2, acc3] = await ethers.getSigners()
+
+      const l2Minter = await deploy<L2ERC20Minter__factory>('L2ERC20Minter', [acc1.address, acc2.address])
+
+      await l2Minter.init(acc3.address)
+
+      await expect(l2Minter.init(acc3.address)).to.be.revertedWith(errorMessages.alreadyInitialized)
+    })
+
+    it('doesnt allow calls to onlyInitialized functions before initialization', async () => {
+      const [acc1, acc2, acc3] = await ethers.getSigners()
+
+      const l2Minter = await deploy<L2ERC20Minter__factory>('L2ERC20Minter', [acc1.address, acc2.address])
+
+      await expect(l2Minter.withdraw('100')).to.be.revertedWith(errorMessages.notInitialized)
+      await expect(l2Minter.withdrawTo(acc3.address, '100')).to.be.revertedWith(errorMessages.notInitialized)
+      await expect(l2Minter.finalizeDeposit(acc3.address, '100')).to.be.revertedWith(errorMessages.notInitialized)
     })
   })
 })
