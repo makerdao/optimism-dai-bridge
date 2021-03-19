@@ -25,6 +25,16 @@ describe('Dai', () => {
       name.should.equal('Dai Stablecoin')
     })
 
+    it('returns the symbol', async () => {
+      const name = await dai.symbol()
+      name.should.equal('DAI')
+    })
+
+    it('returns the decimals', async () => {
+      const name = await dai.decimals()
+      name.toString().should.equal('18')
+    })
+
     describe('with a positive balance', async () => {
       beforeEach(async () => {
         await dai.mint(signers.user1.address, 10)
@@ -84,10 +94,6 @@ describe('Dai', () => {
         await expect(dai.connect(signers.user1).transferFrom(signers.user1.address, dai.address, 1)).to.be.revertedWith(
           '',
         )
-      })
-
-      it('should not allow minting from non-authed user', async () => {
-        await expect(dai.connect(signers.user1).mint(signers.user1.address, 1)).to.be.revertedWith('Dai/not-authorized')
       })
 
       it('should not allow minting to zero address', async () => {
@@ -270,6 +276,108 @@ describe('Dai', () => {
           await dai.connect(signers.user2).burn(signers.user1.address, 1)
           const allowanceAfter = await dai.allowance(signers.user1.address, signers.user2.address)
           allowanceAfter.toString().should.equal(MAX)
+        })
+      })
+
+      describe('auth', async () => {
+        it('returns deployer wards', async () => {
+          const wards = await dai.wards(signers.deployer.address)
+          wards.toString().should.equal('1')
+        })
+
+        it('shuold not allow rely from non-authed user', async () => {
+          await expect(dai.connect(signers.user1).rely(signers.user2.address)).to.be.revertedWith('Dai/not-authorized')
+        })
+
+        it('shuold not allow deny from non-authed user', async () => {
+          await expect(dai.connect(signers.user1).deny(signers.user2.address)).to.be.revertedWith('Dai/not-authorized')
+        })
+
+        it('should not allow minting from non-authed user', async () => {
+          await expect(dai.connect(signers.user1).mint(signers.user1.address, 1)).to.be.revertedWith(
+            'Dai/not-authorized',
+          )
+        })
+      })
+
+      describe('events', async () => {
+        it('emits Rely event on rely', async () => {
+          await expect(dai.connect(signers.deployer).rely(signers.user1.address))
+            .to.emit(dai, 'Rely')
+            .withArgs(signers.user1.address)
+        })
+
+        it('emits Deny event on deny', async () => {
+          await dai.connect(signers.deployer).rely(signers.user1.address)
+          await expect(dai.connect(signers.user1).deny(signers.deployer.address))
+            .to.emit(dai, 'Deny')
+            .withArgs(signers.deployer.address)
+        })
+
+        it('emits Transfer event on mint', async () => {
+          await expect(dai.mint(signers.user1.address, 10))
+            .to.emit(dai, 'Transfer')
+            .withArgs(ZERO_ADDRESS, signers.user1.address, 10)
+        })
+
+        it('emits Transfer event on transfer', async () => {
+          await expect(dai.connect(signers.user1).transfer(signers.user2.address, 1))
+            .to.emit(dai, 'Transfer')
+            .withArgs(signers.user1.address, signers.user2.address, 1)
+        })
+
+        it('emits Transfer event on transferFrom', async () => {
+          await expect(dai.connect(signers.user1).transferFrom(signers.user1.address, signers.user2.address, 1))
+            .to.emit(dai, 'Transfer')
+            .withArgs(signers.user1.address, signers.user2.address, 1)
+        })
+
+        it('emits Transfer event on burn', async () => {
+          await expect(dai.connect(signers.user1).burn(signers.user1.address, 1))
+            .to.emit(dai, 'Transfer')
+            .withArgs(signers.user1.address, ZERO_ADDRESS, 1)
+        })
+
+        it('emits Approval event on approve', async () => {
+          await expect(dai.connect(signers.user1).approve(signers.user2.address, 1))
+            .to.emit(dai, 'Approval')
+            .withArgs(signers.user1.address, signers.user2.address, 1)
+        })
+
+        it('emits Approval event on increaseAllowance', async () => {
+          await expect(dai.connect(signers.user1).increaseAllowance(signers.user2.address, 1))
+            .to.emit(dai, 'Approval')
+            .withArgs(signers.user1.address, signers.user2.address, 1)
+        })
+
+        it('emits Approval event on decreaseAllowance', async () => {
+          await dai.connect(signers.user1).approve(signers.user2.address, 1)
+          await expect(dai.connect(signers.user1).decreaseAllowance(signers.user2.address, 1))
+            .to.emit(dai, 'Approval')
+            .withArgs(signers.user1.address, signers.user2.address, 0)
+        })
+
+        it('emits Approval event on permit', async () => {
+          const permitResult = await signERC2612Permit(
+            web3.currentProvider,
+            dai.address,
+            signers.user1.address,
+            signers.user2.address,
+            '1',
+          )
+          await expect(
+            dai.permit(
+              signers.user1.address,
+              signers.user2.address,
+              '1',
+              permitResult.deadline,
+              permitResult.v,
+              permitResult.r,
+              permitResult.s,
+            ),
+          )
+            .to.emit(dai, 'Approval')
+            .withArgs(signers.user1.address, signers.user2.address, 1)
         })
       })
     })
