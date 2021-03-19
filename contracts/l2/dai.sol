@@ -38,6 +38,7 @@ contract Dai {
   // --- ERC20 Data ---
   string  public constant name     = "Dai Stablecoin";
   string  public constant symbol   = "DAI";
+  string  public constant version  = "1";
   uint8   public constant decimals = 18;
   uint256 public totalSupply;
 
@@ -59,7 +60,8 @@ contract Dai {
   }
 
   // --- EIP712 niceties ---
-  bytes32 public immutable DOMAIN_SEPARATOR;
+  uint256 public immutable deploymentChainId;
+  bytes32 private immutable _DOMAIN_SEPARATOR;
   bytes32 public constant PERMIT_TYPEHASH = keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
 
   constructor() public {
@@ -68,16 +70,28 @@ contract Dai {
 
     uint256 chainId;
     assembly {chainId := chainid()}
-    DOMAIN_SEPARATOR = keccak256(abi.encode(
-      keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
-      keccak256(bytes(name)),
-      keccak256(bytes("1")),
-      chainId,
-      address(this)
-    ));
+    deploymentChainId = chainId;
+    _DOMAIN_SEPARATOR = _calculateDomainSeparator(chainId);
 
     // Set addresses which disallow transfer
     balanceOf[address(this)] = balanceOf[address(0)] = type(uint256).max;
+  }
+
+  function _calculateDomainSeparator(uint256 chainId) private view returns (bytes32) {
+    return keccak256(
+      abi.encode(
+        keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
+        keccak256(bytes(name)),
+        keccak256(bytes(version)),
+        chainId,
+        address(this)
+      )
+    );
+  }
+  function DOMAIN_SEPARATOR() external view returns (bytes32) {
+    uint256 chainId;
+    assembly {chainId := chainid()}
+    return chainId == deploymentChainId ? _DOMAIN_SEPARATOR : _calculateDomainSeparator(chainId);
   }
 
   // --- ERC20 Mutations ---
@@ -168,10 +182,13 @@ contract Dai {
   function permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external {
     require(block.timestamp <= deadline, "Dai/permit-expired");
 
+    uint256 chainId;
+    assembly {chainId := chainid()}
+
     bytes32 digest =
       keccak256(abi.encodePacked(
           "\x19\x01",
-          DOMAIN_SEPARATOR,
+          chainId == deploymentChainId ? _DOMAIN_SEPARATOR : _calculateDomainSeparator(chainId),
           keccak256(abi.encode(
             PERMIT_TYPEHASH,
             owner,
