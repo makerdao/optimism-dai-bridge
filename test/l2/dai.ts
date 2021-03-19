@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { ethers, web3 } from 'hardhat'
 
-const { signERC2612Permit } = require('eth-permit')
+const { signERC2612Permit } = require('./eth-permit/eth-permit')
 
 require('chai').use(require('chai-as-promised')).should()
 
@@ -148,6 +148,9 @@ describe('Dai', () => {
           signers.user1.address,
           signers.user2.address,
           '1',
+          null,
+          null,
+          '2',
         )
         await dai.permit(
           signers.user1.address,
@@ -169,6 +172,9 @@ describe('Dai', () => {
           signers.user1.address,
           signers.user2.address,
           '1',
+          null,
+          null,
+          '2',
         )
         await expect(
           dai.permit(
@@ -190,6 +196,9 @@ describe('Dai', () => {
           signers.user1.address,
           signers.user2.address,
           '1',
+          null,
+          null,
+          '2',
         )
         await expect(
           dai.permit(
@@ -364,6 +373,9 @@ describe('Dai', () => {
             signers.user1.address,
             signers.user2.address,
             '1',
+            null,
+            null,
+            '2',
           )
           await expect(
             dai.permit(
