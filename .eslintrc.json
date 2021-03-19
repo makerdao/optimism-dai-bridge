@@ -11,6 +11,7 @@
   },
   "rules": {
     "unused-imports/no-unused-imports-ts": "error",
+    "@typescript-eslint/no-unused-vars": ["error", { "varsIgnorePattern": "^_" }],
     "simple-import-sort/imports": "error",
     "simple-import-sort/exports": "error",
     "@typescript-eslint/no-use-before-define": "off",

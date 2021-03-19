@@ -8,6 +8,8 @@ import '@eth-optimism/plugins/hardhat/compiler'
 import '@eth-optimism/plugins/hardhat/ethers'
 import '@eth-optimism/smock/build/src/plugins/hardhat-storagelayout'
 
+import '@typechain/hardhat'
+
 const config: HardhatUserConfig = {
   mocha: {
     timeout: 50000,

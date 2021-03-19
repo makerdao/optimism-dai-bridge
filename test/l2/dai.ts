@@ -1,6 +1,8 @@
 import { expect } from 'chai'
 import { ethers, web3 } from 'hardhat'
 
+import { Dai, Dai__factory } from '../../typechain'
+
 const { signERC2612Permit } = require('./eth-permit/eth-permit')
 
 require('chai').use(require('chai-as-promised')).should()
@@ -10,12 +12,12 @@ import { ZERO_ADDRESS } from '../helpers'
 
 describe('Dai', () => {
   let signers: any
-  let dai: any
+  let dai: Dai
 
   beforeEach(async () => {
     const [deployer, user1, user2, user3] = await ethers.getSigners()
     signers = { deployer, user1, user2, user3 }
-    const daiFactory = await ethers.getContractFactory('Dai', deployer)
+    const daiFactory = (await ethers.getContractFactory('Dai', deployer)) as Dai__factory
     dai = await daiFactory.deploy()
   })
 
