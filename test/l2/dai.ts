@@ -285,11 +285,11 @@ describe('Dai', () => {
           wards.toString().should.equal('1')
         })
 
-        it('shuold not allow rely from non-authed user', async () => {
+        it('should not allow rely from non-authed user', async () => {
           await expect(dai.connect(signers.user1).rely(signers.user2.address)).to.be.revertedWith('Dai/not-authorized')
         })
 
-        it('shuold not allow deny from non-authed user', async () => {
+        it('should not allow deny from non-authed user', async () => {
           await expect(dai.connect(signers.user1).deny(signers.user2.address)).to.be.revertedWith('Dai/not-authorized')
         })
 
