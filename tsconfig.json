@@ -1,15 +1,15 @@
 {
   "compilerOptions": {
-    "outDir": "./build",
-    "baseUrl": "./",
-    "resolveJsonModule": true,
-    "moduleResolution": "Node",
-    "strict": true,
-    "sourceMap": true,
     "target": "ES2018",
-    "skipLibCheck": true
+    "sourceMap": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "module": "commonjs",
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "outDir": "dist"
   },
   "include": ["*.ts", "**/*.ts", "artifacts/*.json"],
-  "exclude": ["./build", "node_modules"],
-  "files": ["./hardhat.config.ts", "./modules.d.ts"]
+  "files": ["./hardhat.config.ts", "./modules.d.ts"],
+  "exclude": ["./build", "node_modules"]
 }

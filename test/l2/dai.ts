@@ -1,6 +1,7 @@
 import { expect } from 'chai'
 import { ethers, web3 } from 'hardhat'
-import { Dai, Dai__factory } from 'typechain'
+
+import { Dai, Dai__factory } from '../../typechain'
 
 const { signERC2612Permit } = require('eth-permit')
 
