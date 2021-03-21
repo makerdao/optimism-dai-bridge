@@ -3,7 +3,7 @@ import { expect } from 'chai'
 import { Contract } from 'ethers'
 import { ethers as l1, l2ethers as l2 } from 'hardhat'
 
-import { Dai, L1ERC20Deposit, L2ERC20Minter } from '../typechain'
+import { Dai, L1ERC20Gateway, L2DepositedToken } from '../typechain'
 import { optimismConfig } from './helpers/optimismConfig'
 import {
   deployContract,
@@ -36,14 +36,14 @@ describe('bridge', () => {
     l2Dai = await deployContract<Dai>(l2Signer, await l2.getContractFactory('Dai'), [])
     console.log('L2 DAI: ', l2Dai.address)
 
-    l2Minter = await deployContract<L2ERC20Minter>(l2Signer, await l2.getContractFactory('L2ERC20Minter'), [
+    l2Minter = await deployContract<L2DepositedToken>(l2Signer, await l2.getContractFactory('L2DepositedToken'), [
       optimismConfig._L2_OVM_L2CrossDomainMessenger,
       l2Dai.address,
     ])
     console.log('L2 Minter: ', l2Minter.address)
     await waitForTx(l2Dai.rely(l2Minter.address))
 
-    l1DaiDeposit = await deployContract<L1ERC20Deposit>(l1Signer, await l1.getContractFactory('L1ERC20Deposit'), [
+    l1DaiDeposit = await deployContract<L1ERC20Gateway>(l1Signer, await l1.getContractFactory('L1ERC20Gateway'), [
       l1Dai.address,
       l2Minter.address,
       optimismConfig.Proxy__OVM_L1CrossDomainMessenger,

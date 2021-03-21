@@ -12,7 +12,7 @@ interface Mintable {
   function burn(address usr, uint256 wad) external;
 }
 
-contract L2ERC20Minter is Abs_L2DepositedToken {
+contract L2DepositedToken is Abs_L2DepositedToken {
   Mintable public token;
 
   /***************
