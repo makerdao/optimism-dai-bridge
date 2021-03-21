@@ -53,5 +53,8 @@
     "@typechain/hardhat": "^1.0.1",
     "ts-generator": "^0.1.1",
     "typechain": "^4.0.3"
+  },
+  "resolutions": {
+    "source-map-support": "0.5.19"
   }
 }
