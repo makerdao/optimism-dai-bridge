@@ -1,6 +1,6 @@
 # Optimism Bridge Playground
 
-Upgradable token bridge and Optimism Dai
+Optimism Dai and upgradable token bridge
 
 ## Contracts
 
@@ -9,6 +9,11 @@ Upgradable token bridge and Optimism Dai
   message from `L2DepositedToken`
 - `l2/L2DepositedToken.sol` - L2 side of the bridge. Mints new L2 DAI after receiving message from `L1ERC20Gateway`.
   Burns L2 DAI tokens when withdrawals happens
+
+## Upgrades
+
+Upgrading this bridge is done by extracting escrow to a separate address. Thanks to this new bridge can be deployed and
+connected to the same pool of funds so there are no liqudity issues between bridges.
 
 ## Running
 
