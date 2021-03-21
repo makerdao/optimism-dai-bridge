@@ -1,9 +1,18 @@
 # Optimism Bridge Playground
 
+Upgradable token bridge and Optimism Dai
+
+## Contracts
+
+- `l2/dai.sol` - Improved DAI contract
+- `l1/L1ERC20Gateway.sol` - L1 side of the bridge. Escrows L1 DAI in a specified address. Unlocks L1 DAI upon withdrawal
+  message from `L2DepositedToken`
+- `l2/L2DepositedToken.sol` - L2 side of the bridge. Mints new L2 DAI after receiving message from `L1ERC20Gateway`.
+  Burns L2 DAI tokens when withdrawals happens
+
 ## Running
 
 ```
-# in other terminal window run this project
 yarn
 yarn build
 yarn test  # runs unit tests
@@ -18,7 +27,6 @@ cd optimism-integration
 ./up.sh
 
 # in other terminal window run this project
-yarn
 yarn build
 yarn test-e2e  # runs unit tests
 ```
