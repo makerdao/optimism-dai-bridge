@@ -1,4 +1,4 @@
-# Optimism Bridge Playground
+# Optimism Dai Bridge
 
 Optimism Dai and upgradable token bridge
 
