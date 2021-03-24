@@ -252,7 +252,9 @@ describe('Dai', () => {
         })
 
         it('should not increaseAllowance beyond MAX', async () => {
-          await expect(dai.connect(signers.user1).increaseAllowance(signers.user2.address, ethers.constants.MaxUint256)).to.be.revertedWith('')
+          await expect(
+            dai.connect(signers.user1).increaseAllowance(signers.user2.address, ethers.constants.MaxUint256),
+          ).to.be.revertedWith('')
         })
 
         it('decreaseAllowance should decrease allowance', async () => {
