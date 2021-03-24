@@ -7,9 +7,6 @@ const { signERC2612Permit } = require('./eth-permit/eth-permit')
 
 require('chai').use(require('chai-as-promised')).should()
 
-const MAX = '115792089237316195423570985008687907853269984665640564039457584007913129639935'
-import { ZERO_ADDRESS } from '../helpers'
-
 describe('Dai', () => {
   let signers: any
   let dai: Dai
@@ -85,9 +82,9 @@ describe('Dai', () => {
       })
 
       it('should not transfer to zero address', async () => {
-        await expect(dai.connect(signers.user1).transfer(ZERO_ADDRESS, 1)).to.be.revertedWith('')
+        await expect(dai.connect(signers.user1).transfer(ethers.constants.AddressZero, 1)).to.be.revertedWith('')
         await expect(
-          dai.connect(signers.user1).transferFrom(signers.user1.address, ZERO_ADDRESS, 1),
+          dai.connect(signers.user1).transferFrom(signers.user1.address, ethers.constants.AddressZero, 1),
         ).to.be.revertedWith('')
       })
 
@@ -99,7 +96,7 @@ describe('Dai', () => {
       })
 
       it('should not allow minting to zero address', async () => {
-        await expect(dai.mint(ZERO_ADDRESS, 1)).to.be.revertedWith('')
+        await expect(dai.mint(ethers.constants.AddressZero, 1)).to.be.revertedWith('')
       })
 
       it('should not allow minting to dai address', async () => {
@@ -107,7 +104,7 @@ describe('Dai', () => {
       })
 
       it('should not allow minting to address beyond MAX', async () => {
-        await expect(dai.mint(signers.user1.address, MAX)).to.be.revertedWith('')
+        await expect(dai.mint(signers.user1.address, ethers.constants.MaxUint256)).to.be.revertedWith('')
       })
 
       it('burns own dai', async () => {
@@ -255,7 +252,7 @@ describe('Dai', () => {
         })
 
         it('should not increaseAllowance beyond MAX', async () => {
-          await expect(dai.connect(signers.user1).increaseAllowance(signers.user2.address, MAX)).to.be.revertedWith('')
+          await expect(dai.connect(signers.user1).increaseAllowance(signers.user2.address, ethers.constants.MaxUint256)).to.be.revertedWith('')
         })
 
         it('decreaseAllowance should decrease allowance', async () => {
@@ -274,19 +271,19 @@ describe('Dai', () => {
 
       describe('with a maximum allowance', async () => {
         beforeEach(async () => {
-          await dai.connect(signers.user1).approve(signers.user2.address, MAX)
+          await dai.connect(signers.user1).approve(signers.user2.address, ethers.constants.MaxUint256)
         })
 
         it('does not decrease allowance using transferFrom', async () => {
           await dai.connect(signers.user2).transferFrom(signers.user1.address, signers.user2.address, 1)
           const allowanceAfter = await dai.allowance(signers.user1.address, signers.user2.address)
-          allowanceAfter.toString().should.equal(MAX)
+          allowanceAfter.toString().should.equal(ethers.constants.MaxUint256)
         })
 
         it('does not decrease allowance using burn', async () => {
           await dai.connect(signers.user2).burn(signers.user1.address, 1)
           const allowanceAfter = await dai.allowance(signers.user1.address, signers.user2.address)
-          allowanceAfter.toString().should.equal(MAX)
+          allowanceAfter.toString().should.equal(ethers.constants.MaxUint256)
         })
       })
 
@@ -328,7 +325,7 @@ describe('Dai', () => {
         it('emits Transfer event on mint', async () => {
           await expect(dai.mint(signers.user1.address, 10))
             .to.emit(dai, 'Transfer')
-            .withArgs(ZERO_ADDRESS, signers.user1.address, 10)
+            .withArgs(ethers.constants.AddressZero, signers.user1.address, 10)
         })
 
         it('emits Transfer event on transfer', async () => {
@@ -346,7 +343,7 @@ describe('Dai', () => {
         it('emits Transfer event on burn', async () => {
           await expect(dai.connect(signers.user1).burn(signers.user1.address, 1))
             .to.emit(dai, 'Transfer')
-            .withArgs(signers.user1.address, ZERO_ADDRESS, 1)
+            .withArgs(signers.user1.address, ethers.constants.AddressZero, 1)
         })
 
         it('emits Approval event on approve', async () => {
