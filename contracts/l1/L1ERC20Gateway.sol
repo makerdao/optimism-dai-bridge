@@ -6,7 +6,7 @@ pragma experimental ABIEncoderV2;
 
 import {Abs_L1TokenGateway} from '@eth-optimism/contracts/build/contracts/OVM/bridge/tokens/Abs_L1TokenGateway.sol';
 import {iOVM_ERC20} from '@eth-optimism/contracts/build/contracts/iOVM/precompiles/iOVM_ERC20.sol';
-import '@openzeppelin/contracts/access/Ownable.sol';
+import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 
 contract L1ERC20Gateway is Abs_L1TokenGateway, Ownable {
   iOVM_ERC20 public l1ERC20;
