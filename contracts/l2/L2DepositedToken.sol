@@ -3,8 +3,8 @@
 pragma solidity >0.5.0 <0.8.0;
 pragma experimental ABIEncoderV2;
 
-/* Library Imports */
 import {Abs_L2DepositedToken} from '@eth-optimism/contracts/build/contracts/OVM/bridge/tokens/Abs_L2DepositedToken.sol';
+import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 
 interface Mintable {
   function mint(address usr, uint256 wad) external;
@@ -12,8 +12,9 @@ interface Mintable {
   function burn(address usr, uint256 wad) external;
 }
 
-contract L2DepositedToken is Abs_L2DepositedToken {
+contract L2DepositedToken is Abs_L2DepositedToken, Ownable {
   Mintable public token;
+  bool public isOpen = true;
 
   /***************
    * Constructor *
@@ -27,8 +28,13 @@ contract L2DepositedToken is Abs_L2DepositedToken {
     token = Mintable(_token);
   }
 
+  function close() public onlyOwner {
+    isOpen = false;
+  }
+
   // When a withdrawal is initiated, we burn the withdrawer's funds to prevent subsequent L2 usage.
   function _handleInitiateWithdrawal(address _to, uint256 _amount) internal override {
+    require(isOpen, 'L2DepositedToken/closed');
     token.burn(msg.sender, _amount);
   }
 
