@@ -10,10 +10,21 @@ Optimism Dai and upgradable token bridge
 - `l2/L2DepositedToken.sol` - L2 side of the bridge. Mints new L2 DAI after receiving message from `L1ERC20Gateway`.
   Burns L2 DAI tokens when withdrawals happens
 
-## Upgrades
+## Upgrade guide
 
-Upgrading this bridge is done by extracting escrow to a separate address. Thanks to this new bridge can be deployed and
-connected to the same pool of funds so there are no liqudity issues between bridges.
+### Deploying new token bridge
+
+This bridge stores funds in an external escrow account rather than on the bridge address itself. To upgrade, deploy new
+bridge independently and connect to the same escrow. Thanks to this, no bridge will ever run out of funds.
+
+### Closing bridge
+
+After deploying a new bridge you might consider closing the old one. Procedure is slightly complicated due to async
+messages like `finalizeDeposit` and `finalizeWithdraw` that can be in progress.
+
+An owner calls `L2DepositedToken.close()` and `L1ERC20Gateway.close()` so no new async messages can be sent to the other
+part of the bridge. After all async messages are done processing (can take up to 1 week) bridge is effectively closed.
+Now, you can consider revoking approval to access funds from escrow on L1 and token minting rights on L2.
 
 ## Running
 
