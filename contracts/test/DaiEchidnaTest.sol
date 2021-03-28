@@ -1,4 +1,3 @@
-
 // SPDX-License-Identifier: AGPL-3.0-or-later
 pragma solidity 0.7.6;
 
@@ -11,8 +10,8 @@ contract MockHolder {
     }
 }
 
-/// @dev Dai Invariant Testing
-contract DaiInvariant {
+/// @dev Dai Echidna Testing
+contract DaiEchidnaTest {
 
     Dai internal dai;
     address internal holder;
