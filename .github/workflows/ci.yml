@@ -95,7 +95,6 @@ jobs:
           ./up.sh&
           sleep 60
           yarn test-e2e
-
   echidna:
     name: Echidna
     runs-on: ubuntu-latest
