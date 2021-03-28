@@ -1,3 +1,5 @@
+import { smockit } from '@eth-optimism/smock'
+import { ContractFactory } from 'ethers'
 import { ethers } from 'hardhat'
 export const makeHexString = (byte: string, len: number): string => {
   return '0x' + byte.repeat(len)
@@ -13,4 +15,23 @@ export const NON_ZERO_ADDRESS = makeAddress('11')
 
 export function q18(n: number) {
   return ethers.BigNumber.from(10).pow(18).mul(n).toString()
+}
+
+export async function deploy<T extends ContractFactory>(
+  name: string,
+  args: Parameters<T['deploy']>,
+): Promise<ReturnType<T['deploy']>> {
+  const factory = (await ethers.getContractFactory(name)) as T
+  return factory.deploy(...args)
+}
+
+export async function deployMock<T extends ContractFactory>(
+  name: string,
+  opts: {
+    provider?: any
+    address?: string
+  } = {},
+): Promise<ReturnType<T['deploy']> & { smocked: any }> {
+  const factory = (await ethers.getContractFactory(name)) as T
+  return await smockit(factory, opts)
 }
