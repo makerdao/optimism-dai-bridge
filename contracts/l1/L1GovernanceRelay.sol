@@ -6,6 +6,8 @@ pragma experimental ABIEncoderV2;
 import {OVM_CrossDomainEnabled} from "@eth-optimism/contracts/build/contracts/libraries/bridge/OVM_CrossDomainEnabled.sol";
 import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 
+import "../l2/L2GovernanceRelay.sol";
+
 /**
  * Relay messages from governance to L2.
  */
@@ -35,7 +37,7 @@ contract L1GovernanceRelay is OVM_CrossDomainEnabled, Ownable {
 
     // Send calldata into L2
     sendCrossDomainMessage(
-      l2DepositedToken,
+      l2GovernanceRelay,
       data,
       l2gas
     );
