@@ -70,27 +70,4 @@ contract L1ERC20Gateway is Abs_L1TokenGateway, Ownable {
     // Transfer withdrawn funds out to withdrawer
     l1ERC20.transferFrom(escrow, _to, _amount);
   }
-
-  /**************
-   * Governance *
-   **************/
-
-  /**
-   * @dev Forward a call to be repeated on the L2 AuthProxy.
-   */
-  function relay(address target, bytes calldata targetData) external onlyOwner {
-    // Construct calldata for L2DepositedToken.relay(target, targetData)
-    bytes memory data = abi.encodeWithSelector(
-      L2DepositedToken.relay.selector,
-      target,
-      targetData
-    );
-
-    // Send calldata into L2
-    sendCrossDomainMessage(
-      l2DepositedToken,
-      data,
-      getFinalizeDepositL2Gas()
-    );
-  }
 }

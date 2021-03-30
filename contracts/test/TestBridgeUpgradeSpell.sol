@@ -21,13 +21,10 @@ contract TestBridgeUpgradeSpell {
   function upgradeBridge(address _oldBridge, address _newBridge) external {
     BridgeLike oldBridge = BridgeLike(_oldBridge);
     AuthLike dai = AuthLike(oldBridge.token());
-    AuthLike proxy = AuthLike(address(this));
 
     oldBridge.close();
     dai.deny(_oldBridge);
     dai.rely(_newBridge);
-    proxy.deny(_oldBridge);
-    proxy.rely(_newBridge);
   }
 
 }

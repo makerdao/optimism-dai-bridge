@@ -46,19 +46,4 @@ contract L2DepositedToken is Abs_L2DepositedToken, Ownable {
   function _handleFinalizeDeposit(address _to, uint256 _amount) internal override {
     token.mint(_to, _amount);
   }
-
-  /**************
-   * Governance *
-   **************/
-
-  /**
-   * @dev Forward a call to be repeated on the L2 AuthProxy.
-   */
-  function relay(address target, bytes calldata targetData)
-    external
-    onlyInitialized()
-    onlyFromCrossDomainAccount(address(l1TokenGateway))
-  {
-    proxy.exec(target, targetData);
-  }
 }
