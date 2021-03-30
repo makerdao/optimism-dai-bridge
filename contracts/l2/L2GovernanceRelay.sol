@@ -37,7 +37,7 @@ contract L2GovernanceRelay is OVM_CrossDomainEnabled {
   }
 
   /**
-   * @dev Replay the call from L1.
+   * @dev Execute the call from L1.
    */
   function relay(address target, bytes calldata targetData)
     external
