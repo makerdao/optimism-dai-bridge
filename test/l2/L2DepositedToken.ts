@@ -2,7 +2,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
 
-import { Dai__factory, L2DepositedToken__factory } from '../../typechain'
+import { Dai__factory, L2DepositedToken__factory, AuthProxy__factory } from '../../typechain'
 import { deploy, deployMock } from '../helpers'
 
 const errorMessages = {
@@ -220,33 +220,33 @@ describe('OVM_L2DepositedToken', () => {
 
   describe('init', () => {
     it('sets token gateway', async () => {
-      const [acc1, acc2, acc3] = await ethers.getSigners()
+      const [acc1, acc2, acc3, acc4] = await ethers.getSigners()
 
-      const l2DepositedToken = await deploy<L2DepositedToken__factory>('L2DepositedToken', [acc1.address, acc2.address])
+      const l2DepositedToken = await deploy<L2DepositedToken__factory>('L2DepositedToken', [acc1.address, acc2.address, acc3.address])
 
-      await l2DepositedToken.init(acc3.address)
+      await l2DepositedToken.init(acc4.address)
 
-      expect(await l2DepositedToken.l1TokenGateway()).to.eq(acc3.address)
+      expect(await l2DepositedToken.l1TokenGateway()).to.eq(acc4.address)
     })
 
     it('allows initialization once not multiple times', async () => {
-      const [acc1, acc2, acc3] = await ethers.getSigners()
+      const [acc1, acc2, acc3, acc4] = await ethers.getSigners()
 
-      const l2DepositedToken = await deploy<L2DepositedToken__factory>('L2DepositedToken', [acc1.address, acc2.address])
+      const l2DepositedToken = await deploy<L2DepositedToken__factory>('L2DepositedToken', [acc1.address, acc2.address, acc3.address])
 
-      await l2DepositedToken.init(acc3.address)
+      await l2DepositedToken.init(acc4.address)
 
-      await expect(l2DepositedToken.init(acc3.address)).to.be.revertedWith(errorMessages.alreadyInitialized)
+      await expect(l2DepositedToken.init(acc4.address)).to.be.revertedWith(errorMessages.alreadyInitialized)
     })
 
     it('doesnt allow calls to onlyInitialized functions before initialization', async () => {
-      const [acc1, acc2, acc3] = await ethers.getSigners()
+      const [acc1, acc2, acc3, acc4] = await ethers.getSigners()
 
-      const l2DepositedToken = await deploy<L2DepositedToken__factory>('L2DepositedToken', [acc1.address, acc2.address])
+      const l2DepositedToken = await deploy<L2DepositedToken__factory>('L2DepositedToken', [acc1.address, acc2.address, acc3.address])
 
       await expect(l2DepositedToken.withdraw('100')).to.be.revertedWith(errorMessages.notInitialized)
-      await expect(l2DepositedToken.withdrawTo(acc3.address, '100')).to.be.revertedWith(errorMessages.notInitialized)
-      await expect(l2DepositedToken.finalizeDeposit(acc3.address, '100')).to.be.revertedWith(
+      await expect(l2DepositedToken.withdrawTo(acc4.address, '100')).to.be.revertedWith(errorMessages.notInitialized)
+      await expect(l2DepositedToken.finalizeDeposit(acc4.address, '100')).to.be.revertedWith(
         errorMessages.notInitialized,
       )
     })
@@ -298,13 +298,16 @@ async function setupTest(signers: { l2MessengerImpersonator: SignerWithAddress; 
     { address: await signers.l2MessengerImpersonator.getAddress() }, // This allows us to use an ethers override {from: Mock__OVM_L2CrossDomainMessenger.address} to mock calls
   )
   const l2Dai = await deploy<Dai__factory>('Dai', [])
+  const l2Proxy = await deploy<AuthProxy__factory>('AuthProxy', [])
   const l2DepositedToken = await deploy<L2DepositedToken__factory>('L2DepositedToken', [
     l2CrossDomainMessengerMock.address,
     l2Dai.address,
+    l2Proxy.address,
   ])
   const l1ERC20GatewayMock = await deployMock('L1ERC20Gateway')
 
   await l2Dai.rely(l2DepositedToken.address)
+  await l2Dai.rely(l2Proxy.address)
   await l2DepositedToken.init(l1ERC20GatewayMock.address)
 
   return { l2Dai, l1ERC20GatewayMock, l2CrossDomainMessengerMock, l2DepositedToken }
