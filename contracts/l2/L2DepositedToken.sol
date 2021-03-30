@@ -6,8 +6,6 @@ pragma experimental ABIEncoderV2;
 import {Abs_L2DepositedToken} from '@eth-optimism/contracts/build/contracts/OVM/bridge/tokens/Abs_L2DepositedToken.sol';
 import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 
-import {AuthProxy} from './AuthProxy.sol';
-
 interface Mintable {
   function mint(address usr, uint256 wad) external;
 
@@ -16,7 +14,6 @@ interface Mintable {
 
 contract L2DepositedToken is Abs_L2DepositedToken, Ownable {
   Mintable public token;
-  AuthProxy public proxy;
   bool public isOpen = true;
 
   /***************
@@ -27,9 +24,8 @@ contract L2DepositedToken is Abs_L2DepositedToken, Ownable {
    * @param _l2CrossDomainMessenger Cross-domain messenger used by this contract.
    * @param _token address
    */
-  constructor(address _l2CrossDomainMessenger, address _token, address _proxy) public Abs_L2DepositedToken(_l2CrossDomainMessenger) {
+  constructor(address _l2CrossDomainMessenger, address _token) public Abs_L2DepositedToken(_l2CrossDomainMessenger) {
     token = Mintable(_token);
-    proxy = AuthProxy(_proxy);
   }
 
   function close() public onlyOwner {

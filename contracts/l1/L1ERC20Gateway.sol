@@ -8,8 +8,6 @@ import {Abs_L1TokenGateway} from '@eth-optimism/contracts/build/contracts/OVM/br
 import {iOVM_ERC20} from '@eth-optimism/contracts/build/contracts/iOVM/precompiles/iOVM_ERC20.sol';
 import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 
-import {L2DepositedToken} from '../l2/L2DepositedToken.sol';
-
 contract L1ERC20Gateway is Abs_L1TokenGateway, Ownable {
   iOVM_ERC20 public l1ERC20;
   address public escrow;
