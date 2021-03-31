@@ -3,7 +3,14 @@ import { expect } from 'chai'
 import { Contract } from 'ethers'
 import { ethers as l1, l2ethers as l2 } from 'hardhat'
 
-import { Dai, L1ERC20Gateway, L2DepositedToken, L1GovernanceRelay, L2GovernanceRelay, TestBridgeUpgradeSpell } from '../typechain'
+import {
+  Dai,
+  L1ERC20Gateway,
+  L1GovernanceRelay,
+  L2DepositedToken,
+  L2GovernanceRelay,
+  TestBridgeUpgradeSpell,
+} from '../typechain'
 import { optimismConfig } from './helpers/optimismConfig'
 import {
   deployContract,
@@ -60,15 +67,18 @@ describe('bridge', () => {
     await waitForTx(l2Minter.init(l1DaiDeposit.address))
     console.log('L2 DAI initialized...')
 
-    l2GovernanceRelay = await deployContract<L2GovernanceRelay>(l2Signer, await l2.getContractFactory('L2GovernanceRelay'), [
-      optimismConfig._L2_OVM_L2CrossDomainMessenger,
-    ])
+    l2GovernanceRelay = await deployContract<L2GovernanceRelay>(
+      l2Signer,
+      await l2.getContractFactory('L2GovernanceRelay'),
+      [optimismConfig._L2_OVM_L2CrossDomainMessenger],
+    )
     console.log('L2 Governance Relay: ', l2Minter.address)
 
-    l1GovernanceRelay = await deployContract<L1GovernanceRelay>(l1Signer, await l1.getContractFactory('L1GovernanceRelay'), [
-      l2GovernanceRelay.address,
-      optimismConfig.Proxy__OVM_L1CrossDomainMessenger,
-    ])
+    l1GovernanceRelay = await deployContract<L1GovernanceRelay>(
+      l1Signer,
+      await l1.getContractFactory('L1GovernanceRelay'),
+      [l2GovernanceRelay.address, optimismConfig.Proxy__OVM_L1CrossDomainMessenger],
+    )
     console.log('L1 Governance Relay: ', l1GovernanceRelay.address)
 
     await waitForTx(l2GovernanceRelay.init(l1GovernanceRelay.address))
@@ -126,7 +136,11 @@ describe('bridge', () => {
     await waitForTx(l2MinterV2.init(l1DaiDepositV2.address))
     console.log('L2 Bridge initialized...')
 
-    l2UpgradeSpell = await deployContract<TestBridgeUpgradeSpell>(l2Signer, await l2.getContractFactory('TestBridgeUpgradeSpell'), [])
+    l2UpgradeSpell = await deployContract<TestBridgeUpgradeSpell>(
+      l2Signer,
+      await l2.getContractFactory('TestBridgeUpgradeSpell'),
+      [],
+    )
     console.log('L2 Bridge Upgrade Spell: ', l2UpgradeSpell.address)
 
     // Close L1 bridge V1
@@ -134,7 +148,13 @@ describe('bridge', () => {
     console.log('L1 Bridge Closed')
 
     // Close L2 bridge V1
-    await l1GovernanceRelay.connect(l1Signer).relay(l2UpgradeSpell.address, l2UpgradeSpell.interface.encodeFunctionData('upgradeBridge', [l2Minter.address, l2MinterV2.address]), spellGasLimit)
+    await l1GovernanceRelay
+      .connect(l1Signer)
+      .relay(
+        l2UpgradeSpell.address,
+        l2UpgradeSpell.interface.encodeFunctionData('upgradeBridge', [l2Minter.address, l2MinterV2.address]),
+        spellGasLimit,
+      )
     console.log('L2 Bridge Closed')
 
     console.log('Testing V2 bridge deposit/withdrawal...')
