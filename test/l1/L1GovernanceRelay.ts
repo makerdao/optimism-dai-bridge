@@ -32,7 +32,7 @@ describe('L1GovernanceRelay', () => {
 
     it('reverts when not owner', async () => {
       const [_deployer, l1MessengerImpersonator, user1, l2spell] = await ethers.getSigners()
-      const { l1GovernanceRelay, _l1CrossDomainMessengerMock, _l2GovernanceRelay } = await setupTest({
+      const { l1GovernanceRelay } = await setupTest({
         l1MessengerImpersonator,
       })
 
