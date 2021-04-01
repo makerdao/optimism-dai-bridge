@@ -6,6 +6,7 @@ import { ethers as l1 } from 'hardhat'
 import {
   Dai,
   L1ERC20Gateway,
+  L1Escrow,
   L1GovernanceRelay,
   L2DepositedToken,
   L2GovernanceRelay,
@@ -25,7 +26,7 @@ import {
 
 describe('bridge', () => {
   let l1Signer: Wallet
-  let l1Escrow: Wallet
+  let l1Escrow: L1Escrow
   let l2Signer: Wallet
   let watcher: any
 
@@ -42,7 +43,7 @@ describe('bridge', () => {
   const spellGasLimit = 5000000
 
   beforeEach(async () => {
-    ;({ l1Signer, l2Signer, watcher, l1User: l1Escrow } = await setupTest())
+    ;({ l1Signer, l2Signer, watcher } = await setupTest())
     l1Dai = await deployContract<Dai>(l1Signer, await l1.getContractFactory('Dai'), [])
     console.log('L1 DAI: ', l1Dai.address)
     await waitForTx(l1Dai.mint(l1Signer.address, initialL1DaiNumber))
@@ -56,13 +57,15 @@ describe('bridge', () => {
     ])
     console.log('L2 Minter: ', l2Minter.address)
 
+    l1Escrow = await deployContract<L1Escrow>(l1Signer, await l1.getContractFactory('L1Escrow'))
+
     l1DaiDeposit = await deployContract<L1ERC20Gateway>(l1Signer, await l1.getContractFactory('L1ERC20Gateway'), [
       l1Dai.address,
       l2Minter.address,
       optimismConfig.Proxy__OVM_L1CrossDomainMessenger,
       l1Escrow.address,
     ])
-    await l1Dai.connect(l1Escrow).approve(l1DaiDeposit.address, MAX_UINT256)
+    await waitForTx(l1Escrow.approve(l1Dai.address, l1DaiDeposit.address, MAX_UINT256))
     console.log('L1 DAI Deposit: ', l1DaiDeposit.address)
 
     await waitForTx(l2Minter.init(l1DaiDeposit.address))
@@ -129,7 +132,7 @@ describe('bridge', () => {
       optimismConfig.Proxy__OVM_L1CrossDomainMessenger,
       l1Escrow.address,
     ])
-    await l1Dai.connect(l1Escrow).approve(l1DaiDepositV2.address, MAX_UINT256)
+    await waitForTx(l1Escrow.approve(l1Dai.address, l1DaiDepositV2.address, MAX_UINT256))
     console.log('L1 DAI Deposit V2: ', l1DaiDepositV2.address)
 
     await waitForTx(l2MinterV2.init(l1DaiDepositV2.address))
