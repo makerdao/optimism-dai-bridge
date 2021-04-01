@@ -4,7 +4,9 @@
   "version": "1.0.0",
   "license": "MIT",
   "scripts": {
-    "build": "hardhat compile",
+    "build": "yarn build:l1 && yarn build:l2",
+    "build:l1": "hardhat compile",
+    "build:l2": "TARGET=ovm hardhat compile --no-typechain",
     "clean": "hardhat clean",
     "format": "prettier --check \"./**/*.ts\"",
     "format:fix": "prettier --write \"./**/*.ts\"",
@@ -17,7 +19,7 @@
   },
   "dependencies": {
     "@eth-optimism/contracts": "^0.1.11",
-    "@eth-optimism/plugins": "^0.0.16",
+    "@eth-optimism/plugins": "^1.0.0-alpha.2",
     "@eth-optimism/smock": "^0.2.1-alpha.0",
     "@eth-optimism/solc": "0.5.16-alpha.7",
     "@eth-optimism/watcher": "^0.0.1-alpha.9",
