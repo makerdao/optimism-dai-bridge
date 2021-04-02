@@ -1,11 +1,12 @@
 import { Wallet } from '@ethersproject/wallet'
 import { expect } from 'chai'
 import { Contract } from 'ethers'
-import { ethers as l1, l2ethers as l2 } from 'hardhat'
+import { ethers as l1 } from 'hardhat'
 
 import {
   Dai,
   L1ERC20Gateway,
+  L1Escrow,
   L1GovernanceRelay,
   L2DepositedToken,
   L2GovernanceRelay,
@@ -14,6 +15,7 @@ import {
 import { optimismConfig } from './helpers/optimismConfig'
 import {
   deployContract,
+  getL2Factory,
   MAX_UINT256,
   q18,
   setupTest,
@@ -24,7 +26,7 @@ import {
 
 describe('bridge', () => {
   let l1Signer: Wallet
-  let l1Escrow: Wallet
+  let l1Escrow: L1Escrow
   let l2Signer: Wallet
   let watcher: any
 
@@ -41,19 +43,21 @@ describe('bridge', () => {
   const spellGasLimit = 5000000
 
   beforeEach(async () => {
-    ;({ l1Signer, l2Signer, watcher, l1User: l1Escrow } = await setupTest())
+    ;({ l1Signer, l2Signer, watcher } = await setupTest())
     l1Dai = await deployContract<Dai>(l1Signer, await l1.getContractFactory('Dai'), [])
     console.log('L1 DAI: ', l1Dai.address)
     await waitForTx(l1Dai.mint(l1Signer.address, initialL1DaiNumber))
 
-    l2Dai = await deployContract<Dai>(l2Signer, await l2.getContractFactory('Dai'), [])
+    l2Dai = await deployContract<Dai>(l2Signer, await getL2Factory('Dai'), [])
     console.log('L2 DAI: ', l2Dai.address)
 
-    l2Minter = await deployContract<L2DepositedToken>(l2Signer, await l2.getContractFactory('L2DepositedToken'), [
+    l2Minter = await deployContract<L2DepositedToken>(l2Signer, await getL2Factory('L2DepositedToken'), [
       optimismConfig._L2_OVM_L2CrossDomainMessenger,
       l2Dai.address,
     ])
     console.log('L2 Minter: ', l2Minter.address)
+
+    l1Escrow = await deployContract<L1Escrow>(l1Signer, await l1.getContractFactory('L1Escrow'))
 
     l1DaiDeposit = await deployContract<L1ERC20Gateway>(l1Signer, await l1.getContractFactory('L1ERC20Gateway'), [
       l1Dai.address,
@@ -61,17 +65,15 @@ describe('bridge', () => {
       optimismConfig.Proxy__OVM_L1CrossDomainMessenger,
       l1Escrow.address,
     ])
-    await l1Dai.connect(l1Escrow).approve(l1DaiDeposit.address, MAX_UINT256)
+    await waitForTx(l1Escrow.approve(l1Dai.address, l1DaiDeposit.address, MAX_UINT256))
     console.log('L1 DAI Deposit: ', l1DaiDeposit.address)
 
     await waitForTx(l2Minter.init(l1DaiDeposit.address))
     console.log('L2 DAI initialized...')
 
-    l2GovernanceRelay = await deployContract<L2GovernanceRelay>(
-      l2Signer,
-      await l2.getContractFactory('L2GovernanceRelay'),
-      [optimismConfig._L2_OVM_L2CrossDomainMessenger],
-    )
+    l2GovernanceRelay = await deployContract<L2GovernanceRelay>(l2Signer, await getL2Factory('L2GovernanceRelay'), [
+      optimismConfig._L2_OVM_L2CrossDomainMessenger,
+    ])
     console.log('L2 Governance Relay: ', l2Minter.address)
 
     l1GovernanceRelay = await deployContract<L1GovernanceRelay>(
@@ -118,7 +120,7 @@ describe('bridge', () => {
   })
 
   it('upgrades the bridge through governance relay', async () => {
-    l2MinterV2 = await deployContract<L2DepositedToken>(l2Signer, await l2.getContractFactory('L2DepositedToken'), [
+    l2MinterV2 = await deployContract<L2DepositedToken>(l2Signer, await getL2Factory('L2DepositedToken'), [
       optimismConfig._L2_OVM_L2CrossDomainMessenger,
       l2Dai.address,
     ])
@@ -130,7 +132,7 @@ describe('bridge', () => {
       optimismConfig.Proxy__OVM_L1CrossDomainMessenger,
       l1Escrow.address,
     ])
-    await l1Dai.connect(l1Escrow).approve(l1DaiDepositV2.address, MAX_UINT256)
+    await waitForTx(l1Escrow.approve(l1Dai.address, l1DaiDepositV2.address, MAX_UINT256))
     console.log('L1 DAI Deposit V2: ', l1DaiDepositV2.address)
 
     await waitForTx(l2MinterV2.init(l1DaiDepositV2.address))
@@ -138,7 +140,7 @@ describe('bridge', () => {
 
     l2UpgradeSpell = await deployContract<TestBridgeUpgradeSpell>(
       l2Signer,
-      await l2.getContractFactory('TestBridgeUpgradeSpell'),
+      await getL2Factory('TestBridgeUpgradeSpell'),
       [],
     )
     console.log('L2 Bridge Upgrade Spell: ', l2UpgradeSpell.address)

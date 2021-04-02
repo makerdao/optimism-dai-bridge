@@ -1,5 +1,9 @@
 import { Watcher } from '@eth-optimism/watcher'
+import { assert } from 'console'
 import { Contract, ethers, providers, Signer, Wallet } from 'ethers'
+import { readFileSync } from 'fs'
+import { artifacts as hhArtifacts } from 'hardhat'
+import { join } from 'path'
 
 import { artifacts } from './artifacts'
 import { getL1Provider } from './l1'
@@ -115,4 +119,19 @@ export async function setupTest(): Promise<{
     l2Signer: l2Deployer,
     watcher,
   }
+}
+
+export async function getL2Factory(name: string) {
+  const l1ArtifactPaths = await hhArtifacts.getArtifactPaths()
+  const desiredArtifacts = l1ArtifactPaths.filter((a) => a.endsWith(`/${name}.json`))
+  assert(desiredArtifacts.length === 1, "Couldn't find desired artifact or found too many")
+
+  const l1ArtifactPath = desiredArtifacts[0]
+  const artifactRootPath = join(__dirname, '../../artifacts')
+  const artifactOvmRootPath = join(__dirname, '../../artifacts-ovm')
+  const l2ArtifactPath = l1ArtifactPath.replace(artifactRootPath, artifactOvmRootPath)
+
+  const artifact = JSON.parse(readFileSync(l2ArtifactPath, 'utf-8'))
+
+  return new ethers.ContractFactory(artifact.abi, artifact.bytecode)
 }
