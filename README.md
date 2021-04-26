@@ -1,3 +1,7 @@
+[![Lint](https://github.com/BellwoodStudios/optimism-dai-bridge/actions/workflows/lint.yml/badge.svg)](https://github.com/BellwoodStudios/optimism-dai-bridge/actions/workflows/lint.yml)
+[![Tests](https://github.com/BellwoodStudios/optimism-dai-bridge/actions/workflows/tests.yml/badge.svg)](https://github.com/BellwoodStudios/optimism-dai-bridge/actions/workflows/tests.yml)
+[![Fuzz](https://github.com/BellwoodStudios/optimism-dai-bridge/actions/workflows/fuzz.yml/badge.svg)](https://github.com/BellwoodStudios/optimism-dai-bridge/actions/workflows/fuzz.yml)
+
 # Optimism Dai Bridge
 
 Optimism Dai and upgradable token bridge
