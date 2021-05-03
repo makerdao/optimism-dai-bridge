@@ -19,6 +19,8 @@ export const MAX_UINT256 = ethers.BigNumber.from(2).pow(256).sub(1)
 
 export const DUMMY_ADDRESS = '0x' + '1234'.repeat(10)
 
+export const COMMON_OPTS = { gasPrice: 0 }
+
 export async function waitToRelayTxsToL2(l1OriginatingTx: Promise<any>, watcher: any) {
   console.log('Using watcher to wait for L1->L2 relay...')
   const res = await l1OriginatingTx
@@ -67,7 +69,7 @@ export async function deployContract<T extends Contract = Contract>(
   args: any[] = [],
 ): Promise<T> {
   const contractFactory = new ethers.ContractFactory(artifact.interface, artifact.bytecode, signer)
-  const contractDeployed = await contractFactory.deploy(...args)
+  const contractDeployed = await contractFactory.deploy(...args, COMMON_OPTS)
 
   await contractDeployed.deployed()
 
