@@ -93,7 +93,9 @@ jobs:
           cd optimism-integration
           docker-compose pull
           ./up.sh&
-          sleep 60
+          cd ..
+          ./.github/workflows/wait-for-it.sh -h localhost -p 8080 -t 120
+          sleep 60 # we still need to wait for contracts to be deployed really
           yarn test-e2e
   echidna:
     name: Echidna
