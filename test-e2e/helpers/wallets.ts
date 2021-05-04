@@ -7,7 +7,7 @@ export function getRandomWallets(n: number): Wallet[] {
 }
 
 export function getAdminWallet(): Wallet {
-  return new Wallet('0xea8b000efb33c49d819e8d6452f681eed55cdf7de47d655887fc0e318906f2e7')
+  return new Wallet('0xdf57089febbacf7ba0bc227dafbffa9fc08a93fdc68e1e42411a14efcf23656e')
 }
 
 export function connectWallets(wallets: Wallet[], provider: providers.BaseProvider): Wallet[] {
