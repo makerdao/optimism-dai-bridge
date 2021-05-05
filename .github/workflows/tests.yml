@@ -67,11 +67,16 @@ jobs:
 
       - run: yarn build
       - run: |
-          git clone https://github.com/ethereum-optimism/optimism-integration.git
-          cd optimism-integration
-          docker-compose pull
-          ./up.sh&
-          cd ..
+          git clone https://github.com/ethereum-optimism/optimism.git
+          cd optimism
+          git checkout ae1ac05d7032422a71caf25d16f6e548df5b8d7f
+          cd ops
+          export COMPOSE_DOCKER_CLI_BUILD=1
+          export DOCKER_BUILDKIT=1
+          docker-compose build
+          docker-compose up&
+
+          cd ../../
           ./.github/workflows/wait-for-it.sh -h localhost -p 8080 -t 120
           sleep 60 # we still need to wait for contracts to be deployed really
           yarn test-e2e
