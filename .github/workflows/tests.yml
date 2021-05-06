@@ -38,7 +38,7 @@ jobs:
       - run: yarn test
 
   test-e2e:
-    name: Unit Tests E2E
+    name: Tests E2E
     runs-on: ubuntu-latest
 
     steps:
@@ -74,7 +74,7 @@ jobs:
           export COMPOSE_DOCKER_CLI_BUILD=1
           export DOCKER_BUILDKIT=1
           docker-compose build
-          docker-compose up&
+          docker-compose up -d
 
           cd ../../
           ./.github/workflows/wait-for-it.sh -h localhost -p 8080 -t 120

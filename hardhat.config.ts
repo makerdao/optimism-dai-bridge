@@ -4,7 +4,7 @@ import '@nomiclabs/hardhat-ethers'
 import '@nomiclabs/hardhat-waffle'
 import '@nomiclabs/hardhat-web3'
 
-import '@eth-optimism/plugins/hardhat/compiler'
+import '@eth-optimism/hardhat-ovm'
 import '@eth-optimism/smock/build/src/plugins/hardhat-storagelayout'
 
 import '@typechain/hardhat'
@@ -25,6 +25,10 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: {
       blockGasLimit: 15000000,
+    },
+    ovm: {
+      url: '',
+      ovm: true,
     },
   },
 }
