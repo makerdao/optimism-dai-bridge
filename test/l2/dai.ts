@@ -84,19 +84,8 @@ describe('Dai', () => {
         ).to.be.revertedWith('')
       })
 
-      it('should not transfer to dai address', async () => {
-        await expect(dai.connect(signers.user1).transfer(dai.address, 1)).to.be.revertedWith('')
-        await expect(dai.connect(signers.user1).transferFrom(signers.user1.address, dai.address, 1)).to.be.revertedWith(
-          '',
-        )
-      })
-
       it('should not allow minting to zero address', async () => {
         await expect(dai.mint(ethers.constants.AddressZero, 1)).to.be.revertedWith('')
-      })
-
-      it('should not allow minting to dai address', async () => {
-        await expect(dai.mint(dai.address, 1)).to.be.revertedWith('')
       })
 
       it('should not allow minting to address beyond MAX', async () => {
