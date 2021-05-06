@@ -4,16 +4,40 @@
 pragma solidity >0.5.0 <0.8.0;
 pragma experimental ABIEncoderV2;
 
-import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
+interface ApproveLike {
+  function approve(address, uint256) external;
+}
 
-import {iOVM_ERC20} from '@eth-optimism/contracts/build/contracts/iOVM/precompiles/iOVM_ERC20.sol';
+contract L1Escrow {
+    
+  // --- Auth ---
+  mapping (address => uint256) public wards;
+  function rely(address usr) external auth {
+    wards[usr] = 1;
+    emit Rely(usr);
+  }
+  function deny(address usr) external auth {
+    wards[usr] = 0;
+    emit Deny(usr);
+  }
+  modifier auth {
+    require(wards[msg.sender] == 1, "L1Escrow/not-authorized");
+    _;
+  }
 
-contract L1Escrow is Ownable {
+  event Rely(address indexed usr);
+  event Deny(address indexed usr);
+  
+  constructor() {
+    wards[msg.sender] = 1;
+    emit Rely(msg.sender);
+  }
+
   function approve(
-    iOVM_ERC20 token,
+    address token,
     address spender,
     uint256 value
-  ) public onlyOwner {
-    token.approve(spender, value);
+  ) public auth {
+    ApproveLike(token).approve(spender, value);
   }
 }
