@@ -41,10 +41,15 @@ yarn test  # runs unit tests
 ## Running E2E tests
 
 ```
-# start optimism-integration
-git clone https://github.com/ethereum-optimism/optimism-integration.git
-cd optimism-integration
-./up.sh
+# clone optimism monorepo and run dockerized infrastructure
+git clone https://github.com/ethereum-optimism/optimism.git
+cd optimism
+git checkout ae1ac05d7032422a71caf25d16f6e548df5b8d7f
+cd ops
+export COMPOSE_DOCKER_CLI_BUILD=1
+export DOCKER_BUILDKIT=1
+docker-compose build
+docker-compose up
 
 # in other terminal window run this project
 yarn build
