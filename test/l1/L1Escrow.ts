@@ -7,7 +7,7 @@ import { deploy } from '../helpers'
 const allowanceLimit = 100
 
 const errorMessages = {
-  notOwner: 'Ownable: caller is not the owner',
+  notAuthed: 'L1Escrow/not-authorized',
 }
 
 describe('L1Escrow', () => {
@@ -23,13 +23,13 @@ describe('L1Escrow', () => {
       expect(await l1Dai.allowance(l1Escrow.address, spender.address)).to.be.eq(allowanceLimit)
     })
 
-    it('reverts when called not by an owner', async () => {
+    it('reverts when called by unauthed user', async () => {
       const [_deployer, spender, notDeployer] = await ethers.getSigners()
       const { l1Dai, l1Escrow } = await setupTest()
 
       await expect(
         l1Escrow.connect(notDeployer).approve(l1Dai.address, spender.address, allowanceLimit),
-      ).to.be.rejectedWith(errorMessages.notOwner)
+      ).to.be.rejectedWith(errorMessages.notAuthed)
     })
   })
 })

@@ -12,7 +12,11 @@ Optimism Dai and upgradable token bridge
 - `l1/L1ERC20Gateway.sol` - L1 side of the bridge. Escrows L1 DAI in a specified address. Unlocks L1 DAI upon withdrawal
   message from `L2DepositedToken`
 - `l2/L2DepositedToken.sol` - L2 side of the bridge. Mints new L2 DAI after receiving message from `L1ERC20Gateway`.
-  Burns L2 DAI tokens when withdrawals happens
+  Burns L2 DAI tokens when withdrawals happen.
+
+## Scripts
+
+- `scripts/deployMainnet.ts` - deploys a full solution to forked mainnet and testnet optimism.
 
 ## Upgrade guide
 
@@ -41,10 +45,15 @@ yarn test  # runs unit tests
 ## Running E2E tests
 
 ```
-# start optimism-integration
-git clone https://github.com/ethereum-optimism/optimism-integration.git
-cd optimism-integration
-./up.sh
+# clone optimism monorepo and run dockerized infrastructure
+git clone https://github.com/ethereum-optimism/optimism.git
+cd optimism
+git checkout ae1ac05d7032422a71caf25d16f6e548df5b8d7f
+cd ops
+export COMPOSE_DOCKER_CLI_BUILD=1
+export DOCKER_BUILDKIT=1
+docker-compose build
+docker-compose up
 
 # in other terminal window run this project
 yarn build
