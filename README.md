@@ -12,7 +12,11 @@ Optimism Dai and upgradable token bridge
 - `l1/L1ERC20Gateway.sol` - L1 side of the bridge. Escrows L1 DAI in a specified address. Unlocks L1 DAI upon withdrawal
   message from `L2DepositedToken`
 - `l2/L2DepositedToken.sol` - L2 side of the bridge. Mints new L2 DAI after receiving message from `L1ERC20Gateway`.
-  Burns L2 DAI tokens when withdrawals happens
+  Burns L2 DAI tokens when withdrawals happen.
+
+## Scripts
+
+- `scripts/deployMainnet.ts` - deploys a full solution to forked mainnet and testnet optimism.
 
 ## Upgrade guide
 
