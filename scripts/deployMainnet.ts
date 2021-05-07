@@ -72,9 +72,10 @@ async function main() {
 
   // Permissions
   console.log('Finalizing permissions for L1Escrow...')
-  await l1Escrow.connect(deployer).approve(L1_DAI_ADDRESS, L1_PAUSE_PROXY_ADDRESS, MAX_UINT256)
-  await l1Escrow.connect(deployer).approve(L1_DAI_ADDRESS, L1_ESM_ADDRESS, MAX_UINT256)
-  await l1Escrow.connect(deployer).approve(L1_DAI_ADDRESS, deployer._address, 0)
+  await l1Escrow.connect(deployer).approve(L1_DAI_ADDRESS, l1Gateway.address, MAX_UINT256)
+  await l1Escrow.connect(deployer).rely(L1_PAUSE_PROXY_ADDRESS)
+  await l1Escrow.connect(deployer).rely(L1_ESM_ADDRESS)
+  await l1Escrow.connect(deployer).deny(deployer._address)
   console.log('Finalizing permissions for L2 DAI...')
   await l2Dai.rely(l2Gateway.address, ZERO_GAS_OPTS)
   await l2Dai.rely(l2GovernanceRelay.address, ZERO_GAS_OPTS)
