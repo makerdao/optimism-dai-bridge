@@ -98,7 +98,7 @@ contract Dai {
     require(balance >= value, "Dai/insufficient-balance");
 
     balanceOf[msg.sender] = balance - value;
-    balanceOf[to] = balanceOf[to] + value;
+    balanceOf[to] += value;
 
     emit Transfer(msg.sender, to, value);
 
@@ -119,7 +119,7 @@ contract Dai {
     }
 
     balanceOf[from] = balance - value;
-    balanceOf[to] = balanceOf[to] + value;
+    balanceOf[to] += value;
 
     emit Transfer(from, to, value);
 
