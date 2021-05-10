@@ -24,10 +24,12 @@ contract DaiEchidnaTest {
 
     // --- Math ---
     function add(uint256 x, uint256 y) internal pure returns (uint256 z) {
-        require((z = x + y) >= x);
+        z = x + y;
+        assert (z >= x); // check if there is an addition overflow
     }
     function sub(uint256 x, uint256 y) internal pure returns (uint256 z) {
-        require((z = x - y) <= x);
+        z = x - y;
+        assert (z <= x); // check if there is a subtraction overflow
     }
 
     /// @dev Test that supply and balance hold on mint
