@@ -39,8 +39,7 @@ contract DaiEchidnaTest {
     function mint(uint256 wad) public {
         uint256 supply = dai.totalSupply();
         uint256 holderBalance = dai.balanceOf(holder);
-        wad = wad % sub(MAX_SUPPLY, supply);
-        if (wad < WAD) wad = (1 + wad) * WAD;
+        wad = 1 + wad % sub(MAX_SUPPLY, supply);
         dai.mint(holder, wad);
         assert(dai.balanceOf(holder) == add(holderBalance, wad));
         assert(dai.totalSupply() == add(supply, wad));
