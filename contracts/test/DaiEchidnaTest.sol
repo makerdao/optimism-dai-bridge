@@ -70,9 +70,7 @@ contract DaiEchidnaTest {
     function transferFrom(uint256 wad) public {
         uint256 thisBalance = dai.balanceOf(address(this));
         uint256 holderBalance = dai.balanceOf(holder);
-        uint256 supply = dai.totalSupply();
-        wad = wad % sub(MAX_SUPPLY, supply);
-        if (wad < WAD) wad = (1 + wad) * WAD;
+        wad = 1 + wad % holderBalance;
         dai.transferFrom(holder, address(this), wad);
         assert(dai.balanceOf(holder) == sub(holderBalance, wad));
         assert(dai.balanceOf(address(this)) == add(thisBalance, wad));
