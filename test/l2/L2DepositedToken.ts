@@ -108,7 +108,7 @@ describe('OVM_L2DepositedToken', () => {
       const withdrawCallToMessengerCall = l2CrossDomainMessengerMock.smocked.sendMessage.calls[0]
 
       expect(await l2Dai.balanceOf(user1.address)).to.equal(INITIAL_TOTAL_L1_SUPPLY - withdrawAmount)
-      expect(await l2Dai['totalSupply()']()).to.equal(INITIAL_TOTAL_L1_SUPPLY - withdrawAmount)
+      expect(await l2Dai.totalSupply()).to.equal(INITIAL_TOTAL_L1_SUPPLY - withdrawAmount)
 
       expect(withdrawCallToMessengerCall._target).to.equal(l1ERC20GatewayMock.address)
       expect(withdrawCallToMessengerCall._message).to.equal(

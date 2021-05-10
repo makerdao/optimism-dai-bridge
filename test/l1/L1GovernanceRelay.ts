@@ -8,7 +8,7 @@ import { deploy, deployMock } from '../helpers'
 const errorMessages = {
   invalidMessenger: 'OVM_XCHAIN: messenger contract unauthenticated',
   invalidXDomainMessageOriginator: 'OVM_XCHAIN: wrong sender of cross-domain message',
-  notOwner: 'Ownable: caller is not the owner',
+  notAuthed: 'L1GovernanceRelay/not-authorized',
 }
 
 const SPELL_GAS = 5000000
@@ -30,14 +30,14 @@ describe('L1GovernanceRelay', () => {
       )
     })
 
-    it('reverts when not owner', async () => {
+    it('reverts when not authed', async () => {
       const [_deployer, l1MessengerImpersonator, user1, l2spell] = await ethers.getSigners()
       const { l1GovernanceRelay } = await setupTest({
         l1MessengerImpersonator,
       })
 
       await expect(l1GovernanceRelay.connect(user1).relay(l2spell.address, [], SPELL_GAS)).to.be.revertedWith(
-        errorMessages.notOwner,
+        errorMessages.notAuthed,
       )
     })
   })

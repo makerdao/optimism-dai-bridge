@@ -21,7 +21,7 @@ export async function deploy<T extends ContractFactory>(
   name: string,
   args: Parameters<T['deploy']>,
 ): Promise<ReturnType<T['deploy']>> {
-  const factory = (await ethers.getContractFactory(name)) as T
+  const factory = (await ethers.getContractFactory(name)) as any
   return factory.deploy(...args)
 }
 
@@ -32,6 +32,6 @@ export async function deployMock<T extends ContractFactory>(
     address?: string
   } = {},
 ): Promise<ReturnType<T['deploy']> & { smocked: any }> {
-  const factory = (await ethers.getContractFactory(name)) as T
+  const factory = (await ethers.getContractFactory(name)) as any
   return await smockit(factory, opts)
 }

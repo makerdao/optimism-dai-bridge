@@ -1,6 +1,5 @@
 import { Wallet } from '@ethersproject/wallet'
 import { expect } from 'chai'
-import { Contract } from 'ethers'
 import { ethers as l1 } from 'hardhat'
 
 import {
@@ -14,7 +13,6 @@ import {
 } from '../typechain'
 import { optimismConfig } from './helpers/optimismConfig'
 import {
-  COMMON_OPTS,
   deployContract,
   getL2Factory,
   MAX_UINT256,
@@ -23,6 +21,7 @@ import {
   waitForTx,
   waitToRelayMessageToL1,
   waitToRelayTxsToL2,
+  ZERO_GAS_OPTS,
 } from './helpers/utils'
 
 describe('bridge', () => {
@@ -32,14 +31,14 @@ describe('bridge', () => {
   let watcher: any
 
   let l1Dai: Dai
-  let l1DaiDeposit: Contract
-  let l1DaiDepositV2: Contract
-  let l1GovernanceRelay: Contract
-  let l2Dai: Contract
-  let l2Minter: Contract
-  let l2MinterV2: Contract
-  let l2GovernanceRelay: Contract
-  let l2UpgradeSpell: Contract
+  let l1DaiDeposit: L1ERC20Gateway
+  let l1DaiDepositV2: L1ERC20Gateway
+  let l1GovernanceRelay: L1GovernanceRelay
+  let l2Dai: Dai
+  let l2Minter: L2DepositedToken
+  let l2MinterV2: L2DepositedToken
+  let l2GovernanceRelay: L2GovernanceRelay
+  let l2UpgradeSpell: TestBridgeUpgradeSpell
   const initialL1DaiNumber = q18(10000)
   const spellGasLimit = 5000000
 
@@ -69,7 +68,7 @@ describe('bridge', () => {
     await waitForTx(l1Escrow.approve(l1Dai.address, l1DaiDeposit.address, MAX_UINT256))
     console.log('L1 DAI Deposit: ', l1DaiDeposit.address)
 
-    await waitForTx(l2Minter.init(l1DaiDeposit.address, COMMON_OPTS))
+    await waitForTx(l2Minter.init(l1DaiDeposit.address, ZERO_GAS_OPTS))
     console.log('L2 DAI initialized...')
 
     l2GovernanceRelay = await deployContract<L2GovernanceRelay>(l2Signer, await getL2Factory('L2GovernanceRelay'), [
@@ -84,13 +83,13 @@ describe('bridge', () => {
     )
     console.log('L1 Governance Relay: ', l1GovernanceRelay.address)
 
-    await waitForTx(l2GovernanceRelay.init(l1GovernanceRelay.address, COMMON_OPTS))
+    await waitForTx(l2GovernanceRelay.init(l1GovernanceRelay.address, ZERO_GAS_OPTS))
     console.log('Governance relay initialized...')
 
-    await waitForTx(l2Dai.rely(l2Minter.address, COMMON_OPTS))
-    await waitForTx(l2Dai.rely(l2GovernanceRelay.address, COMMON_OPTS))
-    await waitForTx(l2Dai.deny(l2Signer.address, COMMON_OPTS))
-    await waitForTx(l2Minter.transferOwnership(l2GovernanceRelay.address, COMMON_OPTS))
+    await waitForTx(l2Dai.rely(l2Minter.address, ZERO_GAS_OPTS))
+    await waitForTx(l2Dai.rely(l2GovernanceRelay.address, ZERO_GAS_OPTS))
+    await waitForTx(l2Dai.deny(l2Signer.address, ZERO_GAS_OPTS))
+    await waitForTx(l2Minter.transferOwnership(l2GovernanceRelay.address, ZERO_GAS_OPTS))
     console.log('Permissions updated...')
   })
 
@@ -111,8 +110,8 @@ describe('bridge', () => {
     const balance = await l2Dai.balanceOf(l1Signer.address)
     expect(balance.toString()).to.be.eq(depositAmount)
 
-    await waitForTx(l2Dai.approve(l2Minter.address, depositAmount, COMMON_OPTS))
-    await waitToRelayMessageToL1(l2Minter.withdraw(depositAmount, COMMON_OPTS), watcher)
+    await waitForTx(l2Dai.approve(l2Minter.address, depositAmount, ZERO_GAS_OPTS))
+    await waitToRelayMessageToL1(l2Minter.withdraw(depositAmount, ZERO_GAS_OPTS), watcher)
 
     const l2BalanceAfterWithdrawal = await l2Dai.balanceOf(l1Signer.address)
     expect(l2BalanceAfterWithdrawal.toString()).to.be.eq('0')
@@ -136,7 +135,7 @@ describe('bridge', () => {
     await waitForTx(l1Escrow.approve(l1Dai.address, l1DaiDepositV2.address, MAX_UINT256))
     console.log('L1 DAI Deposit V2: ', l1DaiDepositV2.address)
 
-    await waitForTx(l2MinterV2.init(l1DaiDepositV2.address, COMMON_OPTS))
+    await waitForTx(l2MinterV2.init(l1DaiDepositV2.address, ZERO_GAS_OPTS))
     console.log('L2 Bridge initialized...')
 
     l2UpgradeSpell = await deployContract<TestBridgeUpgradeSpell>(
@@ -168,8 +167,8 @@ describe('bridge', () => {
     const balance = await l2Dai.balanceOf(l1Signer.address)
     expect(balance.toString()).to.be.eq(depositAmount)
 
-    await waitForTx(l2Dai.approve(l2MinterV2.address, depositAmount, COMMON_OPTS))
-    await waitToRelayMessageToL1(l2MinterV2.withdraw(depositAmount, COMMON_OPTS), watcher)
+    await waitForTx(l2Dai.approve(l2MinterV2.address, depositAmount, ZERO_GAS_OPTS))
+    await waitToRelayMessageToL1(l2MinterV2.withdraw(depositAmount, ZERO_GAS_OPTS), watcher)
 
     const l2BalanceAfterWithdrawal = await l2Dai.balanceOf(l1Signer.address)
     expect(l2BalanceAfterWithdrawal.toString()).to.be.eq('0')
