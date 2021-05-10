@@ -4,3 +4,7 @@ format: 'text'
 checkAsserts: true
 #coverage controls coverage guided testing
 coverage: false
+#seqLen defines how many transactions are in a test sequence
+#seqLen: 50
+#testLimit is the number of test sequences to run
+#testLimit: 100000
