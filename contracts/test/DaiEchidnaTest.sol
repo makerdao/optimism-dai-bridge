@@ -48,10 +48,8 @@ contract DaiEchidnaTest {
 
     /// @dev Test that supply and balance hold on burn
     function burn(uint256 wad) public {
-        uint256 supply = dai.totalSupply();
         uint256 holderBalance = dai.balanceOf(holder);
-        wad = wad % sub(MAX_SUPPLY, supply);
-        if (wad < WAD) wad = (1 + wad) * WAD;
+        wad = 1 + wad % holderBalance;
         dai.burn(holder, wad);
         assert(dai.balanceOf(holder) == sub(holderBalance, wad));
         assert(dai.totalSupply() == sub(supply, wad));
