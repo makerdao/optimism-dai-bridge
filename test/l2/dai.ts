@@ -78,29 +78,29 @@ describe('Dai', () => {
       })
 
       it('should not transfer to zero address', async () => {
-        await expect(dai.connect(signers.user1).transfer(ethers.constants.AddressZero, 1)).to.be.revertedWith('')
+        await expect(dai.connect(signers.user1).transfer(ethers.constants.AddressZero, 1)).to.be.revertedWith('Dai/invalid-address')
         await expect(
           dai.connect(signers.user1).transferFrom(signers.user1.address, ethers.constants.AddressZero, 1),
-        ).to.be.revertedWith('')
+        ).to.be.revertedWith('Dai/invalid-address')
       })
 
       it('should not transfer to dai address', async () => {
-        await expect(dai.connect(signers.user1).transfer(dai.address, 1)).to.be.revertedWith('')
+        await expect(dai.connect(signers.user1).transfer(dai.address, 1)).to.be.revertedWith('Dai/invalid-address')
         await expect(dai.connect(signers.user1).transferFrom(signers.user1.address, dai.address, 1)).to.be.revertedWith(
-          '',
+          'Dai/invalid-address',
         )
       })
 
       it('should not allow minting to zero address', async () => {
-        await expect(dai.mint(ethers.constants.AddressZero, 1)).to.be.revertedWith('')
+        await expect(dai.mint(ethers.constants.AddressZero, 1)).to.be.revertedWith('Dai/invalid-address')
       })
 
       it('should not allow minting to dai address', async () => {
-        await expect(dai.mint(dai.address, 1)).to.be.revertedWith('')
+        await expect(dai.mint(dai.address, 1)).to.be.revertedWith('Dai/invalid-address')
       })
 
       it('should not allow minting to address beyond MAX', async () => {
-        await expect(dai.mint(signers.user1.address, ethers.constants.MaxUint256)).to.be.revertedWith('')
+        await expect(dai.mint(signers.user1.address, ethers.constants.MaxUint256)).to.be.reverted
       })
 
       it('burns own dai', async () => {
@@ -250,7 +250,7 @@ describe('Dai', () => {
         it('should not increaseAllowance beyond MAX', async () => {
           await expect(
             dai.connect(signers.user1).increaseAllowance(signers.user2.address, ethers.constants.MaxUint256),
-          ).to.be.revertedWith('')
+          ).to.be.reverted
         })
 
         it('decreaseAllowance should decrease allowance', async () => {
