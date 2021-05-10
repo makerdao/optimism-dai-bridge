@@ -59,8 +59,9 @@ contract DaiEchidnaTest {
 
     /// @dev Test that supply and balance hold on transfer.
     function transfer(uint256 wad) public {
-        uint256 supply = dai.totalSupply();
+        uint256 thisBalance = dai.balanceOf(address(this));
         uint256 holderBalance = dai.balanceOf(holder);
+        uint256 supply = dai.totalSupply();
         wad = wad % sub(MAX_SUPPLY, supply);
         if (wad < WAD) wad = (1 + wad) * WAD;
         dai.transfer(holder, wad);
@@ -70,8 +71,9 @@ contract DaiEchidnaTest {
 
     /// @dev Test that supply and balance hold on transferFrom.
     function transferFrom(uint256 wad) public {
-        uint256 supply = dai.totalSupply();
+        uint256 thisBalance = dai.balanceOf(address(this));
         uint256 holderBalance = dai.balanceOf(holder);
+        uint256 supply = dai.totalSupply();
         wad = wad % sub(MAX_SUPPLY, supply);
         if (wad < WAD) wad = (1 + wad) * WAD;
         dai.transferFrom(holder, address(this), wad);
