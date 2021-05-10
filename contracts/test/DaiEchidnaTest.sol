@@ -16,6 +16,8 @@ contract DaiEchidnaTest {
     Dai internal dai;
     address internal holder;
 
+    uint256 internal constant WAD = 10**18;
+
     /// @dev Instantiate the Dai contract, and an holder address that will return dai when asked to.
     constructor () public {
         dai = new Dai();
@@ -34,6 +36,8 @@ contract DaiEchidnaTest {
 
     /// @dev Test that supply and balance hold on mint
     function mint(uint256 wad) public {
+        wad = wad % uint256(-1);
+        if (wad < WAD) wad = (1 + wad) * WAD;
         uint256 supply = dai.totalSupply();
         uint256 holderBalance = dai.balanceOf(holder);
         dai.mint(holder, wad);
@@ -43,6 +47,8 @@ contract DaiEchidnaTest {
 
     /// @dev Test that supply and balance hold on burn
     function burn(uint256 wad) public {
+        wad = wad % uint256(-1);
+        if (wad < WAD) wad = (1 + wad) * WAD;
         uint256 supply = dai.totalSupply();
         uint256 holderBalance = dai.balanceOf(holder);
         dai.burn(holder, wad);
@@ -52,6 +58,8 @@ contract DaiEchidnaTest {
 
     /// @dev Test that supply and balance hold on transfer.
     function transfer(uint256 wad) public {
+        wad = wad % uint256(-1);
+        if (wad < WAD) wad = (1 + wad) * WAD;
         uint256 thisBalance = dai.balanceOf(address(this));
         uint256 holderBalance = dai.balanceOf(holder);
         dai.transfer(holder, wad);
@@ -61,6 +69,8 @@ contract DaiEchidnaTest {
 
     /// @dev Test that supply and balance hold on transferFrom.
     function transferFrom(uint256 wad) public {
+        wad = wad % uint256(-1);
+        if (wad < WAD) wad = (1 + wad) * WAD;
         uint256 thisBalance = dai.balanceOf(address(this));
         uint256 holderBalance = dai.balanceOf(holder);
         dai.transferFrom(holder, address(this), wad);
