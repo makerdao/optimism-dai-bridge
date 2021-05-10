@@ -17,6 +17,7 @@ contract DaiEchidnaTest {
     address internal holder;
 
     uint256 internal constant WAD = 10**18;
+    uint256 internal constant MAX_SUPPLY = 10**15 * WAD;
 
     /// @dev Instantiate the Dai contract, and an holder address that will return dai when asked to.
     constructor () public {
@@ -36,10 +37,10 @@ contract DaiEchidnaTest {
 
     /// @dev Test that supply and balance hold on mint
     function mint(uint256 wad) public {
-        wad = wad % uint256(-1);
-        if (wad < WAD) wad = (1 + wad) * WAD;
         uint256 supply = dai.totalSupply();
         uint256 holderBalance = dai.balanceOf(holder);
+        wad = wad % sub(MAX_SUPPLY, supply);
+        if (wad < WAD) wad = (1 + wad) * WAD;
         dai.mint(holder, wad);
         assert(dai.balanceOf(holder) == add(holderBalance, wad));
         assert(dai.totalSupply() == add(supply, wad));
@@ -47,10 +48,10 @@ contract DaiEchidnaTest {
 
     /// @dev Test that supply and balance hold on burn
     function burn(uint256 wad) public {
-        wad = wad % uint256(-1);
-        if (wad < WAD) wad = (1 + wad) * WAD;
         uint256 supply = dai.totalSupply();
         uint256 holderBalance = dai.balanceOf(holder);
+        wad = wad % sub(MAX_SUPPLY, supply);
+        if (wad < WAD) wad = (1 + wad) * WAD;
         dai.burn(holder, wad);
         assert(dai.balanceOf(holder) == sub(holderBalance, wad));
         assert(dai.totalSupply() == sub(supply, wad));
@@ -58,10 +59,10 @@ contract DaiEchidnaTest {
 
     /// @dev Test that supply and balance hold on transfer.
     function transfer(uint256 wad) public {
-        wad = wad % uint256(-1);
-        if (wad < WAD) wad = (1 + wad) * WAD;
-        uint256 thisBalance = dai.balanceOf(address(this));
+        uint256 supply = dai.totalSupply();
         uint256 holderBalance = dai.balanceOf(holder);
+        wad = wad % sub(MAX_SUPPLY, supply);
+        if (wad < WAD) wad = (1 + wad) * WAD;
         dai.transfer(holder, wad);
         assert(dai.balanceOf(address(this)) == sub(thisBalance, wad));
         assert(dai.balanceOf(holder) == add(holderBalance, wad));
@@ -69,10 +70,10 @@ contract DaiEchidnaTest {
 
     /// @dev Test that supply and balance hold on transferFrom.
     function transferFrom(uint256 wad) public {
-        wad = wad % uint256(-1);
-        if (wad < WAD) wad = (1 + wad) * WAD;
-        uint256 thisBalance = dai.balanceOf(address(this));
+        uint256 supply = dai.totalSupply();
         uint256 holderBalance = dai.balanceOf(holder);
+        wad = wad % sub(MAX_SUPPLY, supply);
+        if (wad < WAD) wad = (1 + wad) * WAD;
         dai.transferFrom(holder, address(this), wad);
         assert(dai.balanceOf(holder) == sub(holderBalance, wad));
         assert(dai.balanceOf(address(this)) == add(thisBalance, wad));
