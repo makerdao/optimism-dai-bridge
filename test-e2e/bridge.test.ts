@@ -1,6 +1,5 @@
 import { Wallet } from '@ethersproject/wallet'
 import { expect } from 'chai'
-import { Contract } from 'ethers'
 import { ethers as l1 } from 'hardhat'
 
 import {
@@ -32,14 +31,14 @@ describe('bridge', () => {
   let watcher: any
 
   let l1Dai: Dai
-  let l1DaiDeposit: Contract
-  let l1DaiDepositV2: Contract
-  let l1GovernanceRelay: Contract
-  let l2Dai: Contract
-  let l2Minter: Contract
-  let l2MinterV2: Contract
-  let l2GovernanceRelay: Contract
-  let l2UpgradeSpell: Contract
+  let l1DaiDeposit: L1ERC20Gateway
+  let l1DaiDepositV2: L1ERC20Gateway
+  let l1GovernanceRelay: L1GovernanceRelay
+  let l2Dai: Dai
+  let l2Minter: L2DepositedToken
+  let l2MinterV2: L2DepositedToken
+  let l2GovernanceRelay: L2GovernanceRelay
+  let l2UpgradeSpell: TestBridgeUpgradeSpell
   const initialL1DaiNumber = q18(10000)
   const spellGasLimit = 5000000
 
