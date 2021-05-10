@@ -78,7 +78,9 @@ describe('Dai', () => {
       })
 
       it('should not transfer to zero address', async () => {
-        await expect(dai.connect(signers.user1).transfer(ethers.constants.AddressZero, 1)).to.be.revertedWith('Dai/invalid-address')
+        await expect(dai.connect(signers.user1).transfer(ethers.constants.AddressZero, 1)).to.be.revertedWith(
+          'Dai/invalid-address',
+        )
         await expect(
           dai.connect(signers.user1).transferFrom(signers.user1.address, ethers.constants.AddressZero, 1),
         ).to.be.revertedWith('Dai/invalid-address')
@@ -248,9 +250,8 @@ describe('Dai', () => {
         })
 
         it('should not increaseAllowance beyond MAX', async () => {
-          await expect(
-            dai.connect(signers.user1).increaseAllowance(signers.user2.address, ethers.constants.MaxUint256),
-          ).to.be.reverted
+          await expect(dai.connect(signers.user1).increaseAllowance(signers.user2.address, ethers.constants.MaxUint256))
+            .to.be.reverted
         })
 
         it('decreaseAllowance should decrease allowance', async () => {
