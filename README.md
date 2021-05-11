@@ -65,3 +65,17 @@ yarn test-e2e  # runs unit tests
 Run `yarn test:fix` to run linting in fix mode, auto-formatting and unit tests.
 
 Running `yarn test` makes sure that contracts are compiled. Running `yarn test-e2e` doesn't.
+
+
+## Test deployments:
+
+### Kovan:
+
+```
+L1Escrow:  0xefd3AD64a792779857c18f6a7474DE24EdD30699
+L2 DAI:  0xc57D40C0a9815893Bd78C6DBCd9324F491542487
+L2 Gateway:  0x6D7F3Bc1e6be5C667c05E2eDE1Cdb0219c46dAe8
+L1 Gateway:  0x63b83A660467ED9B3FE33F3CA361F6A282064f73
+L2 Governance Relay:  0x6D7F3Bc1e6be5C667c05E2eDE1Cdb0219c46dAe8
+L1 Governance Relay:  0x63b83A660467ED9B3FE33F3CA361F6A282064f73
+```

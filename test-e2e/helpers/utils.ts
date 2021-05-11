@@ -69,7 +69,7 @@ export async function deployContract<T extends Contract = Contract>(
   args: any[] = [],
 ): Promise<T> {
   const contractFactory = new ethers.ContractFactory(artifact.interface, artifact.bytecode, signer)
-  const contractDeployed = await contractFactory.deploy(...args, ZERO_GAS_OPTS)
+  const contractDeployed = await contractFactory.deploy(...args)
 
   await contractDeployed.deployed()
 
