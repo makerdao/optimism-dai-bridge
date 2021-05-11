@@ -1,5 +1,7 @@
-pragma solidity >0.5.0 <0.8.0;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+pragma solidity >=0.7.6;
+pragma abicoder v2;
 
 /**
 ONLY PURPOSE OF THIS FILE IS TO FORCE HARDHAT TO COMPILE CONTRACT FROM @eth-optmism/contracts.
