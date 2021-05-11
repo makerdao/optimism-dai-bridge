@@ -7,19 +7,14 @@ import {Abs_L1TokenGateway} from '@eth-optimism/contracts/build/contracts/OVM/br
 import {iOVM_ERC20} from '@eth-optimism/contracts/build/contracts/iOVM/precompiles/iOVM_ERC20.sol';
 import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 
+// Managed locked funds in L1Escrow and send / receive messages to L2Gateway counterpart
+// Note: when bridge is closed it will still process in progress messages
+
 contract L1ERC20Gateway is Abs_L1TokenGateway, Ownable {
   iOVM_ERC20 public immutable l1ERC20;
   address public immutable escrow;
   bool public isOpen = true;
 
-  /***************
-   * Constructor *
-   ***************/
-
-  /**
-   * @param _l1ERC20 L1 ERC20 address this contract stores deposits for
-   * @param _l2DepositedERC20 L2 Gateway address on the chain being deposited into
-   */
   constructor(
     iOVM_ERC20 _l1ERC20,
     address _l2DepositedERC20,
@@ -30,22 +25,14 @@ contract L1ERC20Gateway is Abs_L1TokenGateway, Ownable {
     escrow = _escrow;
   }
 
+  // --- Administration ---
+
   function close() public onlyOwner {
     isOpen = false;
   }
 
-  /**************
-   * Accounting *
-   **************/
+  // --- Internal methods ---
 
-  /**
-   * @dev When a deposit is initiated on L1, the L1 Gateway
-   * transfers the funds to itself for future withdrawals
-   *
-   * @param _from L1 address ETH is being deposited from
-   * @param _to L2 address that the ETH is being deposited to
-   * @param _amount Amount of ERC20 to send
-   */
   function _handleInitiateDeposit(
     address _from,
     address _to,
@@ -56,13 +43,6 @@ contract L1ERC20Gateway is Abs_L1TokenGateway, Ownable {
     l1ERC20.transferFrom(_from, escrow, _amount);
   }
 
-  /**
-   * @dev When a withdrawal is finalized on L1, the L1 Gateway
-   * transfers the funds to the withdrawer
-   *
-   * @param _to L1 address that the ERC20 is being withdrawn to
-   * @param _amount Amount of ERC20 to send
-   */
   function _handleFinalizeWithdrawal(address _to, uint256 _amount) internal override {
     // Transfer withdrawn funds out to withdrawer
     l1ERC20.transferFrom(escrow, _to, _amount);

@@ -7,9 +7,8 @@ import {OVM_CrossDomainEnabled} from "@eth-optimism/contracts/build/contracts/li
 
 import "../l2/L2GovernanceRelay.sol";
 
-/**
- * Relay messages from governance to L2.
- */
+// Relay a message from L1 to L2GovernanceRelay
+
 contract L1GovernanceRelay is OVM_CrossDomainEnabled {
     
   // --- Auth ---

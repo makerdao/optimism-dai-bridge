@@ -7,6 +7,8 @@ interface ApproveLike {
   function approve(address, uint256) external;
 }
 
+// Escrow funds on L1, manage approval rights
+
 contract L1Escrow {
     
   // --- Auth ---

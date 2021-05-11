@@ -4,9 +4,8 @@ pragma solidity >=0.7.6;
 
 import {OVM_CrossDomainEnabled} from "@eth-optimism/contracts/build/contracts/libraries/bridge/OVM_CrossDomainEnabled.sol";
 
-/**
- * Receive messages from L1 governance.
- */
+// Receive xchain message from L1 counterpart and execute given spell
+
 contract L2GovernanceRelay is OVM_CrossDomainEnabled {
 
   event Initialized(address l1GovernanceRelay);
