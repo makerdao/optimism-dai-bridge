@@ -72,9 +72,6 @@ contract Dai {
     assembly {chainId := chainid()}
     deploymentChainId = chainId;
     _DOMAIN_SEPARATOR = _calculateDomainSeparator(chainId);
-
-    // Set addresses which disallow transfer
-    balanceOf[address(this)] = balanceOf[address(0)] = type(uint256).max;
   }
 
   function _calculateDomainSeparator(uint256 chainId) private view returns (bytes32) {
@@ -96,17 +93,19 @@ contract Dai {
 
   // --- ERC20 Mutations ---
   function transfer(address to, uint256 value) external returns (bool) {
+    require(to != address(0) && to != address(this), "Dai/invalid-address");
     uint256 balance = balanceOf[msg.sender];
     require(balance >= value, "Dai/insufficient-balance");
 
     balanceOf[msg.sender] = balance - value;
-    balanceOf[to] = add(balanceOf[to], value);
+    balanceOf[to] += value;
 
     emit Transfer(msg.sender, to, value);
 
     return true;
   }
   function transferFrom(address from, address to, uint256 value) external returns (bool) {
+    require(to != address(0) && to != address(this), "Dai/invalid-address");
     uint256 balance = balanceOf[from];
     require(balance >= value, "Dai/insufficient-balance");
 
@@ -120,7 +119,7 @@ contract Dai {
     }
 
     balanceOf[from] = balance - value;
-    balanceOf[to] = add(balanceOf[to], value);
+    balanceOf[to] += value;
 
     emit Transfer(from, to, value);
 
@@ -154,6 +153,7 @@ contract Dai {
   
   // --- Mint/Burn ---
   function mint(address to, uint256 value) external auth {
+    require(to != address(0) && to != address(this), "Dai/invalid-address");
     balanceOf[to] = add(balanceOf[to], value);
     totalSupply   = add(totalSupply, value);
 
