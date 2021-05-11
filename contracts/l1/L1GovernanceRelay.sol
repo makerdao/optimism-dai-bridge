@@ -1,15 +1,14 @@
-// SPDX-License-Identifier: MIT
-// @unsupported: ovm 
-pragma solidity >0.5.0 <0.8.0;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2021 Dai Foundation
+// @unsupported: ovm
+pragma solidity >=0.7.6;
 
 import {OVM_CrossDomainEnabled} from "@eth-optimism/contracts/build/contracts/libraries/bridge/OVM_CrossDomainEnabled.sol";
 
 import "../l2/L2GovernanceRelay.sol";
 
-/**
- * Relay messages from governance to L2.
- */
+// Relay a message from L1 to L2GovernanceRelay
+
 contract L1GovernanceRelay is OVM_CrossDomainEnabled {
     
   // --- Auth ---
