@@ -1,11 +1,4 @@
-import {
-  Dai,
-  L1ERC20Gateway,
-  L1Escrow,
-  L1GovernanceRelay,
-  L2DepositedToken,
-  L2GovernanceRelay,
-} from '../typechain'
+import { Dai, L1ERC20Gateway, L1Escrow, L1GovernanceRelay, L2DepositedToken, L2GovernanceRelay } from '../typechain'
 import { deployContract, getL2Factory, MAX_UINT256, waitForTx } from '../test-e2e/helpers/utils'
 import { Signer } from '@ethersproject/abstract-signer'
 
