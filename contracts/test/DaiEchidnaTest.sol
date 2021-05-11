@@ -48,16 +48,16 @@ contract DaiEchidnaTest {
     /// @dev Test that supply and balance hold on burn
     function burn(uint256 wad) public {
         uint256 supply = dai.totalSupply();
-        uint256 holderBalance = dai.balanceOf(holder);
+        uint256 holderBalance = dai.balanceOf(holder) == 0 ? 1 : dai.balanceOf(holder);
         wad = 1 + wad % holderBalance;
         dai.burn(holder, wad);
         assert(dai.balanceOf(holder) == sub(holderBalance, wad));
         assert(dai.totalSupply() == sub(supply, wad));
     }
 
-    /// @dev Test that supply and balance hold on transfer.
+    /// @dev Test that supply and balance hold on transfer
     function transfer(uint256 wad) public {
-        uint256 thisBalance = dai.balanceOf(address(this));
+        uint256 thisBalance = dai.balanceOf(address(this)) == 0 ? 1 : dai.balanceOf(address(this));
         uint256 holderBalance = dai.balanceOf(holder);
         wad = 1 + wad % thisBalance;
         dai.transfer(holder, wad);
@@ -65,10 +65,10 @@ contract DaiEchidnaTest {
         assert(dai.balanceOf(holder) == add(holderBalance, wad));
     }
 
-    /// @dev Test that supply and balance hold on transferFrom.
+    /// @dev Test that supply and balance hold on transferFrom
     function transferFrom(uint256 wad) public {
         uint256 thisBalance = dai.balanceOf(address(this));
-        uint256 holderBalance = dai.balanceOf(holder);
+        uint256 holderBalance = dai.balanceOf(holder) == 0 ? 1 : dai.balanceOf(holder);
         wad = 1 + wad % holderBalance;
         dai.transferFrom(holder, address(this), wad);
         assert(dai.balanceOf(holder) == sub(holderBalance, wad));
