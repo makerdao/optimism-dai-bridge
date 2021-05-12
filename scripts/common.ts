@@ -22,7 +22,7 @@ export async function deploy(opts: Options) {
   const l1Escrow = await deployContract<L1Escrow>(opts.l1Deployer, await opts.l1.getContractFactory('L1Escrow'), [
     opts.L1_TX_OPTS,
   ])
-  console.log('L1Escrow: ', l1Escrow.address)
+  console.log('L1 Escrow: ', l1Escrow.address)
   const l2Dai = await deployContract<Dai>(opts.l2Deployer, await getL2Factory('Dai'), [opts.L2_TX_OPTS])
   console.log('L2 DAI: ', l2Dai.address)
   const l2Gateway = await deployContract<L2Gateway>(opts.l2Deployer, await getL2Factory('L2Gateway'), [
@@ -47,13 +47,13 @@ export async function deploy(opts: Options) {
     await getL2Factory('L2GovernanceRelay'),
     [opts.L2_XDOMAIN_MESSENGER, opts.L2_TX_OPTS],
   )
-  console.log('L2 Governance Relay: ', l2Gateway.address)
+  console.log('L2 Governance Relay: ', l2GovernanceRelay.address)
   const l1GovernanceRelay = await deployContract<L1GovernanceRelay>(
     opts.l1Deployer,
     await opts.l1.getContractFactory('L1GovernanceRelay'),
     [l2GovernanceRelay.address, opts.L1_XDOMAIN_MESSENGER, opts.L1_TX_OPTS],
   )
-  console.log('L1 Governance Relay: ', l1Gateway.address)
+  console.log('L1 Governance Relay: ', l1GovernanceRelay.address)
   await l2GovernanceRelay.init(l1GovernanceRelay.address, opts.L2_TX_OPTS)
 
   // Permissions
