@@ -1,4 +1,4 @@
-import { Dai, L1ERC20Gateway, L1Escrow, L1GovernanceRelay, L2DepositedToken, L2GovernanceRelay } from '../typechain'
+import { Dai, L1Gateway, L1Escrow, L1GovernanceRelay, L2Gateway, L2GovernanceRelay } from '../typechain'
 import { deployContract, getL2Factory, MAX_UINT256, waitForTx } from '../test-e2e/helpers/utils'
 import { Signer } from '@ethersproject/abstract-signer'
 
@@ -25,17 +25,19 @@ export async function deploy(opts: Options) {
   console.log('L1Escrow: ', l1Escrow.address)
   const l2Dai = await deployContract<Dai>(opts.l2Deployer, await getL2Factory('Dai'), [opts.L2_TX_OPTS])
   console.log('L2 DAI: ', l2Dai.address)
-  const l2Gateway = await deployContract<L2DepositedToken>(opts.l2Deployer, await getL2Factory('L2DepositedToken'), [
+  const l2Gateway = await deployContract<L2Gateway>(opts.l2Deployer, await getL2Factory('L2Gateway'), [
     opts.L2_XDOMAIN_MESSENGER,
     l2Dai.address,
     opts.L2_TX_OPTS,
   ])
   console.log('L2 Gateway: ', l2Gateway.address)
-  const l1Gateway = await deployContract<L1ERC20Gateway>(
-    opts.l1Deployer,
-    await opts.l1.getContractFactory('L1ERC20Gateway'),
-    [opts.L1_DAI_ADDRESS, l2Gateway.address, opts.L1_XDOMAIN_MESSENGER, l1Escrow.address, opts.L1_TX_OPTS],
-  )
+  const l1Gateway = await deployContract<L1Gateway>(opts.l1Deployer, await opts.l1.getContractFactory('L1Gateway'), [
+    opts.L1_DAI_ADDRESS,
+    l2Gateway.address,
+    opts.L1_XDOMAIN_MESSENGER,
+    l1Escrow.address,
+    opts.L1_TX_OPTS,
+  ])
   console.log('L1 Gateway: ', l1Gateway.address)
   await l2Gateway.init(l1Gateway.address, opts.L2_TX_OPTS)
 
@@ -77,7 +79,7 @@ export async function deploy(opts: Options) {
     l1Escrow,
     l1Gateway,
     l1GovernanceRelay,
-    L2DepositedToken,
+    L2Gateway,
     l2Dai,
     l2Gateway,
     l2GovernanceRelay,
