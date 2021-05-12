@@ -137,7 +137,7 @@ describe('bridge', () => {
       l1Escrow.address,
       ZERO_GAS_OPTS,
     ])
-    await waitForTx(l1Escrow.approve(l1Dai.address, l1DaiDepositV2.address, MAX_UINT256))
+    await waitForTx(l1Escrow.approve(l1Dai.address, l1DaiDepositV2.address, MAX_UINT256, ZERO_GAS_OPTS))
     console.log('L1 DAI Deposit V2: ', l1DaiDepositV2.address)
 
     await waitForTx(l2GatewayV2.init(l1DaiDepositV2.address, ZERO_GAS_OPTS))
@@ -146,12 +146,12 @@ describe('bridge', () => {
     l2UpgradeSpell = await deployContract<TestBridgeUpgradeSpell>(
       l2Signer,
       await getL2Factory('TestBridgeUpgradeSpell'),
-      [],
+      [ZERO_GAS_OPTS],
     )
     console.log('L2 Bridge Upgrade Spell: ', l2UpgradeSpell.address)
 
     // Close L1 bridge V1
-    await l1DaiDeposit.connect(l1Signer).close()
+    await l1DaiDeposit.connect(l1Signer).close(ZERO_GAS_OPTS)
     console.log('L1 Bridge Closed')
 
     // Close L2 bridge V1
@@ -161,13 +161,14 @@ describe('bridge', () => {
         l2UpgradeSpell.address,
         l2UpgradeSpell.interface.encodeFunctionData('upgradeBridge', [l2Gateway.address, l2GatewayV2.address]),
         spellGasLimit,
+        ZERO_GAS_OPTS
       )
     console.log('L2 Bridge Closed')
 
     console.log('Testing V2 bridge deposit/withdrawal...')
     const depositAmount = q18(500)
-    await waitForTx(l1Dai.approve(l1DaiDepositV2.address, depositAmount))
-    await waitToRelayTxsToL2(l1DaiDepositV2.deposit(depositAmount), watcher)
+    await waitForTx(l1Dai.approve(l1DaiDepositV2.address, depositAmount,ZERO_GAS_OPTS))
+    await waitToRelayTxsToL2(l1DaiDepositV2.deposit(depositAmount, ZERO_GAS_OPTS), watcher)
 
     const balance = await l2Dai.balanceOf(l1Signer.address)
     expect(balance.toString()).to.be.eq(depositAmount)
