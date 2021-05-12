@@ -65,3 +65,38 @@ yarn test-e2e  # runs unit tests
 Run `yarn test:fix` to run linting in fix mode, auto-formatting and unit tests.
 
 Running `yarn test` makes sure that contracts are compiled. Running `yarn test-e2e` doesn't.
+
+## Fuzzing
+
+### Install Echidna
+
+- Precompiled Binaries (recommended)
+
+Before starting, make sure Slither is installed: `$ pip3 install slither-analyzer`
+
+To quickly test Echidna in Linux or MacOS: [release page](https://github.com/crytic/echidna/releases)
+
+### Local Dependencies
+
+- Slither `$ pip3 install slither-analyzer`
+
+- solc-select `$ pip3 install solc-select`
+
+### Local Fuzz Settings
+
+- Edit `echidna.config.yml`
+- Comment `format: "text"`
+- Set `coverage` to true
+- Uncomment `seqLen`
+- Uncomment `testLimit`
+- Uncomment `estimateGas` (optional)
+- Uncomment `corpusDir`
+
+### Run Echidna Tests
+
+- Install solc version: `$ solc-select install 0.7.6`
+
+- Select solc version: `$ solc-select use 0.7.6`
+
+- Run Echidna Tests:
+  `$ echidna-test contracts/test/DaiEchidnaTest.sol --contract DaiEchidnaTest --config echidna.config.yml`
