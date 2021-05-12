@@ -1,5 +1,6 @@
 import { HardhatUserConfig } from 'hardhat/config'
 
+import '@nomiclabs/hardhat-etherscan'
 import '@nomiclabs/hardhat-ethers'
 import '@nomiclabs/hardhat-waffle'
 import '@nomiclabs/hardhat-web3'
@@ -33,6 +34,12 @@ const config: HardhatUserConfig = {
       url: '',
       ovm: true,
     },
+    kovan: {
+      url: 'https://parity0.kovan.makerfoundation.com:8545',
+    },
+  },
+  etherscan: {
+    apiKey: process.env.ETHERSCAN_KEY ?? '', // provide via env
   },
 }
 
