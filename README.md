@@ -67,15 +67,16 @@ Run `yarn test:fix` to run linting in fix mode, auto-formatting and unit tests.
 Running `yarn test` makes sure that contracts are compiled. Running `yarn test-e2e` doesn't.
 
 
-## Test deployments:
+## Deployments:
 
 ### Kovan:
 
 ```
-L1Escrow:  0xefd3AD64a792779857c18f6a7474DE24EdD30699
-L2 DAI:  0xc57D40C0a9815893Bd78C6DBCd9324F491542487
-L2 Gateway:  0x6D7F3Bc1e6be5C667c05E2eDE1Cdb0219c46dAe8
-L1 Gateway:  0x63b83A660467ED9B3FE33F3CA361F6A282064f73
-L2 Governance Relay:  0x6D7F3Bc1e6be5C667c05E2eDE1Cdb0219c46dAe8
-L1 Governance Relay:  0x63b83A660467ED9B3FE33F3CA361F6A282064f73
+L1 DAI: 0x4F96Fe3b7A6Cf9725f59d353F723c1bDb64CA6Aa # part of MCD deployment on kovan: https://changelog.makerdao.com/
+L1 Gateway: 0x47036D738D723554073e383B42bb99d4BE81cF69
+L1 Governance Relay: 0x47036D738D723554073e383B42bb99d4BE81cF69
+L1Escrow: 0x4f9E9b338BD538987CFf5755Da4907AfdeA91418
+L2 DAI: 0x5a30364c5AA7bc0BA7432e7Acaba4248CD57531a
+L2 Gateway: 0x1C57231764a1EEBFA172FFdB90232f573Ae731EB
+L2 Governance Relay: 0x1C57231764a1EEBFA172FFdB90232f573Ae731EB
 ```
