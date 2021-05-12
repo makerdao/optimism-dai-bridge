@@ -13,7 +13,7 @@ const L1_ESM_ADDRESS = '0xD5D728446275B0A12E4a4038527974b92353B4a9'
 const L1_DAI_ADDRESS = '0x4F96Fe3b7A6Cf9725f59d353F723c1bDb64CA6Aa'
 // address: 0xFF2Bd97cEfd97287f1aAbA63BC5c243bb20Cf4A0
 const L1_DEPLOYER_PRIV_KEY = '89142aa5330b9f1db2901ab302a4589c2a973ae2a48a53e45bb08cc265febce2' // random address with some funds on kovan
-const L1_XDOMAIN_MESSENGER = '0x48062eD9b6488EC41c4CfbF2f568D7773819d8C9'
+const L1_XDOMAIN_MESSENGER = '0x78b88FD62FBdBf67b9C5C6528CF84E9d30BB28e0'
 const L1_RPC_URL = 'https://parity0.kovan.makerfoundation.com:8545'
 const L2_DEPLOYER_PRIV_KEY = '6ea93392eb84fad521111def2e8fbd9c45c2b085907797e1a60a210d5bf7089d' // random empty address (l2 has no gas fees ATM)
 const L2_RPC_URL = 'https://kovan.optimism.io/'
