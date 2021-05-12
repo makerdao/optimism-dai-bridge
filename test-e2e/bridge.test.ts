@@ -161,13 +161,13 @@ describe('bridge', () => {
         l2UpgradeSpell.address,
         l2UpgradeSpell.interface.encodeFunctionData('upgradeBridge', [l2Gateway.address, l2GatewayV2.address]),
         spellGasLimit,
-        ZERO_GAS_OPTS
+        ZERO_GAS_OPTS,
       )
     console.log('L2 Bridge Closed')
 
     console.log('Testing V2 bridge deposit/withdrawal...')
     const depositAmount = q18(500)
-    await waitForTx(l1Dai.approve(l1DaiDepositV2.address, depositAmount,ZERO_GAS_OPTS))
+    await waitForTx(l1Dai.approve(l1DaiDepositV2.address, depositAmount, ZERO_GAS_OPTS))
     await waitToRelayTxsToL2(l1DaiDepositV2.deposit(depositAmount, ZERO_GAS_OPTS), watcher)
 
     const balance = await l2Dai.balanceOf(l1Signer.address)
