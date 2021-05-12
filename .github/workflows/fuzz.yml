@@ -61,7 +61,7 @@ jobs:
         run: |
           sudo wget -O /tmp/echidna-test.zip https://github.com/crytic/echidna/releases/download/v1.7.0/echidna-test-1.7.0-Ubuntu-18.04.zip
           sudo unzip /tmp/echidna-test.zip
-          sudo tar -xf /tmp/echidna-test.tar.gz -C /usr/bin
+          sudo tar -xf echidna-test.tar.g -C /usr/bin
           sudo chmod +x /usr/bin/echidna-test
       - name: Run ${{ matrix.testName }}
         run:
