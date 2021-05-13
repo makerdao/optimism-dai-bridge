@@ -82,16 +82,6 @@ To quickly test Echidna in Linux or MacOS: [release page](https://github.com/cry
 
 - solc-select `$ pip3 install solc-select`
 
-### Local Fuzz Settings
-
-- Edit `echidna.config.yml`
-- Comment `format: "text"`
-- Set `coverage` to true
-- Uncomment `seqLen`
-- Uncomment `testLimit`
-- Uncomment `estimateGas` (optional)
-- Uncomment `corpusDir`
-
 ### Run Echidna Tests
 
 - Install solc version: `$ solc-select install 0.7.6`
