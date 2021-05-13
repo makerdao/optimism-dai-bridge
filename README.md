@@ -16,7 +16,8 @@ Optimism Dai and upgradable token bridge
 
 ## Scripts
 
-- `scripts/deployMainnet.ts` - deploys a full solution to forked mainnet and testnet optimism.
+- `scripts/deployMainnet.ts` - deploys a full solution to forked mainnet and optimism testnet on kovan. Run with `yarn deploy:mainnet-fork`
+- `scripts/deployKovan.ts` - deploys a full solution to kovan and optimism testnet on kovan. Run with `yarn deploy:kovan`
 
 ## Upgrade guide
 

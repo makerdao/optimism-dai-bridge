@@ -16,7 +16,8 @@
     "test": "hardhat test",
     "test-e2e": "mocha --config .mocharc-e2e.js",
     "test:fix": "yarn lint:fix && yarn format:fix && yarn test && yarn typecheck",
-    "deploy-mainnet-fork": "FORKMODE=1 TS_NODE_TRANSPILE_ONLY=1 ts-node ./scripts/deployMainnet.ts"
+    "deploy:mainnet-fork": "FORKMODE=1 TS_NODE_TRANSPILE_ONLY=1 ts-node ./scripts/deployMainnet.ts",
+    "deploy:kovan": "TS_NODE_TRANSPILE_ONLY=1 ts-node ./scripts/deployKovan.ts"
   },
   "dependencies": {
     "@eth-optimism/contracts": "^0.1.11",
