@@ -64,5 +64,5 @@ jobs:
           sudo chmod +x /usr/bin/echidna-test
       - name: Run ${{ matrix.testName }}
         run:
-          echidna-test ./contracts/test/DaiEchidnaTest.sol --contract ${{ matrix.testName }} --config echidna.config.yml
-          --check-asserts
+          echidna-test ./contracts/test/DaiEchidnaTest.sol --contract ${{ matrix.testName }} --config
+          echidna.config.ci.yml --check-asserts
