@@ -3,9 +3,9 @@
 #checkAsserts checks assertions
 checkAsserts: true
 #seqLen defines how many transactions are in a test sequence
-seqLen: 50
+seqLen: 200
 #testLimit is the number of test sequences to run
-testLimit: 100000
+testLimit: 1000000
 #estimateGas makes echidna perform analysis of maximum gas costs for functions (experimental)
 estimateGas: true
 #directory to save the corpus; by default is disabled
