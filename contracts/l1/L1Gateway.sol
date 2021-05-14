@@ -10,7 +10,7 @@ import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 // Managed locked funds in L1Escrow and send / receive messages to L2Gateway counterpart
 // Note: when bridge is closed it will still process in progress messages
 
-contract L1ERC20Gateway is Abs_L1TokenGateway, Ownable {
+contract L1Gateway is Abs_L1TokenGateway, Ownable {
   iOVM_ERC20 public immutable l1ERC20;
   address public immutable escrow;
   bool public isOpen = true;
@@ -38,7 +38,7 @@ contract L1ERC20Gateway is Abs_L1TokenGateway, Ownable {
     address _to,
     uint256 _amount
   ) internal override {
-    require(isOpen, 'L1ERC20Gateway/closed');
+    require(isOpen, 'L1Gateway/closed');
 
     l1ERC20.transferFrom(_from, escrow, _amount);
   }

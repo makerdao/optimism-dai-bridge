@@ -6,3 +6,4 @@ typechain
 crytic-export/
 artifacts-ovm
 cache-ovm
+.env

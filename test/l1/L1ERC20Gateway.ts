@@ -2,7 +2,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
 
-import { Dai__factory, L1ERC20Gateway__factory } from '../../typechain'
+import { Dai__factory, L1Gateway__factory } from '../../typechain'
 import { deploy, deployMock } from '../helpers'
 
 const initialTotalL1Supply = 3000
@@ -11,13 +11,13 @@ const depositAmount = 100
 const errorMessages = {
   invalidMessenger: 'OVM_XCHAIN: messenger contract unauthenticated',
   invalidXDomainMessageOriginator: 'OVM_XCHAIN: wrong sender of cross-domain message',
-  bridgeClosed: 'L1ERC20Gateway/closed',
+  bridgeClosed: 'L1Gateway/closed',
   notOwner: 'Ownable: caller is not the owner',
   daiInsufficientAllowance: 'Dai/insufficient-allowance',
   daiInsufficientBalance: 'Dai/insufficient-balance',
 }
 
-describe('L1ERC20Gateway', () => {
+describe('L1Gateway', () => {
   describe('deposit()', () => {
     it('escrows funds and sends xchain message on deposit', async () => {
       const [escrow, l1MessengerImpersonator, user1] = await ethers.getSigners()
@@ -221,7 +221,7 @@ describe('L1ERC20Gateway', () => {
       )
     })
 
-    it('reverts when called by XDomainMessenger but not relying message from l2Minter', async () => {
+    it('reverts when called by XDomainMessenger but not relying message from l2Gateway', async () => {
       const [escrow, l1MessengerImpersonator, user1, user2, user3] = await ethers.getSigners()
       const { l1ERC20Gateway, l1CrossDomainMessengerMock } = await setupWithdrawTest({
         escrow,
@@ -285,13 +285,13 @@ async function setupTest(signers: {
   escrow: SignerWithAddress
   user1: SignerWithAddress
 }) {
-  const l2DepositedTokenMock = await deployMock('L2DepositedToken')
+  const l2DepositedTokenMock = await deployMock('L2Gateway')
   const l1CrossDomainMessengerMock = await deployMock(
     'OVM_L1CrossDomainMessenger',
     { address: await signers.l1MessengerImpersonator.getAddress() }, // This allows us to use an ethers override {from: Mock__OVM_L2CrossDomainMessenger.address} to mock calls
   )
   const l1Dai = await deploy<Dai__factory>('Dai', [])
-  const l1ERC20Gateway = await deploy<L1ERC20Gateway__factory>('L1ERC20Gateway', [
+  const l1ERC20Gateway = await deploy<L1Gateway__factory>('L1Gateway', [
     l1Dai.address,
     l2DepositedTokenMock.address,
     l1CrossDomainMessengerMock.address,

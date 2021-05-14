@@ -16,7 +16,8 @@
     "test": "hardhat test",
     "test-e2e": "mocha --config .mocharc-e2e.js",
     "test:fix": "yarn lint:fix && yarn format:fix && yarn test && yarn typecheck",
-    "deploy-mainnet-fork": "FORKMODE=1 TS_NODE_TRANSPILE_ONLY=1 ts-node ./scripts/deployMainnet.ts"
+    "deploy:mainnet-fork": "FORKMODE=1 TS_NODE_TRANSPILE_ONLY=1 ts-node ./scripts/deployMainnet.ts",
+    "deploy:kovan": "TS_NODE_TRANSPILE_ONLY=1 ts-node ./scripts/deployKovan.ts"
   },
   "dependencies": {
     "@eth-optimism/contracts": "^0.1.11",
@@ -25,6 +26,7 @@
     "@eth-optimism/solc": "0.5.16-alpha.7",
     "@eth-optimism/watcher": "^0.0.1-alpha.9",
     "@nomiclabs/hardhat-ethers": "=2.0.1",
+    "@nomiclabs/hardhat-etherscan": "^2.1.2",
     "@nomiclabs/hardhat-waffle": "=2.0.1",
     "@nomiclabs/hardhat-web3": "^2.0.0",
     "@openzeppelin/contracts": "^3.4.0",
@@ -39,6 +41,7 @@
     "@typescript-eslint/parser": "^4.9.0",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
+    "dotenv": "^9.0.2",
     "earljs": "^0.1.10",
     "eslint": "^7.15.0",
     "eslint-config-typestrict": "^1.0.1",
@@ -52,6 +55,7 @@
     "hardhat": "=2.1.1",
     "mocha": "^8.1.1",
     "prettier": "^2.2.1",
+    "ts-essentials": "^7.0.1",
     "ts-node": "^9.0.0",
     "typechain": "^5.0.0",
     "typescript": "^4.0.2",

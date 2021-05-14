@@ -9,14 +9,19 @@ Optimism Dai and upgradable token bridge
 ## Contracts
 
 - `l2/dai.sol` - Improved DAI contract
-- `l1/L1ERC20Gateway.sol` - L1 side of the bridge. Escrows L1 DAI in a specified address. Unlocks L1 DAI upon withdrawal
-  message from `L2DepositedToken`
-- `l2/L2DepositedToken.sol` - L2 side of the bridge. Mints new L2 DAI after receiving message from `L1ERC20Gateway`.
-  Burns L2 DAI tokens when withdrawals happen.
+- `l1/L1Gateway.sol` - L1 side of the bridge. Escrows L1 DAI in a specified address. Unlocks L1 DAI upon withdrawal
+  message from `L2Gateway`
+- `l2/L2Gateway.sol` - L2 side of the bridge. Mints new L2 DAI after receiving message from `L1Gateway`. Burns L2 DAI
+  tokens when withdrawals happen.
 
 ## Scripts
 
-- `scripts/deployMainnet.ts` - deploys a full solution to forked mainnet and testnet optimism.
+Some of these scripts may require valid `.env` file. Copy `.env.example` as `.env` and fill it out.
+
+- `scripts/deployMainnet.ts` - deploys a full solution to forked mainnet and optimism testnet on kovan. Run with
+  `yarn deploy:mainnet-fork`
+- `scripts/deployKovan.ts` - deploys a full solution to kovan and optimism testnet on kovan. Run with
+  `yarn deploy:kovan`
 
 ## Upgrade guide
 
@@ -30,9 +35,9 @@ bridge independently and connect to the same escrow. Thanks to this, no bridge w
 After deploying a new bridge you might consider closing the old one. Procedure is slightly complicated due to async
 messages like `finalizeDeposit` and `finalizeWithdraw` that can be in progress.
 
-An owner calls `L2DepositedToken.close()` and `L1ERC20Gateway.close()` so no new async messages can be sent to the other
-part of the bridge. After all async messages are done processing (can take up to 1 week) bridge is effectively closed.
-Now, you can consider revoking approval to access funds from escrow on L1 and token minting rights on L2.
+An owner calls `L2Gateway.close()` and `L1Gateway.close()` so no new async messages can be sent to the other part of the
+bridge. After all async messages are done processing (can take up to 1 week) bridge is effectively closed. Now, you can
+consider revoking approval to access funds from escrow on L1 and token minting rights on L2.
 
 ## Known Risks
 
@@ -42,8 +47,8 @@ Optimism is a new, not yet battle-tested system. If there is a bug that allows t
 messages from L2 it would be possible to drain escrowed funds. This can be caused by the bug inside
 `OVM_L1CrossDomainMessenger` contract or a bug preventing fraud proofs to be submitted.
 
-If malicious messages are not subject to a dispute window (1 week) all funds from escrow could be withdrawn by the attacker. This would
-cause L2 DAI being worthless.
+If malicious messages are not subject to a dispute window (1 week) all funds from escrow could be withdrawn by the
+attacker. This would cause L2 DAI being worthless.
 
 In case when such messages are still subject to a dispute window, it would be possible for governance to reject approval
 from `L1Gateway` to `L1Escrow` by calling `L1Escrow.approve(DAI, L1Gateway, 0)` and stop drainage.
@@ -126,3 +131,17 @@ To quickly test Echidna in Linux or MacOS: [release page](https://github.com/cry
 
 - Run Echidna Tests:
   `$ echidna-test contracts/test/DaiEchidnaTest.sol --contract DaiEchidnaTest --config echidna.config.yml`
+
+## Deployments:
+
+### Kovan:
+
+```
+L1 DAI: 0x4F96Fe3b7A6Cf9725f59d353F723c1bDb64CA6Aa # part of MCD deployment on kovan: https://changelog.makerdao.com/
+L1 Gateway:  0x6ee092cDe7B9660015C020ED4666EE90291aBd5d
+L1 Escrow:  0x9b0506371eee93Bb14427692E42c692827dc4468
+L1 Governance Relay:  0xEBb305baff5D3272e74683699E23D117E0fce143
+L2 DAI:  0xaB90DD8836a2Ac1eEF90B639c6895778ca56B0cA
+L2 Gateway:  0xEEC0359d2e689391FCa953364b53887d66057533
+L2 Governance Relay:  0x65943918c69D1aE0eF05f14f08f691B072Bc06eb
+```
