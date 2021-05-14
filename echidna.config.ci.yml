@@ -1,0 +1,6 @@
+#format can be "text" or "json" for different output (human or machine readable)
+format: 'text'
+#checkAsserts checks assertions
+checkAsserts: true
+#coverage controls coverage guided testing
+coverage: false

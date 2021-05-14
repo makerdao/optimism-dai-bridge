@@ -11,15 +11,17 @@ Optimism Dai and upgradable token bridge
 - `l2/dai.sol` - Improved DAI contract
 - `l1/L1Gateway.sol` - L1 side of the bridge. Escrows L1 DAI in a specified address. Unlocks L1 DAI upon withdrawal
   message from `L2Gateway`
-- `l2/L2Gateway.sol` - L2 side of the bridge. Mints new L2 DAI after receiving message from `L1Gateway`.
-  Burns L2 DAI tokens when withdrawals happen.
+- `l2/L2Gateway.sol` - L2 side of the bridge. Mints new L2 DAI after receiving message from `L1Gateway`. Burns L2 DAI
+  tokens when withdrawals happen.
 
 ## Scripts
 
 Some of these scripts may require valid `.env` file. Copy `.env.example` as `.env` and fill it out.
 
-- `scripts/deployMainnet.ts` - deploys a full solution to forked mainnet and optimism testnet on kovan. Run with `yarn deploy:mainnet-fork`
-- `scripts/deployKovan.ts` - deploys a full solution to kovan and optimism testnet on kovan. Run with `yarn deploy:kovan`
+- `scripts/deployMainnet.ts` - deploys a full solution to forked mainnet and optimism testnet on kovan. Run with
+  `yarn deploy:mainnet-fork`
+- `scripts/deployKovan.ts` - deploys a full solution to kovan and optimism testnet on kovan. Run with
+  `yarn deploy:kovan`
 
 ## Upgrade guide
 
@@ -33,9 +35,45 @@ bridge independently and connect to the same escrow. Thanks to this, no bridge w
 After deploying a new bridge you might consider closing the old one. Procedure is slightly complicated due to async
 messages like `finalizeDeposit` and `finalizeWithdraw` that can be in progress.
 
-An owner calls `L2Gateway.close()` and `L1Gateway.close()` so no new async messages can be sent to the other
-part of the bridge. After all async messages are done processing (can take up to 1 week) bridge is effectively closed.
-Now, you can consider revoking approval to access funds from escrow on L1 and token minting rights on L2.
+An owner calls `L2Gateway.close()` and `L1Gateway.close()` so no new async messages can be sent to the other part of the
+bridge. After all async messages are done processing (can take up to 1 week) bridge is effectively closed. Now, you can
+consider revoking approval to access funds from escrow on L1 and token minting rights on L2.
+
+## Known Risks
+
+### Optimism's bug
+
+Optimism is a new, not yet battle-tested system. If there is a bug that allows the attacker to proof an arbitrary
+messages from L2 it would be possible to drain escrowed funds. This can be caused by the bug inside
+`OVM_L1CrossDomainMessenger` contract or a bug preventing fraud proofs to be submitted.
+
+If malicious messages are not subject to a dispute window (1 week) all funds from escrow could be withdrawn by the
+attacker. This would cause L2 DAI being worthless.
+
+In case when such messages are still subject to a dispute window, it would be possible for governance to reject approval
+from `L1Gateway` to `L1Escrow` by calling `L1Escrow.approve(DAI, L1Gateway, 0)` and stop drainage.
+
+If such disastrous scenario occurs but governance succeeds to safe escrowed funds, rollup state can be reconstructed
+from the last valid state commitment and user funds and be retrieved in a separate process.
+
+## Invariants
+
+### L1 DAI Locked and L2 DAI Minted
+
+```
+L1DAI.balanceOf(escrow) ≥ L2DAI.totalSupply()
+```
+
+All DAI available on L2 should be locked on L1. This should hold true with more bridges as well.
+
+It's `>=` because:
+
+a) when depositing on L1, locking is instant but minting is an async message
+
+b) when withdrawing from L2, burning is instant but unlocking on L1 is an async message and is subject to a dispute
+period (1 week)
+
+c) someone can send L1DAI directly to escrow
 
 ## Running
 
@@ -69,6 +107,30 @@ Run `yarn test:fix` to run linting in fix mode, auto-formatting and unit tests.
 
 Running `yarn test` makes sure that contracts are compiled. Running `yarn test-e2e` doesn't.
 
+## Fuzzing
+
+### Install Echidna
+
+- Precompiled Binaries (recommended)
+
+Before starting, make sure Slither is installed: `$ pip3 install slither-analyzer`
+
+To quickly test Echidna in Linux or MacOS: [release page](https://github.com/crytic/echidna/releases)
+
+### Local Dependencies
+
+- Slither `$ pip3 install slither-analyzer`
+
+- solc-select `$ pip3 install solc-select`
+
+### Run Echidna Tests
+
+- Install solc version: `$ solc-select install 0.7.6`
+
+- Select solc version: `$ solc-select use 0.7.6`
+
+- Run Echidna Tests:
+  `$ echidna-test contracts/test/DaiEchidnaTest.sol --contract DaiEchidnaTest --config echidna.config.yml`
 
 ## Deployments:
 
