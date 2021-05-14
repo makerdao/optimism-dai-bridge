@@ -16,6 +16,8 @@ Optimism Dai and upgradable token bridge
 
 ## Scripts
 
+Some of these scripts may require valid `.env` file. Copy `.env.example` as `.env` and fill it out.
+
 - `scripts/deployMainnet.ts` - deploys a full solution to forked mainnet and optimism testnet on kovan. Run with `yarn deploy:mainnet-fork`
 - `scripts/deployKovan.ts` - deploys a full solution to kovan and optimism testnet on kovan. Run with `yarn deploy:kovan`
 
