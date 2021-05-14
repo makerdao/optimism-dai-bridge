@@ -42,7 +42,7 @@ Optimism is a new, not yet battle-tested system. If there is a bug that allows t
 messages from L2 it would be possible to drain escrowed funds. This can be caused by the bug inside
 `OVM_L1CrossDomainMessenger` contract or a bug preventing fraud proofs to be submitted.
 
-If malicious messages are not subject to a dispute window (1week) all funds from escrow could be withdrawn. This would
+If malicious messages are not subject to a dispute window (1 week) all funds from escrow could be withdrawn by the attacker. This would
 cause L2 DAI being worthless.
 
 In case when such messages are still subject to a dispute window, it would be possible for governance to reject approval
