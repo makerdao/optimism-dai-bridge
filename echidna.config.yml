@@ -1,6 +1,12 @@
 #format can be "text" or "json" for different output (human or machine readable)
-format: 'text'
+#format: 'text'
 #checkAsserts checks assertions
 checkAsserts: true
-#coverage controls coverage guided testing
-coverage: false
+#seqLen defines how many transactions are in a test sequence
+seqLen: 200
+#testLimit is the number of test sequences to run
+testLimit: 1000000
+#estimateGas makes echidna perform analysis of maximum gas costs for functions (experimental)
+estimateGas: true
+#directory to save the corpus; by default is disabled
+corpusDir: 'corpus'
