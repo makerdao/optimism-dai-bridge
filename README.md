@@ -40,12 +40,16 @@ Now, you can consider revoking approval to access funds from escrow on L1 and to
 
 Optimism is a new, not yet battle-tested system. If there is a bug that allows the attacker to proof an arbitrary
 messages from L2 it would be possible to drain escrowed funds. This can be caused by the bug inside
-`OVM_L1CrossDomainMessenger` contract or a bug preventing fraud proofs to be submitted. In case when such messages are
-still subject to a dispute window (1 week), it would be possible for governance to reject approval from `L1Gateway` to
-`L1Escrow` by calling `L1Escrow.approve(DAI, L1Gateway, 0)` and stop drainage.
+`OVM_L1CrossDomainMessenger` contract or a bug preventing fraud proofs to be submitted.
 
-If such disastrous scenario occurs rollup state can be reconstructed from the last valid state commitment and user funds
-and be retrieved in a separate process.
+If malicious messages are not subject to a dispute window (1week) all funds from escrow could be withdrawn. This would
+cause L2 DAI being worthless.
+
+In case when such messages are still subject to a dispute window, it would be possible for governance to reject approval
+from `L1Gateway` to `L1Escrow` by calling `L1Escrow.approve(DAI, L1Gateway, 0)` and stop drainage.
+
+If such disastrous scenario occurs but governance succeeds to safe escrowed funds, rollup state can be reconstructed
+from the last valid state commitment and user funds and be retrieved in a separate process.
 
 ## Invariants
 
