@@ -34,6 +34,42 @@ An owner calls `L2DepositedToken.close()` and `L1ERC20Gateway.close()` so no new
 part of the bridge. After all async messages are done processing (can take up to 1 week) bridge is effectively closed.
 Now, you can consider revoking approval to access funds from escrow on L1 and token minting rights on L2.
 
+## Known Risks
+
+### Optimism's bug
+
+Optimism is a new, not yet battle-tested system. If there is a bug that allows the attacker to proof an arbitrary
+messages from L2 it would be possible to drain escrowed funds. This can be caused by the bug inside
+`OVM_L1CrossDomainMessenger` contract or a bug preventing fraud proofs to be submitted.
+
+If malicious messages are not subject to a dispute window (1 week) all funds from escrow could be withdrawn by the attacker. This would
+cause L2 DAI being worthless.
+
+In case when such messages are still subject to a dispute window, it would be possible for governance to reject approval
+from `L1Gateway` to `L1Escrow` by calling `L1Escrow.approve(DAI, L1Gateway, 0)` and stop drainage.
+
+If such disastrous scenario occurs but governance succeeds to safe escrowed funds, rollup state can be reconstructed
+from the last valid state commitment and user funds and be retrieved in a separate process.
+
+## Invariants
+
+### L1 DAI Locked and L2 DAI Minted
+
+```
+L1DAI.balanceOf(escrow) ≥ L2DAI.totalSupply()
+```
+
+All DAI available on L2 should be locked on L1. This should hold true with more bridges as well.
+
+It's `>=` because:
+
+a) when depositing on L1, locking is instant but minting is an async message
+
+b) when withdrawing from L2, burning is instant but unlocking on L1 is an async message and is subject to a dispute
+period (1 week)
+
+c) someone can send L1DAI directly to escrow
+
 ## Running
 
 ```
