@@ -36,18 +36,41 @@ consider revoking approval to access funds from escrow on L1 and token minting r
 
 ### Optimism's bug
 
-Optimism is a new, not yet battle-tested system. If there is a bug that allows the attacker to proof an arbitrary
-messages from L2 it would be possible to drain escrowed funds. This can be caused by the bug inside
-`OVM_L1CrossDomainMessenger` contract or a bug preventing fraud proofs to be submitted.
+In this section, we describe various risks caused by possible **bugs** in Optimism system.
 
-If malicious messages are not subject to a dispute window (1 week) all funds from escrow could be withdrawn by the
-attacker. This would cause L2 DAI being worthless.
+** L1 -> L2 message passing bug **
 
-In case when such messages are still subject to a dispute window, it would be possible for governance to reject approval
-from `L1Gateway` to `L1Escrow` by calling `L1Escrow.approve(DAI, L1Gateway, 0)` and stop drainage.
+Bug allowing to send arbitrary messages from L1 to L2 ie. making `OVM_L2CrossDomainMessenger` to send arbitrary
+messages, could result in minting of uncollateralized L2 DAI. This can be done via:
 
-If such disastrous scenario occurs but governance succeeds to safe escrowed funds, rollup state can be reconstructed
-from the last valid state commitment and user funds and be retrieved in a separate process.
+- sending `finalizeDeposit` messages directly to `L2Gateway`
+- granting minting rights by executing malicious spell with `L2GovernanceRelay`
+
+Immediately withdrawing L2 DAI to L1 DAI is not possible because of the dispute period (1 week). In case of such bug,
+governance can disconnect `L1Gateway` from `L1Escrow`, ensuring that no L1 DAI can be stolen. Even with 2 days delay on
+governance actions, there should be plenty of time to coordinate action. Later off-chain coordination is required to
+send DAI back to rightful owners or redeploy Optimism system.
+
+** L2 -> L1 message passing bug **
+
+Bug allowing to send arbitrary messages from L2 to L1 is potentially more harmful. This can happen two ways:
+
+1. Bug in `OVM_L1CrossDomainMessenger` allows sending arbitrary messages on L1 bypassing the dispute period,
+2. The fraud proof system stops working which allows submitting incorrect state root. Such state root can be used to
+   proof an arbitrary message sent from L2 to L1. This will be a subject to a dispute period (1 week).
+
+If (1) happens, an attacker can immediately drain L1 DAI from `L1Escrow`.
+
+If (2) happens, governance can disconnect `L1Gateway` from `L1Escrow` and prevent from stealing L1 DAI.
+
+### Governance mistake during update
+
+Bridge upgrade is not trivial procedure due to the async messages between L1 and L2. Whole process is described in
+_Upgrade guide_ in this document.
+
+If governance spell mistakenly revokes old bridge approval to access escrow funds async withdrawal messages will fail.
+Fortunately reverted messages can be replied at later date, so governance has to re-approve old `L1Gateway` to escrow
+funds and process again pending withdrawals.
 
 ## Invariants
 
