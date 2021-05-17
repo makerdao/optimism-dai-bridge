@@ -8,20 +8,13 @@ Optimism Dai and upgradable token bridge
 
 ## Contracts
 
-- `l2/dai.sol` - Improved DAI contract
-- `l1/L1Gateway.sol` - L1 side of the bridge. Escrows L1 DAI in a specified address. Unlocks L1 DAI upon withdrawal
-  message from `L2Gateway`
-- `l2/L2Gateway.sol` - L2 side of the bridge. Mints new L2 DAI after receiving message from `L1Gateway`. Burns L2 DAI
+- `dai.sol` - Improved DAI contract.
+- `L1Gateway.sol` - L1 side of the bridge. Escrows L1 DAI in `L1Escrow` contract. Unlocks L1 DAI upon withdrawal message
+  from `L2Gateway`.
+- `L2Gateway.sol` - L2 side of the bridge. Mints new L2 DAI after receiving a message from `L1Gateway`. Burns L2 DAI
   tokens when withdrawals happen.
-
-## Scripts
-
-Some of these scripts may require valid `.env` file. Copy `.env.example` as `.env` and fill it out.
-
-- `scripts/deployMainnet.ts` - deploys a full solution to forked mainnet and optimism testnet on kovan. Run with
-  `yarn deploy:mainnet-fork`
-- `scripts/deployKovan.ts` - deploys a full solution to kovan and optimism testnet on kovan. Run with
-  `yarn deploy:kovan`
+- `L1Escrow` - Hold funds on L1. Allows having many bridges coexist on L1 and share liquidity.
+- `L1GovernanceRelay` & `L2GovernanceRelay` - allows to execute a governance spell on L2.
 
 ## Upgrade guide
 
@@ -32,7 +25,7 @@ bridge independently and connect to the same escrow. Thanks to this, no bridge w
 
 ### Closing bridge
 
-After deploying a new bridge you might consider closing the old one. Procedure is slightly complicated due to async
+After deploying a new bridge you might consider closing the old one. The procedure is slightly complicated due to async
 messages like `finalizeDeposit` and `finalizeWithdraw` that can be in progress.
 
 An owner calls `L2Gateway.close()` and `L1Gateway.close()` so no new async messages can be sent to the other part of the
@@ -74,6 +67,15 @@ b) when withdrawing from L2, burning is instant but unlocking on L1 is an async 
 period (1 week)
 
 c) someone can send L1DAI directly to escrow
+
+## Scripts
+
+Some of these scripts may require valid `.env` file. Copy `.env.example` as `.env` and fill it out.
+
+- `scripts/deployMainnet.ts` - deploys a full solution to forked mainnet and optimism testnet on kovan. Run with
+  `yarn deploy:mainnet-fork`
+- `scripts/deployKovan.ts` - deploys a full solution to kovan and optimism testnet on kovan. Run with
+  `yarn deploy:kovan`
 
 ## Running
 
