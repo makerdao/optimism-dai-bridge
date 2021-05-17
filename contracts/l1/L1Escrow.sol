@@ -28,6 +28,8 @@ contract L1Escrow {
 
   event Rely(address indexed usr);
   event Deny(address indexed usr);
+
+  event Approve(address indexed token, address indexed spender, uint256 value);
   
   constructor() {
     wards[msg.sender] = 1;
@@ -40,5 +42,7 @@ contract L1Escrow {
     uint256 value
   ) public auth {
     ApproveLike(token).approve(spender, value);
+
+    emit Approve(token, spender, value);
   }
 }
