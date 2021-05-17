@@ -64,18 +64,18 @@ export async function deploy(opts: Options) {
   await waitForTx(l1Escrow.connect(opts.l1Deployer).rely(opts.L1_PAUSE_PROXY_ADDRESS, opts.L1_TX_OPTS))
   await waitForTx(l1Escrow.connect(opts.l1Deployer).rely(opts.L1_ESM_ADDRESS, opts.L1_TX_OPTS))
   await waitForTx(l1Escrow.connect(opts.l1Deployer).deny(await opts.l1Deployer.getAddress(), opts.L1_TX_OPTS))
-  
+
   console.log('Finalizing permissions for L2 DAI...')
   await waitForTx(l2Dai.rely(l2Gateway.address, opts.L2_TX_OPTS))
   await waitForTx(l2Dai.rely(l2GovernanceRelay.address, opts.L2_TX_OPTS))
   await waitForTx(l2Dai.deny(await opts.l2Deployer.getAddress(), opts.L2_TX_OPTS))
-  
+
   console.log('Finalizing permissions for L1 Gateway...')
   await waitForTx(l1Gateway.transferOwnership(opts.L1_PAUSE_PROXY_ADDRESS, opts.L1_TX_OPTS))
 
   console.log('Finalizing permissions for L2 Gateway...')
   await waitForTx(l2Gateway.transferOwnership(l2GovernanceRelay.address, opts.L2_TX_OPTS))
-  
+
   console.log('Finalizing permissions for L1 governance relay...')
   await waitForTx(l1GovernanceRelay.rely(opts.L1_PAUSE_PROXY_ADDRESS, opts.L1_TX_OPTS))
   await waitForTx(l1GovernanceRelay.rely(opts.L1_ESM_ADDRESS, opts.L1_TX_OPTS))

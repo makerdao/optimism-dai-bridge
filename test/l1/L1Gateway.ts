@@ -21,7 +21,7 @@ describe('L1Gateway', () => {
   describe('deposit()', () => {
     it('escrows funds and sends xchain message on deposit', async () => {
       const [escrow, l1MessengerImpersonator, user1] = await ethers.getSigners()
-      const { l1Dai, l1ERC20Gateway, l1CrossDomainMessengerMock, l2DepositedTokenMock } = await setupTest({
+      const { l1Dai, l1ERC20Gateway, l1CrossDomainMessengerMock, l2GatewayMock } = await setupTest({
         escrow,
         l1MessengerImpersonator,
         user1,
@@ -35,9 +35,9 @@ describe('L1Gateway', () => {
       expect(await l1Dai.balanceOf(l1ERC20Gateway.address)).to.be.eq(0)
       expect(await l1Dai.balanceOf(escrow.address)).to.be.eq(depositAmount)
 
-      expect(depositCallToMessengerCall._target).to.equal(l2DepositedTokenMock.address)
+      expect(depositCallToMessengerCall._target).to.equal(l2GatewayMock.address)
       expect(depositCallToMessengerCall._message).to.equal(
-        l2DepositedTokenMock.interface.encodeFunctionData('finalizeDeposit', [user1.address, depositAmount]),
+        l2GatewayMock.interface.encodeFunctionData('finalizeDeposit', [user1.address, depositAmount]),
       )
     })
 
@@ -88,7 +88,7 @@ describe('L1Gateway', () => {
   describe('depositTo()', () => {
     it('escrows funds and sends xchain message on deposit', async () => {
       const [escrow, l1MessengerImpersonator, user1, user2] = await ethers.getSigners()
-      const { l1Dai, l1ERC20Gateway, l1CrossDomainMessengerMock, l2DepositedTokenMock } = await setupTest({
+      const { l1Dai, l1ERC20Gateway, l1CrossDomainMessengerMock, l2GatewayMock } = await setupTest({
         escrow,
         l1MessengerImpersonator,
         user1,
@@ -102,9 +102,9 @@ describe('L1Gateway', () => {
       expect(await l1Dai.balanceOf(l1ERC20Gateway.address)).to.be.eq(0)
       expect(await l1Dai.balanceOf(escrow.address)).to.be.eq(depositAmount)
 
-      expect(depositCallToMessengerCall._target).to.equal(l2DepositedTokenMock.address)
+      expect(depositCallToMessengerCall._target).to.equal(l2GatewayMock.address)
       expect(depositCallToMessengerCall._message).to.equal(
-        l2DepositedTokenMock.interface.encodeFunctionData('finalizeDeposit', [user2.address, depositAmount]),
+        l2GatewayMock.interface.encodeFunctionData('finalizeDeposit', [user2.address, depositAmount]),
       )
     })
 
@@ -159,12 +159,12 @@ describe('L1Gateway', () => {
 
     it('sends funds from the escrow', async () => {
       const [escrow, l1MessengerImpersonator, user1, user2] = await ethers.getSigners()
-      const { l1Dai, l1ERC20Gateway, l1CrossDomainMessengerMock, l2DepositedTokenMock } = await setupWithdrawTest({
+      const { l1Dai, l1ERC20Gateway, l1CrossDomainMessengerMock, l2GatewayMock } = await setupWithdrawTest({
         escrow,
         l1MessengerImpersonator,
         user1,
       })
-      l1CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l2DepositedTokenMock.address)
+      l1CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l2GatewayMock.address)
 
       await l1ERC20Gateway.connect(l1MessengerImpersonator).finalizeWithdrawal(user2.address, withdrawAmount)
 
@@ -175,12 +175,12 @@ describe('L1Gateway', () => {
     // pending withdrawals MUST success even if bridge is closed
     it('completes withdrawals even when closed', async () => {
       const [escrow, l1MessengerImpersonator, user1, user2] = await ethers.getSigners()
-      const { l1Dai, l1ERC20Gateway, l1CrossDomainMessengerMock, l2DepositedTokenMock } = await setupWithdrawTest({
+      const { l1Dai, l1ERC20Gateway, l1CrossDomainMessengerMock, l2GatewayMock } = await setupWithdrawTest({
         escrow,
         l1MessengerImpersonator,
         user1,
       })
-      l1CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l2DepositedTokenMock.address)
+      l1CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l2GatewayMock.address)
 
       await l1ERC20Gateway.close()
       await l1ERC20Gateway.connect(l1MessengerImpersonator).finalizeWithdrawal(user2.address, withdrawAmount)
@@ -192,12 +192,12 @@ describe('L1Gateway', () => {
     // if bridge is closed properly this shouldn't happen
     it('reverts when escrow access was revoked', async () => {
       const [escrow, l1MessengerImpersonator, user1, user2] = await ethers.getSigners()
-      const { l1Dai, l1ERC20Gateway, l1CrossDomainMessengerMock, l2DepositedTokenMock } = await setupWithdrawTest({
+      const { l1Dai, l1ERC20Gateway, l1CrossDomainMessengerMock, l2GatewayMock } = await setupWithdrawTest({
         escrow,
         l1MessengerImpersonator,
         user1,
       })
-      l1CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l2DepositedTokenMock.address)
+      l1CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l2GatewayMock.address)
 
       await l1Dai.connect(escrow).approve(l1ERC20Gateway.address, 0)
 
@@ -208,13 +208,13 @@ describe('L1Gateway', () => {
 
     it('reverts when called not by XDomainMessenger', async () => {
       const [escrow, l1MessengerImpersonator, user1, user2] = await ethers.getSigners()
-      const { l1ERC20Gateway, l1CrossDomainMessengerMock, l2DepositedTokenMock } = await setupWithdrawTest({
+      const { l1ERC20Gateway, l1CrossDomainMessengerMock, l2GatewayMock } = await setupWithdrawTest({
         escrow,
         l1MessengerImpersonator,
         user1,
       })
 
-      l1CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l2DepositedTokenMock.address)
+      l1CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l2GatewayMock.address)
 
       await expect(l1ERC20Gateway.connect(user2).finalizeWithdrawal(user2.address, withdrawAmount)).to.be.revertedWith(
         errorMessages.invalidMessenger,
@@ -285,7 +285,7 @@ async function setupTest(signers: {
   escrow: SignerWithAddress
   user1: SignerWithAddress
 }) {
-  const l2DepositedTokenMock = await deployMock('L2Gateway')
+  const l2GatewayMock = await deployMock('L2Gateway')
   const l1CrossDomainMessengerMock = await deployMock(
     'OVM_L1CrossDomainMessenger',
     { address: await signers.l1MessengerImpersonator.getAddress() }, // This allows us to use an ethers override {from: Mock__OVM_L2CrossDomainMessenger.address} to mock calls
@@ -293,13 +293,13 @@ async function setupTest(signers: {
   const l1Dai = await deploy<Dai__factory>('Dai', [])
   const l1ERC20Gateway = await deploy<L1Gateway__factory>('L1Gateway', [
     l1Dai.address,
-    l2DepositedTokenMock.address,
+    l2GatewayMock.address,
     l1CrossDomainMessengerMock.address,
     signers.escrow.address,
   ])
   await l1Dai.mint(signers.user1.address, initialTotalL1Supply)
 
-  return { l1Dai, l1ERC20Gateway, l1CrossDomainMessengerMock, l2DepositedTokenMock }
+  return { l1Dai, l1ERC20Gateway, l1CrossDomainMessengerMock, l2GatewayMock }
 }
 
 async function setupWithdrawTest(signers: {
