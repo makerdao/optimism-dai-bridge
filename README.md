@@ -38,7 +38,7 @@ consider revoking approval to access funds from escrow on L1 and token minting r
 
 In this section, we describe various risks caused by possible **bugs** in Optimism system.
 
-** L1 -> L2 message passing bug **
+**L1 -> L2 message passing bug**
 
 Bug allowing to send arbitrary messages from L1 to L2 ie. making `OVM_L2CrossDomainMessenger` to send arbitrary
 messages, could result in minting of uncollateralized L2 DAI. This can be done via:
@@ -51,7 +51,7 @@ governance can disconnect `L1Gateway` from `L1Escrow`, ensuring that no L1 DAI c
 governance actions, there should be plenty of time to coordinate action. Later off-chain coordination is required to
 send DAI back to rightful owners or redeploy Optimism system.
 
-** L2 -> L1 message passing bug **
+**L2 -> L1 message passing bug**
 
 Bug allowing to send arbitrary messages from L2 to L1 is potentially more harmful. This can happen two ways:
 
@@ -63,9 +63,9 @@ If (1) happens, an attacker can immediately drain L1 DAI from `L1Escrow`.
 
 If (2) happens, governance can disconnect `L1Gateway` from `L1Escrow` and prevent from stealing L1 DAI.
 
-### Governance mistake during update
+### Governance mistake during upgrade
 
-Bridge upgrade is not trivial procedure due to the async messages between L1 and L2. Whole process is described in
+Bridge upgrade is not a trivial procedure due to the async messages between L1 and L2. Whole process is described in
 _Upgrade guide_ in this document.
 
 If governance spell mistakenly revokes old bridge approval to access escrow funds async withdrawal messages will fail.
