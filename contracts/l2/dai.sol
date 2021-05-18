@@ -21,32 +21,34 @@ pragma solidity 0.7.6;
 // Improved Dai token
 
 contract Dai {
-    
   // --- Auth ---
-  mapping (address => uint256) public wards;
+  mapping(address => uint256) public wards;
+
   function rely(address usr) external auth {
     wards[usr] = 1;
     emit Rely(usr);
   }
+
   function deny(address usr) external auth {
     wards[usr] = 0;
     emit Deny(usr);
   }
+
   modifier auth {
-    require(wards[msg.sender] == 1, "Dai/not-authorized");
+    require(wards[msg.sender] == 1, 'Dai/not-authorized');
     _;
   }
 
   // --- ERC20 Data ---
-  string  public constant name     = "Dai Stablecoin";
-  string  public constant symbol   = "DAI";
-  string  public constant version  = "2";
-  uint8   public constant decimals = 18;
+  string public constant name = 'Dai Stablecoin';
+  string public constant symbol = 'DAI';
+  string public constant version = '2';
+  uint8 public constant decimals = 18;
   uint256 public totalSupply;
 
-  mapping (address => uint256)                      public balanceOf;
-  mapping (address => mapping (address => uint256)) public allowance;
-  mapping (address => uint256)                      public nonces;
+  mapping(address => uint256) public balanceOf;
+  mapping(address => mapping(address => uint256)) public allowance;
+  mapping(address => uint256) public nonces;
 
   event Approval(address indexed owner, address indexed spender, uint256 value);
   event Transfer(address indexed from, address indexed to, uint256 value);
@@ -57,6 +59,7 @@ contract Dai {
   function add(uint256 x, uint256 y) internal pure returns (uint256 z) {
     require((z = x + y) >= x);
   }
+
   function sub(uint256 x, uint256 y) internal pure returns (uint256 z) {
     require((z = x - y) <= x);
   }
@@ -64,40 +67,47 @@ contract Dai {
   // --- EIP712 niceties ---
   uint256 public immutable deploymentChainId;
   bytes32 private immutable _DOMAIN_SEPARATOR;
-  bytes32 public constant PERMIT_TYPEHASH = keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
+  bytes32 public constant PERMIT_TYPEHASH =
+    keccak256('Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)');
 
   constructor() public {
     wards[msg.sender] = 1;
     emit Rely(msg.sender);
 
     uint256 chainId;
-    assembly {chainId := chainid()}
+    assembly {
+      chainId := chainid()
+    }
     deploymentChainId = chainId;
     _DOMAIN_SEPARATOR = _calculateDomainSeparator(chainId);
   }
 
   function _calculateDomainSeparator(uint256 chainId) private view returns (bytes32) {
-    return keccak256(
-      abi.encode(
-        keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
-        keccak256(bytes(name)),
-        keccak256(bytes(version)),
-        chainId,
-        address(this)
-      )
-    );
+    return
+      keccak256(
+        abi.encode(
+          keccak256('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)'),
+          keccak256(bytes(name)),
+          keccak256(bytes(version)),
+          chainId,
+          address(this)
+        )
+      );
   }
+
   function DOMAIN_SEPARATOR() external view returns (bytes32) {
     uint256 chainId;
-    assembly {chainId := chainid()}
+    assembly {
+      chainId := chainid()
+    }
     return chainId == deploymentChainId ? _DOMAIN_SEPARATOR : _calculateDomainSeparator(chainId);
   }
 
   // --- ERC20 Mutations ---
   function transfer(address to, uint256 value) external returns (bool) {
-    require(to != address(0) && to != address(this), "Dai/invalid-address");
+    require(to != address(0) && to != address(this), 'Dai/invalid-address');
     uint256 balance = balanceOf[msg.sender];
-    require(balance >= value, "Dai/insufficient-balance");
+    require(balance >= value, 'Dai/insufficient-balance');
 
     balanceOf[msg.sender] = balance - value;
     balanceOf[to] += value;
@@ -106,15 +116,20 @@ contract Dai {
 
     return true;
   }
-  function transferFrom(address from, address to, uint256 value) external returns (bool) {
-    require(to != address(0) && to != address(this), "Dai/invalid-address");
+
+  function transferFrom(
+    address from,
+    address to,
+    uint256 value
+  ) external returns (bool) {
+    require(to != address(0) && to != address(this), 'Dai/invalid-address');
     uint256 balance = balanceOf[from];
-    require(balance >= value, "Dai/insufficient-balance");
+    require(balance >= value, 'Dai/insufficient-balance');
 
     if (from != msg.sender) {
       uint256 allowed = allowance[from][msg.sender];
       if (allowed != type(uint256).max) {
-        require(allowed >= value, "Dai/insufficient-allowance");
+        require(allowed >= value, 'Dai/insufficient-allowance');
 
         allowance[from][msg.sender] = allowed - value;
       }
@@ -127,6 +142,7 @@ contract Dai {
 
     return true;
   }
+
   function approve(address spender, uint256 value) external returns (bool) {
     allowance[msg.sender][spender] = value;
 
@@ -134,6 +150,7 @@ contract Dai {
 
     return true;
   }
+
   function increaseAllowance(address spender, uint256 addedValue) external returns (bool) {
     uint256 newValue = add(allowance[msg.sender][spender], addedValue);
     allowance[msg.sender][spender] = newValue;
@@ -142,9 +159,10 @@ contract Dai {
 
     return true;
   }
+
   function decreaseAllowance(address spender, uint256 subtractedValue) external returns (bool) {
     uint256 allowed = allowance[msg.sender][spender];
-    require(allowed >= subtractedValue, "Dai/insufficient-allowance");
+    require(allowed >= subtractedValue, 'Dai/insufficient-allowance');
     allowed = allowed - subtractedValue;
     allowance[msg.sender][spender] = allowed;
 
@@ -152,56 +170,62 @@ contract Dai {
 
     return true;
   }
-  
+
   // --- Mint/Burn ---
   function mint(address to, uint256 value) external auth {
-    require(to != address(0) && to != address(this), "Dai/invalid-address");
+    require(to != address(0) && to != address(this), 'Dai/invalid-address');
     balanceOf[to] = add(balanceOf[to], value);
-    totalSupply   = add(totalSupply, value);
+    totalSupply = add(totalSupply, value);
 
     emit Transfer(address(0), to, value);
   }
+
   function burn(address from, uint256 value) external {
     uint256 balance = balanceOf[from];
-    require(balance >= value, "Dai/insufficient-balance");
+    require(balance >= value, 'Dai/insufficient-balance');
 
     if (from != msg.sender) {
       uint256 allowed = allowance[from][msg.sender];
       if (allowed != type(uint256).max) {
-        require(allowed >= value, "Dai/insufficient-allowance");
+        require(allowed >= value, 'Dai/insufficient-allowance');
 
         allowance[from][msg.sender] = allowed - value;
       }
     }
 
     balanceOf[from] = balance - value;
-    totalSupply     = sub(totalSupply, value);
+    totalSupply = sub(totalSupply, value);
 
     emit Transfer(from, address(0), value);
   }
 
   // --- Approve by signature ---
-  function permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external {
-    require(block.timestamp <= deadline, "Dai/permit-expired");
+  function permit(
+    address owner,
+    address spender,
+    uint256 value,
+    uint256 deadline,
+    uint8 v,
+    bytes32 r,
+    bytes32 s
+  ) external {
+    require(block.timestamp <= deadline, 'Dai/permit-expired');
 
     uint256 chainId;
-    assembly {chainId := chainid()}
+    assembly {
+      chainId := chainid()
+    }
 
     bytes32 digest =
-      keccak256(abi.encodePacked(
-          "\x19\x01",
+      keccak256(
+        abi.encodePacked(
+          '\x19\x01',
           chainId == deploymentChainId ? _DOMAIN_SEPARATOR : _calculateDomainSeparator(chainId),
-          keccak256(abi.encode(
-            PERMIT_TYPEHASH,
-            owner,
-            spender,
-            value,
-            nonces[owner]++,
-            deadline
-          ))
-      ));
+          keccak256(abi.encode(PERMIT_TYPEHASH, owner, spender, value, nonces[owner]++, deadline))
+        )
+      );
 
-    require(owner != address(0) && owner == ecrecover(digest, v, r, s), "Dai/invalid-permit");
+    require(owner != address(0) && owner == ecrecover(digest, v, r, s), 'Dai/invalid-permit');
 
     allowance[owner][spender] = value;
     emit Approval(owner, spender, value);

@@ -10,19 +10,21 @@ interface ApproveLike {
 // Escrow funds on L1, manage approval rights
 
 contract L1Escrow {
-    
   // --- Auth ---
-  mapping (address => uint256) public wards;
+  mapping(address => uint256) public wards;
+
   function rely(address usr) external auth {
     wards[usr] = 1;
     emit Rely(usr);
   }
+
   function deny(address usr) external auth {
     wards[usr] = 0;
     emit Deny(usr);
   }
+
   modifier auth {
-    require(wards[msg.sender] == 1, "L1Escrow/not-authorized");
+    require(wards[msg.sender] == 1, 'L1Escrow/not-authorized');
     _;
   }
 
@@ -30,7 +32,7 @@ contract L1Escrow {
   event Deny(address indexed usr);
 
   event Approve(address indexed token, address indexed spender, uint256 value);
-  
+
   constructor() {
     wards[msg.sender] = 1;
     emit Rely(msg.sender);
