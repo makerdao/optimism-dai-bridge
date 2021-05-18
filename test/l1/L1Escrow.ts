@@ -23,6 +23,15 @@ describe('L1Escrow', () => {
       expect(await l1Dai.allowance(l1Escrow.address, spender.address)).to.be.eq(allowanceLimit)
     })
 
+    it('emits Approval event', async () => {
+      const [_deployer, spender] = await ethers.getSigners()
+      const { l1Dai, l1Escrow } = await setupTest()
+
+      await expect(l1Escrow.approve(l1Dai.address, spender.address, allowanceLimit))
+        .to.emit(l1Escrow, 'Approve')
+        .withArgs(l1Dai.address, spender.address, allowanceLimit)
+    })
+
     it('reverts when called by unauthed user', async () => {
       const [_deployer, spender, notDeployer] = await ethers.getSigners()
       const { l1Dai, l1Escrow } = await setupTest()

@@ -8,20 +8,13 @@ Optimism Dai and upgradable token bridge
 
 ## Contracts
 
-- `l2/dai.sol` - Improved DAI contract
-- `l1/L1Gateway.sol` - L1 side of the bridge. Escrows L1 DAI in a specified address. Unlocks L1 DAI upon withdrawal
-  message from `L2Gateway`
-- `l2/L2Gateway.sol` - L2 side of the bridge. Mints new L2 DAI after receiving message from `L1Gateway`. Burns L2 DAI
+- `dai.sol` - Improved DAI contract.
+- `L1Gateway.sol` - L1 side of the bridge. Escrows L1 DAI in `L1Escrow` contract. Unlocks L1 DAI upon withdrawal message
+  from `L2Gateway`.
+- `L2Gateway.sol` - L2 side of the bridge. Mints new L2 DAI after receiving a message from `L1Gateway`. Burns L2 DAI
   tokens when withdrawals happen.
-
-## Scripts
-
-Some of these scripts may require valid `.env` file. Copy `.env.example` as `.env` and fill it out.
-
-- `scripts/deployMainnet.ts` - deploys a full solution to forked mainnet and optimism testnet on kovan. Run with
-  `yarn deploy:mainnet-fork`
-- `scripts/deployKovan.ts` - deploys a full solution to kovan and optimism testnet on kovan. Run with
-  `yarn deploy:kovan`
+- `L1Escrow` - Hold funds on L1. Allows having many bridges coexist on L1 and share liquidity.
+- `L1GovernanceRelay` & `L2GovernanceRelay` - allows to execute a governance spell on L2.
 
 ## Upgrade guide
 
@@ -32,7 +25,7 @@ bridge independently and connect to the same escrow. Thanks to this, no bridge w
 
 ### Closing bridge
 
-After deploying a new bridge you might consider closing the old one. Procedure is slightly complicated due to async
+After deploying a new bridge you might consider closing the old one. The procedure is slightly complicated due to async
 messages like `finalizeDeposit` and `finalizeWithdraw` that can be in progress.
 
 An owner calls `L2Gateway.close()` and `L1Gateway.close()` so no new async messages can be sent to the other part of the
@@ -43,18 +36,41 @@ consider revoking approval to access funds from escrow on L1 and token minting r
 
 ### Optimism's bug
 
-Optimism is a new, not yet battle-tested system. If there is a bug that allows the attacker to proof an arbitrary
-messages from L2 it would be possible to drain escrowed funds. This can be caused by the bug inside
-`OVM_L1CrossDomainMessenger` contract or a bug preventing fraud proofs to be submitted.
+In this section, we describe various risks caused by possible **bugs** in Optimism system.
 
-If malicious messages are not subject to a dispute window (1 week) all funds from escrow could be withdrawn by the
-attacker. This would cause L2 DAI being worthless.
+**L1 -> L2 message passing bug**
 
-In case when such messages are still subject to a dispute window, it would be possible for governance to reject approval
-from `L1Gateway` to `L1Escrow` by calling `L1Escrow.approve(DAI, L1Gateway, 0)` and stop drainage.
+Bug allowing to send arbitrary messages from L1 to L2 ie. making `OVM_L2CrossDomainMessenger` to send arbitrary
+messages, could result in minting of uncollateralized L2 DAI. This can be done via:
 
-If such disastrous scenario occurs but governance succeeds to safe escrowed funds, rollup state can be reconstructed
-from the last valid state commitment and user funds and be retrieved in a separate process.
+- sending `finalizeDeposit` messages directly to `L2Gateway`
+- granting minting rights by executing malicious spell with `L2GovernanceRelay`
+
+Immediately withdrawing L2 DAI to L1 DAI is not possible because of the dispute period (1 week). In case of such bug,
+governance can disconnect `L1Gateway` from `L1Escrow`, ensuring that no L1 DAI can be stolen. Even with 2 days delay on
+governance actions, there should be plenty of time to coordinate action. Later off-chain coordination is required to
+send DAI back to rightful owners or redeploy Optimism system.
+
+**L2 -> L1 message passing bug**
+
+Bug allowing to send arbitrary messages from L2 to L1 is potentially more harmful. This can happen two ways:
+
+1. Bug in `OVM_L1CrossDomainMessenger` allows sending arbitrary messages on L1 bypassing the dispute period,
+2. The fraud proof system stops working which allows submitting incorrect state root. Such state root can be used to
+   proof an arbitrary message sent from L2 to L1. This will be a subject to a dispute period (1 week).
+
+If (1) happens, an attacker can immediately drain L1 DAI from `L1Escrow`.
+
+If (2) happens, governance can disconnect `L1Gateway` from `L1Escrow` and prevent from stealing L1 DAI.
+
+### Governance mistake during upgrade
+
+Bridge upgrade is not a trivial procedure due to the async messages between L1 and L2. Whole process is described in
+_Upgrade guide_ in this document.
+
+If governance spell mistakenly revokes old bridge approval to access escrow funds async withdrawal messages will fail.
+Fortunately reverted messages can be replied at later date, so governance has to re-approve old `L1Gateway` to escrow
+funds and process again pending withdrawals.
 
 ## Invariants
 
@@ -74,6 +90,15 @@ b) when withdrawing from L2, burning is instant but unlocking on L1 is an async 
 period (1 week)
 
 c) someone can send L1DAI directly to escrow
+
+## Scripts
+
+Some of these scripts may require valid `.env` file. Copy `.env.example` as `.env` and fill it out.
+
+- `scripts/deployMainnet.ts` - deploys a full solution to forked mainnet and optimism testnet on kovan. Run with
+  `yarn deploy:mainnet-fork`
+- `scripts/deployKovan.ts` - deploys a full solution to kovan and optimism testnet on kovan. Run with
+  `yarn deploy:kovan`
 
 ## Running
 

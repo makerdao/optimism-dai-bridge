@@ -17,7 +17,7 @@ interface Mintable {
 // Note: when bridge is closed it will still process in progress messages
 
 contract L2Gateway is Abs_L2DepositedToken, Ownable {
-  Mintable public token;
+  Mintable public immutable token;
   bool public isOpen = true;
 
   constructor(address _l2CrossDomainMessenger, address _token) public Abs_L2DepositedToken(_l2CrossDomainMessenger) {
