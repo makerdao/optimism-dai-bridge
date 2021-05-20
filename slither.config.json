@@ -1,0 +1,8 @@
+{
+  "detectors_to_exclude": "pragma,naming-convention,solc-version,redundant-statements,shadowing-local,uninitialized-return,empty-functions,external-function,unused-return",
+  "exclude_informational": true,
+  "exclude_low": false,
+  "exclude_medium": false,
+  "exclude_high": false,
+  "disable_color": false
+}
