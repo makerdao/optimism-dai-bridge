@@ -24,7 +24,7 @@ contract L2Gateway is Abs_L2DepositedToken, Ownable {
     token = Mintable(_token);
   }
 
-  function close() public onlyOwner {
+  function close() external onlyOwner {
     isOpen = false;
   }
 

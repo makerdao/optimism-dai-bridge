@@ -27,7 +27,7 @@ contract L1Gateway is Abs_L1TokenGateway, Ownable {
 
   // --- Administration ---
 
-  function close() public onlyOwner {
+  function close() external onlyOwner {
     isOpen = false;
   }
 

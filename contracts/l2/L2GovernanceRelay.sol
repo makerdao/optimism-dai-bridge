@@ -21,7 +21,7 @@ contract L2GovernanceRelay is OVM_CrossDomainEnabled {
   function init(
     address _l1GovernanceRelay
   )
-    public
+    external
   {
     require(address(l1GovernanceRelay) == address(0), "Contract has already been initialized");
 
