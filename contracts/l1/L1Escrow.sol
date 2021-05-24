@@ -40,9 +40,9 @@ contract L1Escrow {
     address token,
     address spender,
     uint256 value
-  ) public auth {
-    ApproveLike(token).approve(spender, value);
-
+  ) external auth {
     emit Approve(token, spender, value);
+
+    ApproveLike(token).approve(spender, value);
   }
 }
