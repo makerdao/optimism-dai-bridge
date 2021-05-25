@@ -1,6 +1,8 @@
 import { Dai, L1Gateway, L1Escrow, L1GovernanceRelay, L2Gateway, L2GovernanceRelay } from '../typechain'
 import { deployContract, getL2Factory, MAX_UINT256, waitForTx } from '../test-e2e/helpers/utils'
 import { Signer } from '@ethersproject/abstract-signer'
+import { expect } from 'chai'
+import { getActiveWards } from '../test-e2e/helpers/auth'
 
 interface Options {
   l1Deployer: Signer
@@ -83,6 +85,13 @@ export async function deploy(opts: Options) {
   await waitForTx(l1GovernanceRelay.rely(opts.L1_PAUSE_PROXY_ADDRESS, opts.L1_TX_OPTS))
   await waitForTx(l1GovernanceRelay.rely(opts.L1_ESM_ADDRESS, opts.L1_TX_OPTS))
   await waitForTx(l1GovernanceRelay.deny(await opts.l1Deployer.getAddress(), opts.L1_TX_OPTS))
+
+  console.log('Permission sanity checks...')
+  expect(await getActiveWards(l1Escrow)).to.deep.eq([opts.L1_ESM_ADDRESS, opts.L1_PAUSE_PROXY_ADDRESS])
+  expect(await getActiveWards(l1Gateway)).to.deep.eq([opts.L1_ESM_ADDRESS, opts.L1_PAUSE_PROXY_ADDRESS])
+  expect(await getActiveWards(l1GovernanceRelay)).to.deep.eq([opts.L1_ESM_ADDRESS, opts.L1_PAUSE_PROXY_ADDRESS])
+  expect(await getActiveWards(l2Gateway)).to.deep.eq([l2GovernanceRelay.address])
+  expect(await getActiveWards(l2Dai)).to.deep.eq([l2GovernanceRelay.address, l2Gateway.address])
 
   return {
     l1Escrow,
