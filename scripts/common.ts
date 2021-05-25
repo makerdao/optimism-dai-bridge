@@ -70,12 +70,11 @@ export async function deploy(opts: Options) {
   await waitForTx(l2Dai.rely(l2GovernanceRelay.address, opts.L2_TX_OPTS))
   await waitForTx(l2Dai.deny(await opts.l2Deployer.getAddress(), opts.L2_TX_OPTS))
 
-  // NOTE: gateways should NOT give permission to ESM
   console.log('Finalizing permissions for L1 Gateway...')
   await waitForTx(l1Gateway.rely(opts.L1_PAUSE_PROXY_ADDRESS, opts.L1_TX_OPTS))
+  await waitForTx(l1Gateway.rely(opts.L1_ESM_ADDRESS, opts.L1_TX_OPTS))
   await waitForTx(l1Gateway.deny(await opts.l1Deployer.getAddress(), opts.L1_TX_OPTS))
 
-  // NOTE: gateways should NOT give permission to ESM
   console.log('Finalizing permissions for L2 Gateway...')
   await waitForTx(l2Gateway.rely(l2GovernanceRelay.address, opts.L2_TX_OPTS))
   await waitForTx(l2Gateway.deny(await opts.l2Deployer.getAddress(), opts.L1_TX_OPTS))

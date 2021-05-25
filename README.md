@@ -33,6 +33,10 @@ An owner calls `L2Gateway.close()` and `L1Gateway.close()` so no new async messa
 bridge. After all async messages are done processing (can take up to 1 week) bridge is effectively closed. Now, you can
 consider revoking approval to access funds from escrow on L1 and token minting rights on L2.
 
+## Emergency shutdown
+
+If ES is triggered, ESM contract can be used to `deny` access from the `PauseProxy` (governance). In such scenario the bridge continues to work as usual and it's impossible to be closed.
+
 ## Known Risks
 
 ### Optimism's bug
