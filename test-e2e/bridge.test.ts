@@ -11,6 +11,7 @@ import {
   L2GovernanceRelay,
   TestBridgeUpgradeSpell,
 } from '../typechain'
+import { getActiveWards } from './helpers/auth'
 import { optimismConfig } from './helpers/optimismConfig'
 import {
   deployContract,
@@ -93,8 +94,11 @@ describe('bridge', () => {
     await waitForTx(l2Dai.rely(l2GovernanceRelay.address, ZERO_GAS_OPTS))
     await waitForTx(l2Dai.deny(l2Signer.address, ZERO_GAS_OPTS))
     await waitForTx(l2Gateway.rely(l2GovernanceRelay.address, ZERO_GAS_OPTS))
-    await waitForTx(l2Gateway.deny(l2Signer.address))
-    console.log('Permissions updated...')
+    await waitForTx(l2Gateway.deny(l2Signer.address, ZERO_GAS_OPTS))
+    console.log('Permission sanity checks...')
+    expect(await getActiveWards(l2Dai)).to.deep.eq([l2Gateway.address, l2GovernanceRelay.address])
+    expect(await getActiveWards(l2Gateway)).to.deep.eq([l2GovernanceRelay.address])
+    console.log('Permissions updated.')
   })
 
   it('moves l1 tokens to l2', async () => {
