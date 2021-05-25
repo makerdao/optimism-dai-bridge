@@ -92,7 +92,8 @@ describe('bridge', () => {
     await waitForTx(l2Dai.rely(l2Gateway.address, ZERO_GAS_OPTS))
     await waitForTx(l2Dai.rely(l2GovernanceRelay.address, ZERO_GAS_OPTS))
     await waitForTx(l2Dai.deny(l2Signer.address, ZERO_GAS_OPTS))
-    await waitForTx(l2Gateway.transferOwnership(l2GovernanceRelay.address, ZERO_GAS_OPTS))
+    await waitForTx(l2Gateway.rely(l2GovernanceRelay.address, ZERO_GAS_OPTS))
+    await waitForTx(l2Gateway.deny(l2Signer.address))
     console.log('Permissions updated...')
   })
 

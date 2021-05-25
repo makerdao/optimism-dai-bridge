@@ -11,7 +11,7 @@ const errorMessages = {
   alreadyInitialized: 'Contract has already been initialized',
   notInitialized: 'Contract has not yet been initialized',
   bridgeClosed: 'L2Gateway/closed',
-  notOwner: 'Ownable: caller is not the owner',
+  notOwner: 'L2Gateway/not-authorized',
   daiInsufficientAllowance: 'Dai/insufficient-allowance',
   daiInsufficientBalance: 'Dai/insufficient-balance',
   daiNotAuthorized: 'Dai/not-authorized',

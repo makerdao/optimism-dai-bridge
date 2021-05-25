@@ -12,7 +12,7 @@ const errorMessages = {
   invalidMessenger: 'OVM_XCHAIN: messenger contract unauthenticated',
   invalidXDomainMessageOriginator: 'OVM_XCHAIN: wrong sender of cross-domain message',
   bridgeClosed: 'L1Gateway/closed',
-  notOwner: 'Ownable: caller is not the owner',
+  notOwner: 'L1Gateway/not-authorized',
   daiInsufficientAllowance: 'Dai/insufficient-allowance',
   daiInsufficientBalance: 'Dai/insufficient-balance',
 }
