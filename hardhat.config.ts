@@ -13,15 +13,7 @@ const config: HardhatUserConfig = {
   },
   solidity: {
     version: '0.7.6',
-    settings: {
-      // note: we do not run optimizer
-      // this is required by smock
-      outputSelection: {
-        '*': {
-          '*': ['storageLayout'],
-        },
-      },
-    },
+    // note: we do not run optimizer
   },
   ovm: {
     solcVersion: '0.7.6',
