@@ -20,7 +20,7 @@
     "deploy:kovan": "TS_NODE_TRANSPILE_ONLY=1 ts-node ./scripts/deployKovan.ts"
   },
   "dependencies": {
-    "@eth-optimism/contracts": "^0.1.11",
+    "@eth-optimism/contracts": "^0.3.2",
     "@eth-optimism/hardhat-ovm": "^0.1.1",
     "@eth-optimism/smock": "^1.1.4",
     "@eth-optimism/solc": "0.5.16-alpha.7",

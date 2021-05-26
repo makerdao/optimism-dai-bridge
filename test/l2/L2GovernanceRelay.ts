@@ -3,7 +3,7 @@ import { expect } from 'chai'
 import { ethers } from 'hardhat'
 
 import { Dai__factory, L2GovernanceRelay__factory, TestDaiMintSpell__factory } from '../../typechain'
-import { deploy, deployMock } from '../helpers'
+import { deploy, deployMock, deployOptimismContractMock } from '../helpers'
 
 const errorMessages = {
   invalidMessenger: 'OVM_XCHAIN: messenger contract unauthenticated',
@@ -100,7 +100,7 @@ describe('OVM_L2GovernanceRelay', () => {
 })
 
 async function setupTest(signers: { l2MessengerImpersonator: SignerWithAddress; user1: SignerWithAddress }) {
-  const l2CrossDomainMessengerMock = await deployMock(
+  const l2CrossDomainMessengerMock = await deployOptimismContractMock(
     'OVM_L2CrossDomainMessenger',
     { address: await signers.l2MessengerImpersonator.getAddress() }, // This allows us to use an ethers override {from: Mock__OVM_L2CrossDomainMessenger.address} to mock calls
   )
