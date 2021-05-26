@@ -1,14 +1,11 @@
-import { HardhatUserConfig } from 'hardhat/config'
-
 import '@nomiclabs/hardhat-etherscan'
 import '@nomiclabs/hardhat-ethers'
 import '@nomiclabs/hardhat-waffle'
 import '@nomiclabs/hardhat-web3'
-
 import '@eth-optimism/hardhat-ovm'
-import '@eth-optimism/smock/build/src/plugins/hardhat-storagelayout'
-
 import '@typechain/hardhat'
+
+import { HardhatUserConfig } from 'hardhat/config'
 
 const config: HardhatUserConfig = {
   mocha: {
@@ -16,7 +13,15 @@ const config: HardhatUserConfig = {
   },
   solidity: {
     version: '0.7.6',
-    // note: we do not run optimizer
+    settings: {
+      // note: we do not run optimizer
+      // this is required by smock
+      outputSelection: {
+        '*': {
+          '*': ['storageLayout'],
+        },
+      },
+    },
   },
   ovm: {
     solcVersion: '0.7.6',
