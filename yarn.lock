@@ -92,10 +92,10 @@
     ethers "^5.0.31"
     lodash "^4.17.21"
 
-"@eth-optimism/hardhat-ovm@^0.1.1":
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/@eth-optimism/hardhat-ovm/-/hardhat-ovm-0.1.1.tgz#1e778c5ef08b12458d13d2c9a67490e982c0b081"
-  integrity sha512-rEp1BRs26r0BQnjJktvs9d96u2pDpQe3yrgeRKW58JKdW/wPza9RuooE50agtUSdF77QeLwtfzxuU6Ce+615Cg==
+"@eth-optimism/hardhat-ovm@^0.2.2":
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/@eth-optimism/hardhat-ovm/-/hardhat-ovm-0.2.2.tgz#55fafaa6b8277447abaf132602c1c6d14a2a18a2"
+  integrity sha512-QLzqawYCzC/m6K/Oaj/tCZQlu6kZTgnleg1cJad8kVYA5E+JWZQ6ZJrcStoJoJrco9RIroPUjAFEhFM8YiCc7Q==
   dependencies:
     node-fetch "^2.6.1"
 
