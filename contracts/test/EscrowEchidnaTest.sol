@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+// @unsupported: ovm
 pragma solidity 0.7.6;
 
 import "../l1/L1Escrow.sol";
