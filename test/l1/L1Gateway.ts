@@ -246,10 +246,10 @@ describe('L1Gateway', () => {
         user1,
       })
 
-      expect(await l1ERC20Gateway.isOpen()).to.be.eq(true)
+      expect(await l1ERC20Gateway.isOpen()).to.be.eq(1)
       await l1ERC20Gateway.connect(owner).close()
 
-      expect(await l1ERC20Gateway.isOpen()).to.be.eq(false)
+      expect(await l1ERC20Gateway.isOpen()).to.be.eq(0)
     })
 
     it('can be called multiple times by the owner but nothing changes', async () => {
@@ -261,10 +261,10 @@ describe('L1Gateway', () => {
       })
 
       await l1ERC20Gateway.connect(owner).close()
-      expect(await l1ERC20Gateway.isOpen()).to.be.eq(false)
+      expect(await l1ERC20Gateway.isOpen()).to.be.eq(0)
 
       await l1ERC20Gateway.connect(owner).close()
-      expect(await l1ERC20Gateway.isOpen()).to.be.eq(false)
+      expect(await l1ERC20Gateway.isOpen()).to.be.eq(0)
     })
 
     it('reverts when called not by the owner', async () => {

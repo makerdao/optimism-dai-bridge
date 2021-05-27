@@ -256,10 +256,10 @@ describe('OVM_L2Gateway', () => {
         user1,
       })
 
-      expect(await l2Gateway.isOpen()).to.be.eq(true)
+      expect(await l2Gateway.isOpen()).to.be.eq(1)
       await l2Gateway.connect(owner).close()
 
-      expect(await l2Gateway.isOpen()).to.be.eq(false)
+      expect(await l2Gateway.isOpen()).to.be.eq(0)
     })
 
     it('can be called multiple times by the owner but nothing changes', async () => {
@@ -270,10 +270,10 @@ describe('OVM_L2Gateway', () => {
       })
 
       await l2Gateway.connect(owner).close()
-      expect(await l2Gateway.isOpen()).to.be.eq(false)
+      expect(await l2Gateway.isOpen()).to.be.eq(0)
 
       await l2Gateway.connect(owner).close()
-      expect(await l2Gateway.isOpen()).to.be.eq(false)
+      expect(await l2Gateway.isOpen()).to.be.eq(0)
     })
 
     it('reverts when called not by the owner', async () => {
