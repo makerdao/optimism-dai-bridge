@@ -3,7 +3,7 @@ import { expect } from 'chai'
 import { ethers } from 'hardhat'
 
 import { Dai__factory, L1Gateway__factory } from '../../typechain'
-import { deploy, deployMock } from '../helpers'
+import { deploy, deployMock, deployOptimismContractMock } from '../helpers'
 
 const initialTotalL1Supply = 3000
 const depositAmount = 100
@@ -286,7 +286,7 @@ async function setupTest(signers: {
   user1: SignerWithAddress
 }) {
   const l2GatewayMock = await deployMock('L2Gateway')
-  const l1CrossDomainMessengerMock = await deployMock(
+  const l1CrossDomainMessengerMock = await deployOptimismContractMock(
     'OVM_L1CrossDomainMessenger',
     { address: await signers.l1MessengerImpersonator.getAddress() }, // This allows us to use an ethers override {from: Mock__OVM_L2CrossDomainMessenger.address} to mock calls
   )

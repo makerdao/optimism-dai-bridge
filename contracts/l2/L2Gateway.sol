@@ -15,7 +15,7 @@
 
 pragma solidity >=0.7.6;
 
-import {Abs_L2DepositedToken} from '@eth-optimism/contracts/build/contracts/OVM/bridge/tokens/Abs_L2DepositedToken.sol';
+import {Abs_L2DepositedToken} from '@eth-optimism/contracts/OVM/bridge/tokens/Abs_L2DepositedToken.sol';
 
 interface Mintable {
   function mint(address usr, uint256 wad) external;

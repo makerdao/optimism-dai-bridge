@@ -16,8 +16,11 @@
 
 pragma solidity >=0.7.6;
 
-import {Abs_L1TokenGateway} from '@eth-optimism/contracts/build/contracts/OVM/bridge/tokens/Abs_L1TokenGateway.sol';
-import {iOVM_ERC20} from '@eth-optimism/contracts/build/contracts/iOVM/precompiles/iOVM_ERC20.sol';
+import {Abs_L1TokenGateway} from '@eth-optimism/contracts/OVM/bridge/tokens/Abs_L1TokenGateway.sol';
+
+interface TokenLike {
+  function transferFrom(address _from, address _to, uint256 _value) external returns (bool success);
+}
 
 // Managed locked funds in L1Escrow and send / receive messages to L2Gateway counterpart
 // Note: when bridge is closed it will still process in progress messages
@@ -41,12 +44,12 @@ contract L1Gateway is Abs_L1TokenGateway {
   event Rely(address indexed usr);
   event Deny(address indexed usr);
 
-  iOVM_ERC20 public immutable l1ERC20;
+  TokenLike public immutable l1ERC20;
   address public immutable escrow;
   bool public isOpen = true;
 
   constructor(
-    iOVM_ERC20 _l1ERC20,
+    TokenLike _l1ERC20,
     address _l2DepositedERC20,
     address _l1messenger,
     address _escrow
