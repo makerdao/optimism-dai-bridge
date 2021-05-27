@@ -46,7 +46,7 @@ contract L1Gateway is Abs_L1TokenGateway {
 
   TokenLike public immutable l1ERC20;
   address public immutable escrow;
-  bool public isOpen = true;
+  uint256 public isOpen = 1;
 
   constructor(
     TokenLike _l1ERC20,
@@ -64,7 +64,7 @@ contract L1Gateway is Abs_L1TokenGateway {
   // --- Administration ---
 
   function close() external auth {
-    isOpen = false;
+    isOpen = 0;
   }
 
   // --- Internal methods ---
@@ -74,7 +74,7 @@ contract L1Gateway is Abs_L1TokenGateway {
     address _to,
     uint256 _amount
   ) internal override {
-    require(isOpen, 'L1Gateway/closed');
+    require(isOpen == 1, 'L1Gateway/closed');
 
     l1ERC20.transferFrom(_from, escrow, _amount);
   }
