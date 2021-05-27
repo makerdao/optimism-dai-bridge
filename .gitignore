@@ -7,3 +7,4 @@ crytic-export/
 artifacts-ovm
 cache-ovm
 .env
+gasReporterOutput.json

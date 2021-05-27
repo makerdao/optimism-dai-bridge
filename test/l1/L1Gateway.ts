@@ -3,7 +3,7 @@ import { expect } from 'chai'
 import { ethers } from 'hardhat'
 
 import { Dai__factory, L1Gateway__factory } from '../../typechain'
-import { deploy, deployMock } from '../helpers'
+import { deploy, deployMock, deployOptimismContractMock } from '../helpers'
 
 const initialTotalL1Supply = 3000
 const depositAmount = 100
@@ -246,10 +246,10 @@ describe('L1Gateway', () => {
         user1,
       })
 
-      expect(await l1ERC20Gateway.isOpen()).to.be.eq(true)
+      expect(await l1ERC20Gateway.isOpen()).to.be.eq(1)
       await l1ERC20Gateway.connect(owner).close()
 
-      expect(await l1ERC20Gateway.isOpen()).to.be.eq(false)
+      expect(await l1ERC20Gateway.isOpen()).to.be.eq(0)
     })
 
     it('can be called multiple times by the owner but nothing changes', async () => {
@@ -261,10 +261,10 @@ describe('L1Gateway', () => {
       })
 
       await l1ERC20Gateway.connect(owner).close()
-      expect(await l1ERC20Gateway.isOpen()).to.be.eq(false)
+      expect(await l1ERC20Gateway.isOpen()).to.be.eq(0)
 
       await l1ERC20Gateway.connect(owner).close()
-      expect(await l1ERC20Gateway.isOpen()).to.be.eq(false)
+      expect(await l1ERC20Gateway.isOpen()).to.be.eq(0)
     })
 
     it('reverts when called not by the owner', async () => {
@@ -286,7 +286,7 @@ async function setupTest(signers: {
   user1: SignerWithAddress
 }) {
   const l2GatewayMock = await deployMock('L2Gateway')
-  const l1CrossDomainMessengerMock = await deployMock(
+  const l1CrossDomainMessengerMock = await deployOptimismContractMock(
     'OVM_L1CrossDomainMessenger',
     { address: await signers.l1MessengerImpersonator.getAddress() }, // This allows us to use an ethers override {from: Mock__OVM_L2CrossDomainMessenger.address} to mock calls
   )

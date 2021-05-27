@@ -15,7 +15,7 @@
 
 pragma solidity >=0.7.6;
 
-import {Abs_L2DepositedToken} from '@eth-optimism/contracts/build/contracts/OVM/bridge/tokens/Abs_L2DepositedToken.sol';
+import {Abs_L2DepositedToken} from '@eth-optimism/contracts/OVM/bridge/tokens/Abs_L2DepositedToken.sol';
 
 interface Mintable {
   function mint(address usr, uint256 wad) external;
@@ -47,7 +47,7 @@ contract L2Gateway is Abs_L2DepositedToken {
   event Deny(address indexed usr);
 
   Mintable public immutable token;
-  bool public isOpen = true;
+  uint256 public isOpen = 1;
 
   constructor(address _l2CrossDomainMessenger, address _token) public Abs_L2DepositedToken(_l2CrossDomainMessenger) {
     wards[msg.sender] = 1;
@@ -57,13 +57,13 @@ contract L2Gateway is Abs_L2DepositedToken {
   }
 
   function close() external auth {
-    isOpen = false;
+    isOpen = 0;
   }
 
   // When a withdrawal is initiated, we burn the withdrawer's funds to prevent subsequent L2 usage.
   function _handleInitiateWithdrawal(address _to, uint256 _amount) internal override {
     // do not allow initiaitng new xchain messages if bridge is closed
-    require(isOpen, 'L2Gateway/closed');
+    require(isOpen == 1, 'L2Gateway/closed');
     token.burn(msg.sender, _amount);
   }
 

@@ -38,7 +38,7 @@ describe('L1Escrow', () => {
 
       await expect(
         l1Escrow.connect(notDeployer).approve(l1Dai.address, spender.address, allowanceLimit),
-      ).to.be.rejectedWith(errorMessages.notAuthed)
+      ).to.be.revertedWith(errorMessages.notAuthed)
     })
   })
 })

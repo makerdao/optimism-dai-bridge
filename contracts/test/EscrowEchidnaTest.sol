@@ -6,14 +6,15 @@ import "../l1/L1Escrow.sol";
 import "../l1/L1Gateway.sol";
 import "../l2/L2Gateway.sol";
 import "../l2/dai.sol";
-import "@eth-optimism/contracts/build/contracts/OVM/bridge/messaging/OVM_L1CrossDomainMessenger.sol";
-import "@eth-optimism/contracts/build/contracts/OVM/bridge/messaging/OVM_L2CrossDomainMessenger.sol";
-import "@eth-optimism/contracts/build/contracts/libraries/resolver/Lib_AddressManager.sol";
 
 interface DaiLike {
     function totalSupply() external view returns (uint256);
     function balanceOf(address account) external view returns (uint256);
     function mint(address usr, uint256 wad) external;
+}
+
+contract MockMessenger {
+
 }
 
 contract Create {
@@ -32,9 +33,8 @@ contract EscrowEchidnaTest {
 
     address internal dai;
     L1Escrow internal escrow;
-    OVM_L1CrossDomainMessenger internal messenger1;
-    Lib_AddressManager internal manager;
-    OVM_L2CrossDomainMessenger internal messenger2;
+    MockMessenger internal messenger1;
+    MockMessenger internal messenger2;
     L2Gateway internal gate2;
     L1Gateway internal gate1;
     Dai internal oDai;
@@ -49,11 +49,10 @@ contract EscrowEchidnaTest {
         dai = create.deploy();
         oDai = new Dai();
         escrow = new L1Escrow();
-        messenger1 = new OVM_L1CrossDomainMessenger();
-        manager = new Lib_AddressManager();
-        messenger2 = new OVM_L2CrossDomainMessenger(address(manager));
+        messenger1 = new MockMessenger();
+        messenger2 = new MockMessenger();
         gate2 = new L2Gateway(address(messenger2), address(oDai));
-        gate1 = new L1Gateway(iOVM_ERC20(dai), address(gate2), address(messenger1), address(escrow));
+        gate1 = new L1Gateway(TokenLike(dai), address(gate2), address(messenger1), address(escrow));
     }
 
     // --- Math ---

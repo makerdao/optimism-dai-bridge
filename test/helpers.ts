@@ -1,6 +1,8 @@
+import { getContractDefinition } from '@eth-optimism/contracts'
 import { smockit } from '@eth-optimism/smock'
 import { ContractFactory } from 'ethers'
 import { ethers } from 'hardhat'
+
 export const makeHexString = (byte: string, len: number): string => {
   return '0x' + byte.repeat(len)
 }
@@ -33,5 +35,17 @@ export async function deployMock<T extends ContractFactory>(
   } = {},
 ): Promise<ReturnType<T['deploy']> & { smocked: any }> {
   const factory = (await ethers.getContractFactory(name)) as any
+  return await smockit(factory, opts)
+}
+
+export async function deployOptimismContractMock<T extends ContractFactory>(
+  name: string,
+  opts: {
+    provider?: any
+    address?: string
+  } = {},
+): Promise<ReturnType<T['deploy']> & { smocked: any }> {
+  const artifact = getContractDefinition(name)
+  const factory = new ethers.ContractFactory(artifact.abi, artifact.bytecode) as any
   return await smockit(factory, opts)
 }

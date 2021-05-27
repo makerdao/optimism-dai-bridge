@@ -3,7 +3,7 @@ import { expect } from 'chai'
 import { ethers } from 'hardhat'
 
 import { Dai__factory, L2Gateway__factory } from '../../typechain'
-import { deploy, deployMock } from '../helpers'
+import { deploy, deployMock, deployOptimismContractMock } from '../helpers'
 
 const errorMessages = {
   invalidMessenger: 'OVM_XCHAIN: messenger contract unauthenticated',
@@ -256,10 +256,10 @@ describe('OVM_L2Gateway', () => {
         user1,
       })
 
-      expect(await l2Gateway.isOpen()).to.be.eq(true)
+      expect(await l2Gateway.isOpen()).to.be.eq(1)
       await l2Gateway.connect(owner).close()
 
-      expect(await l2Gateway.isOpen()).to.be.eq(false)
+      expect(await l2Gateway.isOpen()).to.be.eq(0)
     })
 
     it('can be called multiple times by the owner but nothing changes', async () => {
@@ -270,10 +270,10 @@ describe('OVM_L2Gateway', () => {
       })
 
       await l2Gateway.connect(owner).close()
-      expect(await l2Gateway.isOpen()).to.be.eq(false)
+      expect(await l2Gateway.isOpen()).to.be.eq(0)
 
       await l2Gateway.connect(owner).close()
-      expect(await l2Gateway.isOpen()).to.be.eq(false)
+      expect(await l2Gateway.isOpen()).to.be.eq(0)
     })
 
     it('reverts when called not by the owner', async () => {
@@ -289,7 +289,7 @@ describe('OVM_L2Gateway', () => {
 })
 
 async function setupTest(signers: { l2MessengerImpersonator: SignerWithAddress; user1: SignerWithAddress }) {
-  const l2CrossDomainMessengerMock = await deployMock(
+  const l2CrossDomainMessengerMock = await deployOptimismContractMock(
     'OVM_L2CrossDomainMessenger',
     { address: await signers.l2MessengerImpersonator.getAddress() }, // This allows us to use an ethers override {from: Mock__OVM_L2CrossDomainMessenger.address} to mock calls
   )
