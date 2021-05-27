@@ -1,9 +1,10 @@
+import 'hardhat-gas-reporter'
 import '@nomiclabs/hardhat-etherscan'
 import '@nomiclabs/hardhat-ethers'
 import '@nomiclabs/hardhat-waffle'
 import '@nomiclabs/hardhat-web3'
-import '@eth-optimism/hardhat-ovm'
 import '@typechain/hardhat'
+import '@eth-optimism/hardhat-ovm'
 
 import { HardhatUserConfig } from 'hardhat/config'
 
@@ -37,6 +38,11 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_KEY ?? '', // provide via env
+  },
+  gasReporter: {
+    enabled: process.env.REPORT_GAS === '1',
+    currency: 'USD',
+    gasPrice: 50,
   },
 }
 
