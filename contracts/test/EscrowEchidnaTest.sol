@@ -95,4 +95,13 @@ contract EscrowEchidnaTest {
         assert(DaiLike(dai).balanceOf(address(escrow)) == add(escrowBalance, wad));
         assert(DaiLike(dai).balanceOf(address(escrow)) >= oDai.totalSupply());
     }
+    function withdraw(uint256 wad) public {
+        deposit(wad);
+        uint256 escrowBalance = DaiLike(dai).balanceOf(address(escrow));
+        uint256 thisBalance = DaiLike(dai).balanceOf(address(this));
+        gate2.withdraw(wad);
+        assert(DaiLike(dai).balanceOf(address(escrow)) == sub(escrowBalance, wad));
+        assert(DaiLike(dai).balanceOf(address(this)) == add(thisBalance, wad));
+        assert(DaiLike(dai).balanceOf(address(escrow)) <= oDai.totalSupply());
+    }
 }
