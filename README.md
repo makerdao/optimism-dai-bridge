@@ -35,7 +35,8 @@ consider revoking approval to access funds from escrow on L1 and token minting r
 
 ## Emergency shutdown
 
-If ES is triggered, ESM contract can be used to `deny` access from the `PauseProxy` (governance). In such scenario the bridge continues to work as usual and it's impossible to be closed.
+If ES is triggered, ESM contract can be used to `deny` access from the `PauseProxy` (governance). In such scenario the
+bridge continues to work as usual and it's impossible to be closed.
 
 ## Known Risks
 
@@ -143,23 +144,28 @@ Running `yarn test` makes sure that contracts are compiled. Running `yarn test-e
 
 - Precompiled Binaries (recommended)
 
-Before starting, make sure Slither is installed: `$ pip3 install slither-analyzer`
+Before starting, make sure Slither is installed:  
+`$ pip3 install slither-analyzer`
 
 To quickly test Echidna in Linux or MacOS: [release page](https://github.com/crytic/echidna/releases)
 
 ### Local Dependencies
 
-- Slither `$ pip3 install slither-analyzer`
+- Slither:  
+  `$ pip3 install slither-analyzer`
 
-- solc-select `$ pip3 install solc-select`
+- solc-select:  
+  `$ pip3 install solc-select`
 
 ### Run Echidna Tests
 
-- Install solc version: `$ solc-select install 0.7.6`
+- Install solc version:  
+  `$ solc-select install 0.7.6`
 
-- Select solc version: `$ solc-select use 0.7.6`
+- Select solc version:  
+  `$ solc-select use 0.7.6`
 
-- Run Echidna Tests:
+- Run Echidna Tests:  
   `$ echidna-test contracts/test/DaiEchidnaTest.sol --contract DaiEchidnaTest --config echidna.config.yml`
 
 ## Deployments:
