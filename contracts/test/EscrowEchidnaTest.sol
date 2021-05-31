@@ -6,6 +6,7 @@ import "../l1/L1Escrow.sol";
 import "../l1/L1Gateway.sol";
 import "../l2/L2Gateway.sol";
 import "../l2/dai.sol";
+import "@eth-optimism/contracts/iOVM/bridge/messaging/iAbs_BaseCrossDomainMessenger.sol";
 
 interface DaiLike {
     function totalSupply() external view returns (uint256);
@@ -14,8 +15,22 @@ interface DaiLike {
     function approve(address usr, uint wad) external returns (bool);
 }
 
-contract MockMessenger {
-
+contract MockMessenger is iAbs_BaseCrossDomainMessenger {
+  function xDomainMessageSender()
+    public
+    override
+    view
+    returns (address)
+  {
+    require(false, "not implemented");
+  }
+  function sendMessage(
+    address _target,
+    bytes calldata _message,
+    uint32 _gasLimit
+  ) external override {
+      (bool success,) = _target.call(_message);
+  }
 }
 
 /// @dev Create contract to deploy L1 Dai from Bytecode
@@ -35,8 +50,7 @@ contract EscrowEchidnaTest {
 
     address internal dai;
     L1Escrow internal escrow;
-    MockMessenger internal messenger1;
-    MockMessenger internal messenger2;
+    MockMessenger internal messenger;
     L2Gateway internal gate2;
     L1Gateway internal gate1;
     Dai internal oDai;
@@ -51,10 +65,10 @@ contract EscrowEchidnaTest {
         dai = create.deploy();
         oDai = new Dai();
         escrow = new L1Escrow();
-        messenger1 = new MockMessenger();
-        messenger2 = new MockMessenger();
-        gate2 = new L2Gateway(address(messenger2), address(oDai));
-        gate1 = new L1Gateway(TokenLike(dai), address(gate2), address(messenger1), address(escrow));
+        messenger = new MockMessenger();
+        gate2 = new L2Gateway(address(messenger), address(oDai));
+        gate1 = new L1Gateway(TokenLike(dai), address(gate2), address(messenger), address(escrow));
+        gate2.init(gate1);
         escrow.approve(dai, address(gate1), type(uint256).max);
         DaiLike(dai).approve(address(gate1), type(uint256).max);
     }
