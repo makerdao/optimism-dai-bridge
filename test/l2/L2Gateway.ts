@@ -80,7 +80,7 @@ describe('OVM_L2Gateway', () => {
       )
     })
 
-    it('reverts when called by XDomainMessenger but not relying message from l1ERC20Gateway', async () => {
+    it('reverts when called by XDomainMessenger but not relying message from l1Gateway', async () => {
       const [_, l2MessengerImpersonator, user1, user2] = await ethers.getSigners()
       const { l2CrossDomainMessengerMock, l2Gateway } = await setupTest({
         l2MessengerImpersonator,

@@ -21,18 +21,18 @@ describe('L1Gateway', () => {
   describe('deposit()', () => {
     it('escrows funds and sends xchain message on deposit', async () => {
       const [escrow, l1MessengerImpersonator, user1] = await ethers.getSigners()
-      const { l1Dai, l1ERC20Gateway, l1CrossDomainMessengerMock, l2GatewayMock } = await setupTest({
+      const { l1Dai, l1Gateway, l1CrossDomainMessengerMock, l2GatewayMock } = await setupTest({
         escrow,
         l1MessengerImpersonator,
         user1,
       })
 
-      await l1Dai.connect(user1).approve(l1ERC20Gateway.address, depositAmount)
-      await l1ERC20Gateway.connect(user1).deposit(depositAmount)
+      await l1Dai.connect(user1).approve(l1Gateway.address, depositAmount)
+      await l1Gateway.connect(user1).deposit(depositAmount)
       const depositCallToMessengerCall = l1CrossDomainMessengerMock.smocked.sendMessage.calls[0]
 
       expect(await l1Dai.balanceOf(user1.address)).to.be.eq(initialTotalL1Supply - depositAmount)
-      expect(await l1Dai.balanceOf(l1ERC20Gateway.address)).to.be.eq(0)
+      expect(await l1Dai.balanceOf(l1Gateway.address)).to.be.eq(0)
       expect(await l1Dai.balanceOf(escrow.address)).to.be.eq(depositAmount)
 
       expect(depositCallToMessengerCall._target).to.equal(l2GatewayMock.address)
@@ -43,63 +43,63 @@ describe('L1Gateway', () => {
 
     it('reverts when approval is too low', async () => {
       const [escrow, l1MessengerImpersonator, user1] = await ethers.getSigners()
-      const { l1Dai, l1ERC20Gateway } = await setupTest({
+      const { l1Dai, l1Gateway } = await setupTest({
         escrow,
         l1MessengerImpersonator,
         user1,
       })
 
-      await l1Dai.connect(user1).approve(l1ERC20Gateway.address, 0)
-      await expect(l1ERC20Gateway.connect(user1).deposit(depositAmount)).to.be.revertedWith(
+      await l1Dai.connect(user1).approve(l1Gateway.address, 0)
+      await expect(l1Gateway.connect(user1).deposit(depositAmount)).to.be.revertedWith(
         errorMessages.daiInsufficientAllowance,
       )
     })
 
     it('reverts when funds too low', async () => {
       const [escrow, l1MessengerImpersonator, user1, user2] = await ethers.getSigners()
-      const { l1Dai, l1ERC20Gateway } = await setupTest({
+      const { l1Dai, l1Gateway } = await setupTest({
         escrow,
         l1MessengerImpersonator,
         user1,
       })
 
-      await l1Dai.connect(user2).approve(l1ERC20Gateway.address, depositAmount)
-      await expect(l1ERC20Gateway.connect(user2).deposit(depositAmount)).to.be.revertedWith(
+      await l1Dai.connect(user2).approve(l1Gateway.address, depositAmount)
+      await expect(l1Gateway.connect(user2).deposit(depositAmount)).to.be.revertedWith(
         errorMessages.daiInsufficientBalance,
       )
     })
 
     it('reverts when bridge is closed', async () => {
       const [escrow, l1MessengerImpersonator, user1] = await ethers.getSigners()
-      const { l1Dai, l1ERC20Gateway } = await setupTest({
+      const { l1Dai, l1Gateway } = await setupTest({
         escrow,
         l1MessengerImpersonator,
         user1,
       })
 
-      await l1ERC20Gateway.close()
+      await l1Gateway.close()
 
-      await l1Dai.connect(user1).approve(l1ERC20Gateway.address, depositAmount)
+      await l1Dai.connect(user1).approve(l1Gateway.address, depositAmount)
 
-      await expect(l1ERC20Gateway.connect(user1).deposit(depositAmount)).to.be.revertedWith(errorMessages.bridgeClosed)
+      await expect(l1Gateway.connect(user1).deposit(depositAmount)).to.be.revertedWith(errorMessages.bridgeClosed)
     })
   })
 
   describe('depositTo()', () => {
     it('escrows funds and sends xchain message on deposit', async () => {
       const [escrow, l1MessengerImpersonator, user1, user2] = await ethers.getSigners()
-      const { l1Dai, l1ERC20Gateway, l1CrossDomainMessengerMock, l2GatewayMock } = await setupTest({
+      const { l1Dai, l1Gateway, l1CrossDomainMessengerMock, l2GatewayMock } = await setupTest({
         escrow,
         l1MessengerImpersonator,
         user1,
       })
 
-      await l1Dai.connect(user1).approve(l1ERC20Gateway.address, depositAmount)
-      await l1ERC20Gateway.connect(user1).depositTo(user2.address, depositAmount)
+      await l1Dai.connect(user1).approve(l1Gateway.address, depositAmount)
+      await l1Gateway.connect(user1).depositTo(user2.address, depositAmount)
       const depositCallToMessengerCall = l1CrossDomainMessengerMock.smocked.sendMessage.calls[0]
 
       expect(await l1Dai.balanceOf(user1.address)).to.be.eq(initialTotalL1Supply - depositAmount)
-      expect(await l1Dai.balanceOf(l1ERC20Gateway.address)).to.be.eq(0)
+      expect(await l1Dai.balanceOf(l1Gateway.address)).to.be.eq(0)
       expect(await l1Dai.balanceOf(escrow.address)).to.be.eq(depositAmount)
 
       expect(depositCallToMessengerCall._target).to.equal(l2GatewayMock.address)
@@ -110,45 +110,45 @@ describe('L1Gateway', () => {
 
     it('reverts when approval is too low', async () => {
       const [escrow, l1MessengerImpersonator, user1, user2] = await ethers.getSigners()
-      const { l1Dai, l1ERC20Gateway } = await setupTest({
+      const { l1Dai, l1Gateway } = await setupTest({
         escrow,
         l1MessengerImpersonator,
         user1,
       })
 
-      await l1Dai.connect(user1).approve(l1ERC20Gateway.address, 0)
-      await expect(l1ERC20Gateway.connect(user1).depositTo(user2.address, depositAmount)).to.be.revertedWith(
+      await l1Dai.connect(user1).approve(l1Gateway.address, 0)
+      await expect(l1Gateway.connect(user1).depositTo(user2.address, depositAmount)).to.be.revertedWith(
         errorMessages.daiInsufficientAllowance,
       )
     })
 
     it('reverts when funds too low', async () => {
       const [escrow, l1MessengerImpersonator, user1, user2] = await ethers.getSigners()
-      const { l1Dai, l1ERC20Gateway } = await setupTest({
+      const { l1Dai, l1Gateway } = await setupTest({
         escrow,
         l1MessengerImpersonator,
         user1,
       })
 
-      await l1Dai.connect(user2).approve(l1ERC20Gateway.address, depositAmount)
-      await expect(l1ERC20Gateway.connect(user2).depositTo(user1.address, depositAmount)).to.be.revertedWith(
+      await l1Dai.connect(user2).approve(l1Gateway.address, depositAmount)
+      await expect(l1Gateway.connect(user2).depositTo(user1.address, depositAmount)).to.be.revertedWith(
         errorMessages.daiInsufficientBalance,
       )
     })
 
     it('reverts when bridge is closed', async () => {
       const [escrow, l1MessengerImpersonator, user1] = await ethers.getSigners()
-      const { l1Dai, l1ERC20Gateway } = await setupTest({
+      const { l1Dai, l1Gateway } = await setupTest({
         escrow,
         l1MessengerImpersonator,
         user1,
       })
 
-      await l1ERC20Gateway.close()
+      await l1Gateway.close()
 
-      await l1Dai.connect(user1).approve(l1ERC20Gateway.address, depositAmount)
+      await l1Dai.connect(user1).approve(l1Gateway.address, depositAmount)
 
-      await expect(l1ERC20Gateway.connect(user1).depositTo(user1.address, depositAmount)).to.be.revertedWith(
+      await expect(l1Gateway.connect(user1).depositTo(user1.address, depositAmount)).to.be.revertedWith(
         errorMessages.bridgeClosed,
       )
     })
@@ -159,14 +159,14 @@ describe('L1Gateway', () => {
 
     it('sends funds from the escrow', async () => {
       const [escrow, l1MessengerImpersonator, user1, user2] = await ethers.getSigners()
-      const { l1Dai, l1ERC20Gateway, l1CrossDomainMessengerMock, l2GatewayMock } = await setupWithdrawTest({
+      const { l1Dai, l1Gateway, l1CrossDomainMessengerMock, l2GatewayMock } = await setupWithdrawTest({
         escrow,
         l1MessengerImpersonator,
         user1,
       })
       l1CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l2GatewayMock.address)
 
-      await l1ERC20Gateway.connect(l1MessengerImpersonator).finalizeWithdrawal(user2.address, withdrawAmount)
+      await l1Gateway.connect(l1MessengerImpersonator).finalizeWithdrawal(user2.address, withdrawAmount)
 
       expect(await l1Dai.balanceOf(user2.address)).to.be.equal(withdrawAmount)
       expect(await l1Dai.balanceOf(escrow.address)).to.be.equal(initialTotalL1Supply - withdrawAmount)
@@ -175,15 +175,15 @@ describe('L1Gateway', () => {
     // pending withdrawals MUST success even if bridge is closed
     it('completes withdrawals even when closed', async () => {
       const [escrow, l1MessengerImpersonator, user1, user2] = await ethers.getSigners()
-      const { l1Dai, l1ERC20Gateway, l1CrossDomainMessengerMock, l2GatewayMock } = await setupWithdrawTest({
+      const { l1Dai, l1Gateway, l1CrossDomainMessengerMock, l2GatewayMock } = await setupWithdrawTest({
         escrow,
         l1MessengerImpersonator,
         user1,
       })
       l1CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l2GatewayMock.address)
 
-      await l1ERC20Gateway.close()
-      await l1ERC20Gateway.connect(l1MessengerImpersonator).finalizeWithdrawal(user2.address, withdrawAmount)
+      await l1Gateway.close()
+      await l1Gateway.connect(l1MessengerImpersonator).finalizeWithdrawal(user2.address, withdrawAmount)
 
       expect(await l1Dai.balanceOf(user2.address)).to.be.equal(withdrawAmount)
       expect(await l1Dai.balanceOf(escrow.address)).to.be.equal(initialTotalL1Supply - withdrawAmount)
@@ -192,23 +192,23 @@ describe('L1Gateway', () => {
     // if bridge is closed properly this shouldn't happen
     it('reverts when escrow access was revoked', async () => {
       const [escrow, l1MessengerImpersonator, user1, user2] = await ethers.getSigners()
-      const { l1Dai, l1ERC20Gateway, l1CrossDomainMessengerMock, l2GatewayMock } = await setupWithdrawTest({
+      const { l1Dai, l1Gateway, l1CrossDomainMessengerMock, l2GatewayMock } = await setupWithdrawTest({
         escrow,
         l1MessengerImpersonator,
         user1,
       })
       l1CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l2GatewayMock.address)
 
-      await l1Dai.connect(escrow).approve(l1ERC20Gateway.address, 0)
+      await l1Dai.connect(escrow).approve(l1Gateway.address, 0)
 
       await expect(
-        l1ERC20Gateway.connect(l1MessengerImpersonator).finalizeWithdrawal(user2.address, withdrawAmount),
+        l1Gateway.connect(l1MessengerImpersonator).finalizeWithdrawal(user2.address, withdrawAmount),
       ).to.be.revertedWith(errorMessages.daiInsufficientAllowance)
     })
 
     it('reverts when called not by XDomainMessenger', async () => {
       const [escrow, l1MessengerImpersonator, user1, user2] = await ethers.getSigners()
-      const { l1ERC20Gateway, l1CrossDomainMessengerMock, l2GatewayMock } = await setupWithdrawTest({
+      const { l1Gateway, l1CrossDomainMessengerMock, l2GatewayMock } = await setupWithdrawTest({
         escrow,
         l1MessengerImpersonator,
         user1,
@@ -216,14 +216,14 @@ describe('L1Gateway', () => {
 
       l1CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l2GatewayMock.address)
 
-      await expect(l1ERC20Gateway.connect(user2).finalizeWithdrawal(user2.address, withdrawAmount)).to.be.revertedWith(
+      await expect(l1Gateway.connect(user2).finalizeWithdrawal(user2.address, withdrawAmount)).to.be.revertedWith(
         errorMessages.invalidMessenger,
       )
     })
 
     it('reverts when called by XDomainMessenger but not relying message from l2Gateway', async () => {
       const [escrow, l1MessengerImpersonator, user1, user2, user3] = await ethers.getSigners()
-      const { l1ERC20Gateway, l1CrossDomainMessengerMock } = await setupWithdrawTest({
+      const { l1Gateway, l1CrossDomainMessengerMock } = await setupWithdrawTest({
         escrow,
         l1MessengerImpersonator,
         user1,
@@ -232,7 +232,7 @@ describe('L1Gateway', () => {
       l1CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => user3.address)
 
       await expect(
-        l1ERC20Gateway.connect(l1MessengerImpersonator).finalizeWithdrawal(user2.address, withdrawAmount),
+        l1Gateway.connect(l1MessengerImpersonator).finalizeWithdrawal(user2.address, withdrawAmount),
       ).to.be.revertedWith(errorMessages.invalidXDomainMessageOriginator)
     })
   })
@@ -240,42 +240,42 @@ describe('L1Gateway', () => {
   describe('close()', () => {
     it('can be called by owner', async () => {
       const [owner, l1MessengerImpersonator, user1] = await ethers.getSigners()
-      const { l1ERC20Gateway } = await setupTest({
+      const { l1Gateway } = await setupTest({
         escrow: owner,
         l1MessengerImpersonator,
         user1,
       })
 
-      expect(await l1ERC20Gateway.isOpen()).to.be.eq(1)
-      await l1ERC20Gateway.connect(owner).close()
+      expect(await l1Gateway.isOpen()).to.be.eq(1)
+      await l1Gateway.connect(owner).close()
 
-      expect(await l1ERC20Gateway.isOpen()).to.be.eq(0)
+      expect(await l1Gateway.isOpen()).to.be.eq(0)
     })
 
     it('can be called multiple times by the owner but nothing changes', async () => {
       const [owner, l1MessengerImpersonator, user1] = await ethers.getSigners()
-      const { l1ERC20Gateway } = await setupTest({
+      const { l1Gateway } = await setupTest({
         escrow: owner,
         l1MessengerImpersonator,
         user1,
       })
 
-      await l1ERC20Gateway.connect(owner).close()
-      expect(await l1ERC20Gateway.isOpen()).to.be.eq(0)
+      await l1Gateway.connect(owner).close()
+      expect(await l1Gateway.isOpen()).to.be.eq(0)
 
-      await l1ERC20Gateway.connect(owner).close()
-      expect(await l1ERC20Gateway.isOpen()).to.be.eq(0)
+      await l1Gateway.connect(owner).close()
+      expect(await l1Gateway.isOpen()).to.be.eq(0)
     })
 
     it('reverts when called not by the owner', async () => {
       const [owner, l1MessengerImpersonator, user1] = await ethers.getSigners()
-      const { l1ERC20Gateway } = await setupTest({
+      const { l1Gateway } = await setupTest({
         escrow: owner,
         l1MessengerImpersonator,
         user1,
       })
 
-      await expect(l1ERC20Gateway.connect(user1).close()).to.be.revertedWith(errorMessages.notOwner)
+      await expect(l1Gateway.connect(user1).close()).to.be.revertedWith(errorMessages.notOwner)
     })
   })
 })
@@ -291,7 +291,7 @@ async function setupTest(signers: {
     { address: await signers.l1MessengerImpersonator.getAddress() }, // This allows us to use an ethers override {from: Mock__OVM_L2CrossDomainMessenger.address} to mock calls
   )
   const l1Dai = await deploy<Dai__factory>('Dai', [])
-  const l1ERC20Gateway = await deploy<L1Gateway__factory>('L1Gateway', [
+  const l1Gateway = await deploy<L1Gateway__factory>('L1Gateway', [
     l1Dai.address,
     l2GatewayMock.address,
     l1CrossDomainMessengerMock.address,
@@ -299,7 +299,7 @@ async function setupTest(signers: {
   ])
   await l1Dai.mint(signers.user1.address, initialTotalL1Supply)
 
-  return { l1Dai, l1ERC20Gateway, l1CrossDomainMessengerMock, l2GatewayMock }
+  return { l1Dai, l1Gateway, l1CrossDomainMessengerMock, l2GatewayMock }
 }
 
 async function setupWithdrawTest(signers: {
@@ -308,7 +308,7 @@ async function setupWithdrawTest(signers: {
   user1: SignerWithAddress
 }) {
   const contracts = await setupTest(signers)
-  await contracts.l1Dai.connect(signers.escrow).approve(contracts.l1ERC20Gateway.address, ethers.constants.MaxUint256)
+  await contracts.l1Dai.connect(signers.escrow).approve(contracts.l1Gateway.address, ethers.constants.MaxUint256)
   await contracts.l1Dai.connect(signers.user1).transfer(await signers.escrow.getAddress(), initialTotalL1Supply)
 
   return contracts
