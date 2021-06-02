@@ -2,7 +2,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
 
-import { Dai__factory, L1Gateway__factory } from '../../typechain'
+import { Dai__factory, L1Escrow__factory, L1Gateway__factory } from '../../typechain'
 import { deploy, deployMock, deployOptimismContractMock } from '../helpers'
 
 const initialTotalL1Supply = 3000
@@ -20,9 +20,8 @@ const errorMessages = {
 describe('L1Gateway', () => {
   describe('deposit()', () => {
     it('escrows funds and sends xchain message on deposit', async () => {
-      const [escrow, l1MessengerImpersonator, user1] = await ethers.getSigners()
-      const { l1Dai, l1Gateway, l1CrossDomainMessengerMock, l2GatewayMock } = await setupTest({
-        escrow,
+      const [l1MessengerImpersonator, user1] = await ethers.getSigners()
+      const { l1Dai, l1Gateway, l1CrossDomainMessengerMock, l2GatewayMock, l1Escrow } = await setupTest({
         l1MessengerImpersonator,
         user1,
       })
@@ -33,7 +32,7 @@ describe('L1Gateway', () => {
 
       expect(await l1Dai.balanceOf(user1.address)).to.be.eq(initialTotalL1Supply - depositAmount)
       expect(await l1Dai.balanceOf(l1Gateway.address)).to.be.eq(0)
-      expect(await l1Dai.balanceOf(escrow.address)).to.be.eq(depositAmount)
+      expect(await l1Dai.balanceOf(l1Escrow.address)).to.be.eq(depositAmount)
 
       expect(depositCallToMessengerCall._target).to.equal(l2GatewayMock.address)
       expect(depositCallToMessengerCall._message).to.equal(
@@ -42,9 +41,8 @@ describe('L1Gateway', () => {
     })
 
     it('reverts when approval is too low', async () => {
-      const [escrow, l1MessengerImpersonator, user1] = await ethers.getSigners()
+      const [l1MessengerImpersonator, user1] = await ethers.getSigners()
       const { l1Dai, l1Gateway } = await setupTest({
-        escrow,
         l1MessengerImpersonator,
         user1,
       })
@@ -56,9 +54,8 @@ describe('L1Gateway', () => {
     })
 
     it('reverts when funds too low', async () => {
-      const [escrow, l1MessengerImpersonator, user1, user2] = await ethers.getSigners()
+      const [l1MessengerImpersonator, user1, user2] = await ethers.getSigners()
       const { l1Dai, l1Gateway } = await setupTest({
-        escrow,
         l1MessengerImpersonator,
         user1,
       })
@@ -70,9 +67,8 @@ describe('L1Gateway', () => {
     })
 
     it('reverts when bridge is closed', async () => {
-      const [escrow, l1MessengerImpersonator, user1] = await ethers.getSigners()
+      const [l1MessengerImpersonator, user1] = await ethers.getSigners()
       const { l1Dai, l1Gateway } = await setupTest({
-        escrow,
         l1MessengerImpersonator,
         user1,
       })
@@ -87,9 +83,8 @@ describe('L1Gateway', () => {
 
   describe('depositTo()', () => {
     it('escrows funds and sends xchain message on deposit', async () => {
-      const [escrow, l1MessengerImpersonator, user1, user2] = await ethers.getSigners()
-      const { l1Dai, l1Gateway, l1CrossDomainMessengerMock, l2GatewayMock } = await setupTest({
-        escrow,
+      const [l1MessengerImpersonator, user1, user2] = await ethers.getSigners()
+      const { l1Dai, l1Gateway, l1CrossDomainMessengerMock, l2GatewayMock, l1Escrow } = await setupTest({
         l1MessengerImpersonator,
         user1,
       })
@@ -100,7 +95,7 @@ describe('L1Gateway', () => {
 
       expect(await l1Dai.balanceOf(user1.address)).to.be.eq(initialTotalL1Supply - depositAmount)
       expect(await l1Dai.balanceOf(l1Gateway.address)).to.be.eq(0)
-      expect(await l1Dai.balanceOf(escrow.address)).to.be.eq(depositAmount)
+      expect(await l1Dai.balanceOf(l1Escrow.address)).to.be.eq(depositAmount)
 
       expect(depositCallToMessengerCall._target).to.equal(l2GatewayMock.address)
       expect(depositCallToMessengerCall._message).to.equal(
@@ -109,9 +104,8 @@ describe('L1Gateway', () => {
     })
 
     it('reverts when approval is too low', async () => {
-      const [escrow, l1MessengerImpersonator, user1, user2] = await ethers.getSigners()
+      const [l1MessengerImpersonator, user1, user2] = await ethers.getSigners()
       const { l1Dai, l1Gateway } = await setupTest({
-        escrow,
         l1MessengerImpersonator,
         user1,
       })
@@ -123,9 +117,8 @@ describe('L1Gateway', () => {
     })
 
     it('reverts when funds too low', async () => {
-      const [escrow, l1MessengerImpersonator, user1, user2] = await ethers.getSigners()
+      const [l1MessengerImpersonator, user1, user2] = await ethers.getSigners()
       const { l1Dai, l1Gateway } = await setupTest({
-        escrow,
         l1MessengerImpersonator,
         user1,
       })
@@ -137,9 +130,8 @@ describe('L1Gateway', () => {
     })
 
     it('reverts when bridge is closed', async () => {
-      const [escrow, l1MessengerImpersonator, user1] = await ethers.getSigners()
+      const [l1MessengerImpersonator, user1] = await ethers.getSigners()
       const { l1Dai, l1Gateway } = await setupTest({
-        escrow,
         l1MessengerImpersonator,
         user1,
       })
@@ -158,9 +150,8 @@ describe('L1Gateway', () => {
     const withdrawAmount = 100
 
     it('sends funds from the escrow', async () => {
-      const [escrow, l1MessengerImpersonator, user1, user2] = await ethers.getSigners()
-      const { l1Dai, l1Gateway, l1CrossDomainMessengerMock, l2GatewayMock } = await setupWithdrawTest({
-        escrow,
+      const [l1MessengerImpersonator, user1, user2] = await ethers.getSigners()
+      const { l1Dai, l1Gateway, l1CrossDomainMessengerMock, l2GatewayMock, l1Escrow } = await setupWithdrawTest({
         l1MessengerImpersonator,
         user1,
       })
@@ -169,14 +160,13 @@ describe('L1Gateway', () => {
       await l1Gateway.connect(l1MessengerImpersonator).finalizeWithdrawal(user2.address, withdrawAmount)
 
       expect(await l1Dai.balanceOf(user2.address)).to.be.equal(withdrawAmount)
-      expect(await l1Dai.balanceOf(escrow.address)).to.be.equal(initialTotalL1Supply - withdrawAmount)
+      expect(await l1Dai.balanceOf(l1Escrow.address)).to.be.equal(initialTotalL1Supply - withdrawAmount)
     })
 
     // pending withdrawals MUST success even if bridge is closed
     it('completes withdrawals even when closed', async () => {
-      const [escrow, l1MessengerImpersonator, user1, user2] = await ethers.getSigners()
-      const { l1Dai, l1Gateway, l1CrossDomainMessengerMock, l2GatewayMock } = await setupWithdrawTest({
-        escrow,
+      const [l1MessengerImpersonator, user1, user2] = await ethers.getSigners()
+      const { l1Dai, l1Gateway, l1CrossDomainMessengerMock, l2GatewayMock, l1Escrow } = await setupWithdrawTest({
         l1MessengerImpersonator,
         user1,
       })
@@ -186,20 +176,19 @@ describe('L1Gateway', () => {
       await l1Gateway.connect(l1MessengerImpersonator).finalizeWithdrawal(user2.address, withdrawAmount)
 
       expect(await l1Dai.balanceOf(user2.address)).to.be.equal(withdrawAmount)
-      expect(await l1Dai.balanceOf(escrow.address)).to.be.equal(initialTotalL1Supply - withdrawAmount)
+      expect(await l1Dai.balanceOf(l1Escrow.address)).to.be.equal(initialTotalL1Supply - withdrawAmount)
     })
 
     // if bridge is closed properly this shouldn't happen
     it('reverts when escrow access was revoked', async () => {
-      const [escrow, l1MessengerImpersonator, user1, user2] = await ethers.getSigners()
-      const { l1Dai, l1Gateway, l1CrossDomainMessengerMock, l2GatewayMock } = await setupWithdrawTest({
-        escrow,
+      const [l1MessengerImpersonator, user1, user2] = await ethers.getSigners()
+      const { l1Dai, l1Gateway, l1CrossDomainMessengerMock, l2GatewayMock, l1Escrow } = await setupWithdrawTest({
         l1MessengerImpersonator,
         user1,
       })
       l1CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l2GatewayMock.address)
 
-      await l1Dai.connect(escrow).approve(l1Gateway.address, 0)
+      await l1Escrow.approve(l1Dai.address, l1Gateway.address, 0)
 
       await expect(
         l1Gateway.connect(l1MessengerImpersonator).finalizeWithdrawal(user2.address, withdrawAmount),
@@ -207,9 +196,8 @@ describe('L1Gateway', () => {
     })
 
     it('reverts when called not by XDomainMessenger', async () => {
-      const [escrow, l1MessengerImpersonator, user1, user2] = await ethers.getSigners()
+      const [l1MessengerImpersonator, user1, user2] = await ethers.getSigners()
       const { l1Gateway, l1CrossDomainMessengerMock, l2GatewayMock } = await setupWithdrawTest({
-        escrow,
         l1MessengerImpersonator,
         user1,
       })
@@ -222,9 +210,8 @@ describe('L1Gateway', () => {
     })
 
     it('reverts when called by XDomainMessenger but not relying message from l2Gateway', async () => {
-      const [escrow, l1MessengerImpersonator, user1, user2, user3] = await ethers.getSigners()
+      const [l1MessengerImpersonator, user1, user2, user3] = await ethers.getSigners()
       const { l1Gateway, l1CrossDomainMessengerMock } = await setupWithdrawTest({
-        escrow,
         l1MessengerImpersonator,
         user1,
       })
@@ -241,7 +228,6 @@ describe('L1Gateway', () => {
     it('can be called by owner', async () => {
       const [owner, l1MessengerImpersonator, user1] = await ethers.getSigners()
       const { l1Gateway } = await setupTest({
-        escrow: owner,
         l1MessengerImpersonator,
         user1,
       })
@@ -255,7 +241,6 @@ describe('L1Gateway', () => {
     it('can be called multiple times by the owner but nothing changes', async () => {
       const [owner, l1MessengerImpersonator, user1] = await ethers.getSigners()
       const { l1Gateway } = await setupTest({
-        escrow: owner,
         l1MessengerImpersonator,
         user1,
       })
@@ -268,9 +253,8 @@ describe('L1Gateway', () => {
     })
 
     it('reverts when called not by the owner', async () => {
-      const [owner, l1MessengerImpersonator, user1] = await ethers.getSigners()
+      const [_owner, l1MessengerImpersonator, user1] = await ethers.getSigners()
       const { l1Gateway } = await setupTest({
-        escrow: owner,
         l1MessengerImpersonator,
         user1,
       })
@@ -280,36 +264,29 @@ describe('L1Gateway', () => {
   })
 })
 
-async function setupTest(signers: {
-  l1MessengerImpersonator: SignerWithAddress
-  escrow: SignerWithAddress
-  user1: SignerWithAddress
-}) {
+async function setupTest(signers: { l1MessengerImpersonator: SignerWithAddress; user1: SignerWithAddress }) {
   const l2GatewayMock = await deployMock('L2Gateway')
   const l1CrossDomainMessengerMock = await deployOptimismContractMock(
     'OVM_L1CrossDomainMessenger',
     { address: await signers.l1MessengerImpersonator.getAddress() }, // This allows us to use an ethers override {from: Mock__OVM_L2CrossDomainMessenger.address} to mock calls
   )
-  const l1Dai = await deploy<Dai__factory>('Dai', [])
+  const l1Dai = await deploy<Dai__factory>('Dai')
+  const l1Escrow = await deploy<L1Escrow__factory>('L1Escrow')
   const l1Gateway = await deploy<L1Gateway__factory>('L1Gateway', [
     l1Dai.address,
     l2GatewayMock.address,
     l1CrossDomainMessengerMock.address,
-    signers.escrow.address,
+    l1Escrow.address,
   ])
   await l1Dai.mint(signers.user1.address, initialTotalL1Supply)
 
-  return { l1Dai, l1Gateway, l1CrossDomainMessengerMock, l2GatewayMock }
+  return { l1Dai, l1Gateway, l1CrossDomainMessengerMock, l2GatewayMock, l1Escrow }
 }
 
-async function setupWithdrawTest(signers: {
-  l1MessengerImpersonator: SignerWithAddress
-  escrow: SignerWithAddress
-  user1: SignerWithAddress
-}) {
+async function setupWithdrawTest(signers: { l1MessengerImpersonator: SignerWithAddress; user1: SignerWithAddress }) {
   const contracts = await setupTest(signers)
-  await contracts.l1Dai.connect(signers.escrow).approve(contracts.l1Gateway.address, ethers.constants.MaxUint256)
-  await contracts.l1Dai.connect(signers.user1).transfer(await signers.escrow.getAddress(), initialTotalL1Supply)
+  await contracts.l1Escrow.approve(contracts.l1Dai.address, contracts.l1Gateway.address, ethers.constants.MaxUint256)
+  await contracts.l1Dai.connect(signers.user1).transfer(contracts.l1Escrow.address, initialTotalL1Supply)
 
   return contracts
 }

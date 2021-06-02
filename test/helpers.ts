@@ -21,10 +21,10 @@ export function q18(n: number) {
 
 export async function deploy<T extends ContractFactory>(
   name: string,
-  args: Parameters<T['deploy']>,
+  args?: Parameters<T['deploy']>,
 ): Promise<ReturnType<T['deploy']>> {
   const factory = (await ethers.getContractFactory(name)) as any
-  return factory.deploy(...args)
+  return factory.deploy(...(args || []))
 }
 
 export async function deployMock<T extends ContractFactory>(
