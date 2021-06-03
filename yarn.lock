@@ -98,10 +98,9 @@
     minimatch "^3.0.4"
     strip-json-comments "^3.1.1"
 
-"@eth-optimism/contracts@^0.3.2":
+"@eth-optimism/contracts@https://gitpkg.now.sh/ethereum-optimism/optimism/packages/contracts?5dc356aac95090d78a81bd85ffe3274cfb08b280":
   version "0.3.4"
-  resolved "https://registry.yarnpkg.com/@eth-optimism/contracts/-/contracts-0.3.4.tgz#869dffcfd47994c556185090dd0814ea8d13ced7"
-  integrity sha512-GTmyf+MR/LWadlm4ff5spA6pyZOGnmpNBRMZ8ecvOzjszhFVT1J1DTxuqcvrEt/UIk53j5OQT5tNZHmyovNvQQ==
+  resolved "https://gitpkg.now.sh/ethereum-optimism/optimism/packages/contracts?5dc356aac95090d78a81bd85ffe3274cfb08b280#1bd9d14007c44c86b9269ea510ffff819070c24d"
   dependencies:
     "@eth-optimism/core-utils" "^0.4.4"
     "@ethersproject/abstract-provider" "^5.0.8"
@@ -109,9 +108,9 @@
     "@ethersproject/contracts" "^5.0.5"
     glob "^7.1.6"
 
-"@eth-optimism/contracts@https://gitpkg.now.sh/ethereum-optimism/optimism/packages/contracts?5dc356aac95090d78a81bd85ffe3274cfb08b280":
+"@eth-optimism/contracts@https://gitpkg.now.sh/ethereum-optimism/optimism/packages/contracts?8f3795c0146cab8bf60bf09df200c252271cc10b":
   version "0.3.4"
-  resolved "https://gitpkg.now.sh/ethereum-optimism/optimism/packages/contracts?5dc356aac95090d78a81bd85ffe3274cfb08b280#1bd9d14007c44c86b9269ea510ffff819070c24d"
+  resolved "https://gitpkg.now.sh/ethereum-optimism/optimism/packages/contracts?8f3795c0146cab8bf60bf09df200c252271cc10b#87cbdc6a96d57727a7bbcaea05794e6afee8e2bf"
   dependencies:
     "@eth-optimism/core-utils" "^0.4.4"
     "@ethersproject/abstract-provider" "^5.0.8"
