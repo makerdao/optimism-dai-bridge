@@ -109,6 +109,16 @@
     "@ethersproject/contracts" "^5.0.5"
     glob "^7.1.6"
 
+"@eth-optimism/contracts@https://gitpkg.now.sh/ethereum-optimism/optimism/packages/contracts?5dc356aac95090d78a81bd85ffe3274cfb08b280":
+  version "0.3.4"
+  resolved "https://gitpkg.now.sh/ethereum-optimism/optimism/packages/contracts?5dc356aac95090d78a81bd85ffe3274cfb08b280#1bd9d14007c44c86b9269ea510ffff819070c24d"
+  dependencies:
+    "@eth-optimism/core-utils" "^0.4.4"
+    "@ethersproject/abstract-provider" "^5.0.8"
+    "@ethersproject/abstract-signer" "^5.1.0"
+    "@ethersproject/contracts" "^5.0.5"
+    glob "^7.1.6"
+
 "@eth-optimism/core-utils@^0.4.1", "@eth-optimism/core-utils@^0.4.4":
   version "0.4.4"
   resolved "https://registry.yarnpkg.com/@eth-optimism/core-utils/-/core-utils-0.4.4.tgz#7f393ae83671a19cea8704b51afce7fa215eb938"
