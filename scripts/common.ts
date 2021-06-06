@@ -21,34 +21,35 @@ interface Options {
 
 export async function deploy(opts: Options) {
   // Bridge deploy
-  const l1Escrow = await deployUsingFactory<L1Escrow>(opts.l1Deployer, await opts.l1.getContractFactory('L1Escrow'), [
+  const l1Escrow = await deployUsingFactory(opts.l1Deployer, await opts.l1.getContractFactory('L1Escrow'), [
     opts.L1_TX_OPTS,
   ])
   console.log('L1 Escrow: ', l1Escrow.address)
-  const l2Dai = await deployUsingFactory<Dai>(opts.l2Deployer, await getL2Factory('Dai'), [opts.L2_TX_OPTS])
+  const l2Dai = await deployUsingFactory(opts.l2Deployer, await getL2Factory('Dai'), [opts.L2_TX_OPTS])
   console.log('L2 DAI: ', l2Dai.address)
-  const l2Gateway = await deployUsingFactory<L2Gateway>(opts.l2Deployer, await getL2Factory('L2Gateway'), [
+  const l2Gateway = await deployUsingFactory(opts.l2Deployer, await getL2Factory('L2Gateway'), [
     opts.L2_XDOMAIN_MESSENGER,
     l2Dai.address,
     opts.L2_TX_OPTS,
   ])
   console.log('L2 Gateway: ', l2Gateway.address)
-  const l1Gateway = await deployUsingFactory<L1Gateway>(
-    opts.l1Deployer,
-    await opts.l1.getContractFactory('L1Gateway'),
-    [opts.L1_DAI_ADDRESS, l2Gateway.address, opts.L1_XDOMAIN_MESSENGER, l1Escrow.address, opts.L1_TX_OPTS],
-  )
+  const l1Gateway = await deployUsingFactory(opts.l1Deployer, await opts.l1.getContractFactory('L1Gateway'), [
+    opts.L1_DAI_ADDRESS,
+    l2Gateway.address,
+    opts.L1_XDOMAIN_MESSENGER,
+    l1Escrow.address,
+    opts.L1_TX_OPTS,
+  ])
   console.log('L1 Gateway: ', l1Gateway.address)
   await l2Gateway.init(l1Gateway.address, opts.L2_TX_OPTS)
 
   // Governance deploy
-  const l2GovernanceRelay = await deployUsingFactory<L2GovernanceRelay>(
-    opts.l2Deployer,
-    await getL2Factory('L2GovernanceRelay'),
-    [opts.L2_XDOMAIN_MESSENGER, opts.L2_TX_OPTS],
-  )
+  const l2GovernanceRelay = await deployUsingFactory(opts.l2Deployer, await getL2Factory('L2GovernanceRelay'), [
+    opts.L2_XDOMAIN_MESSENGER,
+    opts.L2_TX_OPTS,
+  ])
   console.log('L2 Governance Relay: ', l2GovernanceRelay.address)
-  const l1GovernanceRelay = await deployUsingFactory<L1GovernanceRelay>(
+  const l1GovernanceRelay = await deployUsingFactory(
     opts.l1Deployer,
     await opts.l1.getContractFactory('L1GovernanceRelay'),
     [l2GovernanceRelay.address, opts.L1_XDOMAIN_MESSENGER, opts.L1_TX_OPTS],
