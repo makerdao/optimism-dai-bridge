@@ -48,10 +48,11 @@ contract L2Gateway is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
   event Rely(address indexed usr);
   event Deny(address indexed usr);
 
+ // @todo: normalize naming
   Mintable public immutable token;
   uint256 public isOpen = 1;
-  address l1Gateway;
-  address l1Token;
+  address public l1Gateway;
+  address public l1Token;
 
   constructor(address _l2CrossDomainMessenger, address _token) public OVM_CrossDomainEnabled(_l2CrossDomainMessenger) {
     wards[msg.sender] = 1;
@@ -60,8 +61,13 @@ contract L2Gateway is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
     token = Mintable(_token);
   }
 
+  modifier onlyAfterInit() {
+    require(l1Gateway != address(0), 'L2Gateway/not-init'); 
+    _;
+  }
+
   function init(address _l1Gateway, address _l1Token) external auth {
-    require(_l1Token != address(0)); 
+    require(l1Gateway == address(0), 'L2Gateway/already-init'); 
 
     l1Gateway = _l1Gateway;
     l1Token = _l1Token;
@@ -74,19 +80,20 @@ contract L2Gateway is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
   function withdraw(
         address _l2Token,
         uint256 _amount,
-        uint32, // _l1Gas, @todo why empty?
+        uint32 _l1Gas,
         bytes calldata _data
     )
         external
         override
         virtual
+        onlyAfterInit()
     {
         _initiateWithdrawal(
             _l2Token,
             msg.sender,
             msg.sender,
             _amount,
-            0,
+            _l1Gas,
             _data
         );
     }
@@ -95,19 +102,20 @@ contract L2Gateway is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
         address _l2Token,
         address _to,
         uint256 _amount,
-        uint32, // _l1Gas,
+        uint32 _l1Gas,
         bytes calldata _data
     )
         external
         override
         virtual
+        onlyAfterInit()
     {
         _initiateWithdrawal(
             _l2Token,
             msg.sender,
             _to,
             _amount,
-            0,
+            _l1Gas,
             _data
         );
     }
@@ -118,7 +126,7 @@ contract L2Gateway is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
         address _from,
         address _to,
         uint256 _amount,
-        uint32, // _l1Gas,
+        uint32 _l1Gas,
         bytes calldata _data
     )
         internal
@@ -126,8 +134,6 @@ contract L2Gateway is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
     // do not allow initiaitng new xchain messages if bridge is closed
     require(isOpen == 1, 'L2Gateway/closed');
     token.burn(msg.sender, _amount);
-
-    address l1Token = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE; // @todo? save l1 token in constructor?
 
     bytes memory message = abi.encodeWithSelector(
         iOVM_L1ERC20Bridge.finalizeERC20Withdrawal.selector,
@@ -142,7 +148,7 @@ contract L2Gateway is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
     // Send message up to L1 bridge
     sendCrossDomainMessage(
         l1Gateway,
-        0,
+        _l1Gas,
         message
     );
 
@@ -161,8 +167,10 @@ contract L2Gateway is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
     external
     override
     virtual
+    onlyAfterInit()
     onlyFromCrossDomainAccount(l1Gateway)
   {
+    require(l1Gateway != address(0), 'L2Gateway/not-init'); 
     // @todo: ensure that l2token is _token
     token.mint(_to, _amount);
 
