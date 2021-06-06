@@ -1,6 +1,7 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address'
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
+import { ZERO_GAS_OPTS } from '../../test-e2e/helpers/utils'
 
 import { Dai__factory, L1Escrow__factory, L1Gateway__factory } from '../../typechain'
 import { deploy, deployMock, deployOptimismContractMock } from '../helpers'
@@ -17,17 +18,17 @@ const errorMessages = {
   daiInsufficientBalance: 'Dai/insufficient-balance',
 }
 
-describe('L1Gateway', () => {
-  describe('deposit()', () => {
-    it('escrows funds and sends xchain message on deposit', async () => {
+describe.only('L1Gateway', () => {
+  describe('depositERC20()', () => {
+    it.only('escrows funds and sends xchain message on deposit', async () => {
       const [l1MessengerImpersonator, user1] = await ethers.getSigners()
-      const { l1Dai, l1Gateway, l1CrossDomainMessengerMock, l2GatewayMock, l1Escrow } = await setupTest({
+      const { l1Dai, l2Dai, l1Gateway, l1CrossDomainMessengerMock, l2GatewayMock, l1Escrow } = await setupTest({
         l1MessengerImpersonator,
         user1,
       })
 
       await l1Dai.connect(user1).approve(l1Gateway.address, depositAmount)
-      await l1Gateway.connect(user1).deposit(depositAmount)
+      await l1Gateway.connect(user1).depositERC20(l1Dai.address, l2GatewayMock.address, depositAmount, 0, '0x')
       const depositCallToMessengerCall = l1CrossDomainMessengerMock.smocked.sendMessage.calls[0]
 
       expect(await l1Dai.balanceOf(user1.address)).to.be.eq(initialTotalL1Supply - depositAmount)
@@ -36,8 +37,16 @@ describe('L1Gateway', () => {
 
       expect(depositCallToMessengerCall._target).to.equal(l2GatewayMock.address)
       expect(depositCallToMessengerCall._message).to.equal(
-        l2GatewayMock.interface.encodeFunctionData('finalizeDeposit', [user1.address, depositAmount]),
+        l2GatewayMock.interface.encodeFunctionData('finalizeDeposit', [
+          l1Dai.address,
+          l2Dai.address,
+          user1.address,
+          user1.address,
+          depositAmount,
+          '0x',
+        ]),
       )
+      //@todo assert event
     })
 
     it('reverts when approval is too low', async () => {
@@ -271,16 +280,18 @@ async function setupTest(signers: { l1MessengerImpersonator: SignerWithAddress; 
     { address: await signers.l1MessengerImpersonator.getAddress() }, // This allows us to use an ethers override {from: Mock__OVM_L2CrossDomainMessenger.address} to mock calls
   )
   const l1Dai = await deploy<Dai__factory>('Dai')
+  const l2Dai = await deploy<Dai__factory>('Dai')
   const l1Escrow = await deploy<L1Escrow__factory>('L1Escrow')
   const l1Gateway = await deploy<L1Gateway__factory>('L1Gateway', [
     l1Dai.address,
     l2GatewayMock.address,
+    l2Dai.address,
     l1CrossDomainMessengerMock.address,
     l1Escrow.address,
   ])
   await l1Dai.mint(signers.user1.address, initialTotalL1Supply)
 
-  return { l1Dai, l1Gateway, l1CrossDomainMessengerMock, l2GatewayMock, l1Escrow }
+  return { l1Dai, l2Dai, l1Gateway, l1CrossDomainMessengerMock, l2GatewayMock, l1Escrow }
 }
 
 async function setupWithdrawTest(signers: { l1MessengerImpersonator: SignerWithAddress; user1: SignerWithAddress }) {

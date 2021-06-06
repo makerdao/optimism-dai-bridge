@@ -70,8 +70,8 @@ contract L1GovernanceRelay is OVM_CrossDomainEnabled {
     // Send calldata into L2
     sendCrossDomainMessage(
       l2GovernanceRelay,
-      data,
-      l2gas
+      l2gas,
+      data
     );
   }
 }

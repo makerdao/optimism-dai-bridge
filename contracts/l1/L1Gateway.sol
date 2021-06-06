@@ -17,6 +17,7 @@
 pragma solidity >=0.7.6;
 
 import {iOVM_L1ERC20Bridge} from '@eth-optimism/contracts/contracts/optimistic-ethereum/iOVM/bridge/tokens/iOVM_L1ERC20Bridge.sol';
+import {iOVM_L2ERC20Bridge} from '@eth-optimism/contracts/contracts/optimistic-ethereum/iOVM/bridge/tokens/iOVM_L2ERC20Bridge.sol';
 import {OVM_CrossDomainEnabled} from '@eth-optimism/contracts/contracts/optimistic-ethereum/libraries/bridge/OVM_CrossDomainEnabled.sol';
 
 interface TokenLike {
@@ -47,12 +48,14 @@ contract L1Gateway is iOVM_L1ERC20Bridge, OVM_CrossDomainEnabled {
 
   TokenLike public immutable l1ERC20;
   address public immutable l2Gateway;
+  address public immutable l2ERC20;
   address public immutable escrow;
   uint256 public isOpen = 1;
 
   constructor(
     TokenLike _l1ERC20,
     address _l2Gateway,
+    address _l2ERC20,
     address _l1messenger,
     address _escrow
   ) OVM_CrossDomainEnabled(_l1messenger) { 
@@ -61,6 +64,7 @@ contract L1Gateway is iOVM_L1ERC20Bridge, OVM_CrossDomainEnabled {
 
     l1ERC20 = _l1ERC20;
     l2Gateway = _l2Gateway;
+    l2ERC20 = _l2ERC20;
     escrow = _escrow;
   }
 
@@ -86,7 +90,7 @@ contract L1Gateway is iOVM_L1ERC20Bridge, OVM_CrossDomainEnabled {
         override
         virtual
     {
-        _initiateERC20Deposit(l1ERC20, l2Gateway, msg.sender, msg.sender, _amount, _l2Gas, _data);
+        _initiateERC20Deposit(msg.sender, msg.sender, _amount, _l2Gas, _data);
     }
 
      /**
@@ -104,26 +108,10 @@ contract L1Gateway is iOVM_L1ERC20Bridge, OVM_CrossDomainEnabled {
         override
         virtual
     {
-        _initiateERC20Deposit(l1ERC20, l2Gateway, msg.sender, _to, _amount, _l2Gas, _data);
+        _initiateERC20Deposit(msg.sender, _to, _amount, _l2Gas, _data);
     }
 
-    /**
-     * @dev Performs the logic for deposits by informing the L2 Deposited Token
-     * contract of the deposit and calling a handler to lock the L1 funds. (e.g. transferFrom)
-     *
-     * @param _l1Token Address of the L1 ERC20 we are depositing
-     * @param _l2Token Address of the L1 respective L2 ERC20
-     * @param _from Account to pull the deposit from on L1
-     * @param _to Account to give the deposit to on L2
-     * @param _amount Amount of the ERC20 to deposit.
-     * @param _l2Gas Gas limit required to complete the deposit on L2.
-     * @param _data Optional data to forward to L2. This data is provided
-     *        solely as a convenience for external contracts. Aside from enforcing a maximum
-     *        length, these contracts provide no guarantees about its content.
-     */
     function _initiateERC20Deposit(
-        address _l1Token,
-        address _l2Token,
         address _from,
         address _to,
         uint256 _amount,
@@ -137,8 +125,9 @@ contract L1Gateway is iOVM_L1ERC20Bridge, OVM_CrossDomainEnabled {
 
         // Construct calldata for _l2Token.finalizeDeposit(_to, _amount)
         bytes memory message = abi.encodeWithSelector(
-            iOVM_L2DepositedToken(_l2Token).finalizeDeposit.selector,
-            _l1Token,
+            iOVM_L2ERC20Bridge(l2Gateway).finalizeDeposit.selector,
+            l1ERC20,
+            l2ERC20,
             _from,
             _to,
             _amount,
@@ -147,13 +136,13 @@ contract L1Gateway is iOVM_L1ERC20Bridge, OVM_CrossDomainEnabled {
 
         // Send calldata into L2
         sendCrossDomainMessage(
-            _l2Token,
+            l2Gateway,
             _l2Gas,
             message
         );
 
         // We omit _data here because events only support bytes32 types.
-        emit ERC20DepositInitiated(_l1Token, _l2Token, _from, _to, _amount, _data);
+        emit ERC20DepositInitiated(address(l1ERC20), l2ERC20, _from, _to, _amount, _data);
     }
 
     /**
@@ -174,6 +163,6 @@ contract L1Gateway is iOVM_L1ERC20Bridge, OVM_CrossDomainEnabled {
         // Transfer withdrawn funds out to withdrawer
         l1ERC20.transferFrom(escrow, _to, _amount);
 
-        emit ERC20WithdrawalFinalized(l1ERC20, l2Gateway, _from, _to, _amount, _data);
+        emit ERC20WithdrawalFinalized(address(l1ERC20), l2Gateway, _from, _to, _amount, _data);
     }
 }

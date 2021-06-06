@@ -15,7 +15,9 @@
 
 pragma solidity >=0.7.6;
 
-import {Abs_L2DepositedToken} from '@eth-optimism/contracts/OVM/bridge/tokens/Abs_L2DepositedToken.sol';
+import {iOVM_L1ERC20Bridge} from '@eth-optimism/contracts/contracts/optimistic-ethereum/iOVM/bridge/tokens/iOVM_L1ERC20Bridge.sol';
+import {iOVM_L2ERC20Bridge} from '@eth-optimism/contracts/contracts/optimistic-ethereum/iOVM/bridge/tokens/iOVM_L2ERC20Bridge.sol';
+import {OVM_CrossDomainEnabled} from '@eth-optimism/contracts/contracts/optimistic-ethereum/libraries/bridge/OVM_CrossDomainEnabled.sol';
 
 interface Mintable {
   function mint(address usr, uint256 wad) external;
@@ -27,7 +29,7 @@ interface Mintable {
 // Burn tokens on L1 and send a message to unlock tokens on L1 to L1 counterpart
 // Note: when bridge is closed it will still process in progress messages
 
-contract L2Gateway is Abs_L2DepositedToken {
+contract L2Gateway is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
   // --- Auth ---
   mapping (address => uint256) public wards;
   function rely(address usr) external auth {
@@ -48,27 +50,122 @@ contract L2Gateway is Abs_L2DepositedToken {
 
   Mintable public immutable token;
   uint256 public isOpen = 1;
+  address l1Gateway;
+  address l1Token;
 
-  constructor(address _l2CrossDomainMessenger, address _token) public Abs_L2DepositedToken(_l2CrossDomainMessenger) {
+  constructor(address _l2CrossDomainMessenger, address _token) public OVM_CrossDomainEnabled(_l2CrossDomainMessenger) {
     wards[msg.sender] = 1;
     emit Rely(msg.sender);
 
     token = Mintable(_token);
   }
 
+  function init(address _l1Gateway, address _l1Token) external auth {
+    require(_l1Token != address(0)); 
+
+    l1Gateway = _l1Gateway;
+    l1Token = _l1Token;
+  }
+
   function close() external auth {
     isOpen = 0;
   }
 
+  function withdraw(
+        address _l2Token,
+        uint256 _amount,
+        uint32, // _l1Gas, @todo why empty?
+        bytes calldata _data
+    )
+        external
+        override
+        virtual
+    {
+        _initiateWithdrawal(
+            _l2Token,
+            msg.sender,
+            msg.sender,
+            _amount,
+            0,
+            _data
+        );
+    }
+
+    function withdrawTo(
+        address _l2Token,
+        address _to,
+        uint256 _amount,
+        uint32, // _l1Gas,
+        bytes calldata _data
+    )
+        external
+        override
+        virtual
+    {
+        _initiateWithdrawal(
+            _l2Token,
+            msg.sender,
+            _to,
+            _amount,
+            0,
+            _data
+        );
+    }
+
   // When a withdrawal is initiated, we burn the withdrawer's funds to prevent subsequent L2 usage.
-  function _handleInitiateWithdrawal(address _to, uint256 _amount) internal override {
+  function _initiateWithdrawal(
+        address _l2Token,
+        address _from,
+        address _to,
+        uint256 _amount,
+        uint32, // _l1Gas,
+        bytes calldata _data
+    )
+        internal
+    {
     // do not allow initiaitng new xchain messages if bridge is closed
     require(isOpen == 1, 'L2Gateway/closed');
     token.burn(msg.sender, _amount);
+
+    address l1Token = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE; // @todo? save l1 token in constructor?
+
+    bytes memory message = abi.encodeWithSelector(
+        iOVM_L1ERC20Bridge.finalizeERC20Withdrawal.selector,
+        l1Token,
+        _l2Token,
+        _from,
+        _to,
+        _amount,
+        _data
+    );
+
+    // Send message up to L1 bridge
+    sendCrossDomainMessage(
+        l1Gateway,
+        0,
+        message
+    );
+
+    emit WithdrawalInitiated(l1Token, _l2Token, msg.sender, _to, _amount, _data);
   }
 
   // When a deposit is finalized, we credit the account on L2 with the same amount of tokens.
-  function _handleFinalizeDeposit(address _to, uint256 _amount) internal override {
+  function finalizeDeposit(
+        address _l1Token,
+        address _l2Token,
+        address _from,
+        address _to,
+        uint256 _amount,
+        bytes calldata _data
+    ) 
+    external
+    override
+    virtual
+    onlyFromCrossDomainAccount(l1Gateway)
+  {
+    // @todo: ensure that l2token is _token
     token.mint(_to, _amount);
+
+    emit DepositFinalized(_l1Token, _l2Token, _from, _to, _amount, _data);
   }
 }
