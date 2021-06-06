@@ -14,7 +14,7 @@ import {
 import { getActiveWards } from './helpers/auth'
 import { optimismConfig } from './helpers/optimismConfig'
 import {
-  deployContract,
+  deployUsingFactory,
   getL2Factory,
   MAX_UINT256,
   q18,
@@ -45,25 +45,27 @@ describe('bridge', () => {
 
   beforeEach(async () => {
     ;({ l1Signer, l2Signer, watcher } = await setupTest())
-    l1Dai = await deployContract<Dai>(l1Signer, await l1.getContractFactory('Dai'), [ZERO_GAS_OPTS])
+    l1Dai = await deployUsingFactory(l1Signer, await l1.getContractFactory('Dai'), [ZERO_GAS_OPTS])
     console.log('L1 DAI: ', l1Dai.address)
     await waitForTx(l1Dai.mint(l1Signer.address, initialL1DaiNumber))
 
-    l2Dai = await deployContract<Dai>(l2Signer, await getL2Factory('Dai'), [ZERO_GAS_OPTS])
+    l2Dai = await deployUsingFactory(l2Signer, await getL2Factory('Dai'), [ZERO_GAS_OPTS])
     console.log('L2 DAI: ', l2Dai.address)
 
-    l2Gateway = await deployContract<L2Gateway>(l2Signer, await getL2Factory('L2Gateway'), [
+    l2Gateway = await deployUsingFactory(l2Signer, await getL2Factory('L2Gateway'), [
       optimismConfig._L2_OVM_L2CrossDomainMessenger,
       l2Dai.address,
       ZERO_GAS_OPTS,
     ])
     console.log('L2 Minter: ', l2Gateway.address)
 
-    l1Escrow = await deployContract<L1Escrow>(l1Signer, await l1.getContractFactory('L1Escrow'), [ZERO_GAS_OPTS])
+    l1Escrow = await deployUsingFactory(l1Signer, await l1.getContractFactory('L1Escrow'), [ZERO_GAS_OPTS])
+    console.log('L1 Escrow: ', l1Escrow.address)
 
-    l1DaiDeposit = await deployContract<L1Gateway>(l1Signer, await l1.getContractFactory('L1Gateway'), [
+    l1DaiDeposit = await deployUsingFactory(l1Signer, await l1.getContractFactory('L1Gateway'), [
       l1Dai.address,
       l2Gateway.address,
+      l2Dai.address,
       optimismConfig.Proxy__OVM_L1CrossDomainMessenger,
       l1Escrow.address,
       ZERO_GAS_OPTS,
@@ -71,20 +73,20 @@ describe('bridge', () => {
     await waitForTx(l1Escrow.approve(l1Dai.address, l1DaiDeposit.address, MAX_UINT256))
     console.log('L1 DAI Deposit: ', l1DaiDeposit.address)
 
-    await waitForTx(l2Gateway.init(l1DaiDeposit.address, ZERO_GAS_OPTS))
+    await waitForTx(l2Gateway.init(l1DaiDeposit.address, l1Dai.address, ZERO_GAS_OPTS))
     console.log('L2 DAI initialized...')
 
-    l2GovernanceRelay = await deployContract<L2GovernanceRelay>(l2Signer, await getL2Factory('L2GovernanceRelay'), [
+    l2GovernanceRelay = await deployUsingFactory(l2Signer, await getL2Factory('L2GovernanceRelay'), [
       optimismConfig._L2_OVM_L2CrossDomainMessenger,
       ZERO_GAS_OPTS,
     ])
     console.log('L2 Governance Relay: ', l2Gateway.address)
 
-    l1GovernanceRelay = await deployContract<L1GovernanceRelay>(
-      l1Signer,
-      await l1.getContractFactory('L1GovernanceRelay'),
-      [l2GovernanceRelay.address, optimismConfig.Proxy__OVM_L1CrossDomainMessenger, ZERO_GAS_OPTS],
-    )
+    l1GovernanceRelay = await deployUsingFactory(l1Signer, await l1.getContractFactory('L1GovernanceRelay'), [
+      l2GovernanceRelay.address,
+      optimismConfig.Proxy__OVM_L1CrossDomainMessenger,
+      ZERO_GAS_OPTS,
+    ])
     console.log('L1 Governance Relay: ', l1GovernanceRelay.address)
 
     await waitForTx(l2GovernanceRelay.init(l1GovernanceRelay.address, ZERO_GAS_OPTS))
@@ -101,10 +103,10 @@ describe('bridge', () => {
     console.log('Permissions updated.')
   })
 
-  it('moves l1 tokens to l2', async () => {
+  it.only('moves l1 tokens to l2', async () => {
     const depositAmount = q18(500)
     await waitForTx(l1Dai.approve(l1DaiDeposit.address, depositAmount))
-    await waitToRelayTxsToL2(l1DaiDeposit.deposit(depositAmount), watcher)
+    await waitToRelayTxsToL2(l1DaiDeposit.depositERC20(l1Dai.address, l2Dai.address, depositAmount, 0, '0x'), watcher)
 
     const balance = await l2Dai.balanceOf(l1Signer.address)
     expect(balance.toString()).to.be.eq(depositAmount)
@@ -128,14 +130,14 @@ describe('bridge', () => {
   })
 
   it('upgrades the bridge through governance relay', async () => {
-    l2GatewayV2 = await deployContract<L2Gateway>(l2Signer, await getL2Factory('L2Gateway'), [
+    l2GatewayV2 = await deployUsingFactory<L2Gateway>(l2Signer, await getL2Factory('L2Gateway'), [
       optimismConfig._L2_OVM_L2CrossDomainMessenger,
       l2Dai.address,
       ZERO_GAS_OPTS,
     ])
     console.log('L2 Minter V2: ', l2GatewayV2.address)
 
-    l1DaiDepositV2 = await deployContract<L1Gateway>(l1Signer, await l1.getContractFactory('L1Gateway'), [
+    l1DaiDepositV2 = await deployUsingFactory<L1Gateway>(l1Signer, await l1.getContractFactory('L1Gateway'), [
       l1Dai.address,
       l2GatewayV2.address,
       optimismConfig.Proxy__OVM_L1CrossDomainMessenger,
@@ -148,7 +150,7 @@ describe('bridge', () => {
     await waitForTx(l2GatewayV2.init(l1DaiDepositV2.address, ZERO_GAS_OPTS))
     console.log('L2 Bridge initialized...')
 
-    l2UpgradeSpell = await deployContract<TestBridgeUpgradeSpell>(
+    l2UpgradeSpell = await deployUsingFactory<TestBridgeUpgradeSpell>(
       l2Signer,
       await getL2Factory('TestBridgeUpgradeSpell'),
       [ZERO_GAS_OPTS],
