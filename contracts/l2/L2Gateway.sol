@@ -48,17 +48,16 @@ contract L2Gateway is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
   event Rely(address indexed usr);
   event Deny(address indexed usr);
 
- // @todo: normalize naming
-  Mintable public immutable token;
+  address public immutable l2Token;
   uint256 public isOpen = 1;
   address public l1Gateway;
   address public l1Token;
 
-  constructor(address _l2CrossDomainMessenger, address _token) public OVM_CrossDomainEnabled(_l2CrossDomainMessenger) {
+  constructor(address _l2CrossDomainMessenger, address _l2Token) public OVM_CrossDomainEnabled(_l2CrossDomainMessenger) {
     wards[msg.sender] = 1;
     emit Rely(msg.sender);
 
-    token = Mintable(_token);
+    l2Token = _l2Token;
   }
 
   modifier onlyAfterInit() {
@@ -88,7 +87,7 @@ contract L2Gateway is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
         virtual
         onlyAfterInit()
     {
-        require(_l2Token == address(token), "L2Gateway/token-not-dai");
+        require(_l2Token == l2Token, "L2Gateway/token-not-dai");
 
         _initiateWithdrawal(
             msg.sender,
@@ -111,8 +110,8 @@ contract L2Gateway is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
         virtual
         onlyAfterInit()
     {
-        require(_l2Token == address(token), "L2Gateway/token-not-dai");
-        
+        require(_l2Token == l2Token, "L2Gateway/token-not-dai");
+
         _initiateWithdrawal(
             msg.sender,
             _to,
@@ -134,12 +133,13 @@ contract L2Gateway is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
     {
     // do not allow initiaitng new xchain messages if bridge is closed
     require(isOpen == 1, 'L2Gateway/closed');
-    token.burn(msg.sender, _amount);
+
+    Mintable(l2Token).burn(msg.sender, _amount);
 
     bytes memory message = abi.encodeWithSelector(
         iOVM_L1ERC20Bridge.finalizeERC20Withdrawal.selector,
         l1Token,
-        token,
+        l2Token,
         _from,
         _to,
         _amount,
@@ -153,7 +153,7 @@ contract L2Gateway is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
         message
     );
 
-    emit WithdrawalInitiated(l1Token, address(token), msg.sender, _to, _amount, _data);
+    emit WithdrawalInitiated(l1Token, l2Token, msg.sender, _to, _amount, _data);
   }
 
   // When a deposit is finalized, we credit the account on L2 with the same amount of tokens.
@@ -171,9 +171,9 @@ contract L2Gateway is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
     onlyAfterInit()
     onlyFromCrossDomainAccount(l1Gateway)
   {
-    require(_l1Token == l1Token && _l2Token == address(token), "L2Gateway/token-not-dai");
+    require(_l1Token == l1Token && _l2Token == l2Token, "L2Gateway/token-not-dai");
 
-    token.mint(_to, _amount);
+    Mintable(l2Token).mint(_to, _amount);
 
     emit DepositFinalized(_l1Token, _l2Token, _from, _to, _amount, _data);
   }

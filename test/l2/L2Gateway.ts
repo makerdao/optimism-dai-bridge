@@ -336,7 +336,7 @@ describe('OVM_L2Gateway', () => {
       expect(await l2Gateway.messenger()).to.eq(xDomainMessenger.address)
       expect(await l2Gateway.l1Gateway()).to.eq(l1Gateway.address)
       expect(await l2Gateway.l1Token()).to.eq(l1Dai.address)
-      expect(await l2Gateway.token()).to.eq(l2Dai.address)
+      expect(await l2Gateway.l2Token()).to.eq(l2Dai.address)
     })
 
     it('allows initialization only once', async () => {

@@ -88,6 +88,7 @@ contract L1Gateway is iOVM_L1ERC20Bridge, OVM_CrossDomainEnabled {
         virtual
     {
         require(_l1Token == l1Token && _l2Token == l2Token, "L1Gateway/token-not-dai");
+        
         _initiateERC20Deposit(msg.sender, msg.sender, _amount, _l2Gas, _data);
     }
 
@@ -104,6 +105,7 @@ contract L1Gateway is iOVM_L1ERC20Bridge, OVM_CrossDomainEnabled {
         virtual
     {
         require(_l1Token == l1Token && _l2Token == l2Token, "L1Gateway/token-not-dai");
+
         _initiateERC20Deposit(msg.sender, _to, _amount, _l2Gas, _data);
     }
 
@@ -117,6 +119,7 @@ contract L1Gateway is iOVM_L1ERC20Bridge, OVM_CrossDomainEnabled {
         internal
     {
         require(isOpen == 1, 'L1Gateway/closed');
+
         TokenLike(l1Token).transferFrom(_from, escrow, _amount);
 
         // Construct calldata for _l2Token.finalizeDeposit(_to, _amount)
