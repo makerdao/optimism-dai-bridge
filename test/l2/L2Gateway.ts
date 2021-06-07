@@ -13,6 +13,7 @@ const errorMessages = {
   invalidXDomainMessageOriginator: 'OVM_XCHAIN: wrong sender of cross-domain message',
   alreadyInitialized: 'L2Gateway/already-init',
   notInitialized: 'L2Gateway/not-init',
+  tokenMismatch: 'L2Gateway/token-not-dai',
   bridgeClosed: 'L2Gateway/closed',
   notOwner: 'L2Gateway/not-authorized',
   daiInsufficientAllowance: 'Dai/insufficient-allowance',
@@ -32,13 +33,18 @@ describe('OVM_L2Gateway', () => {
       })
       l2CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l1GatewayMock.address)
 
-      await l2Gateway
+      const finalizeDepositTx = await l2Gateway
         .connect(l2MessengerImpersonator)
         .finalizeDeposit(l1Dai.address, l2Dai.address, user1.address, user1.address, depositAmount, defaultData)
 
       expect(await l2Dai.balanceOf(user1.address)).to.be.eq(depositAmount)
       expect(await l2Dai.totalSupply()).to.be.eq(depositAmount)
+      await expect(finalizeDepositTx)
+        .to.emit(l2Gateway, 'DepositFinalized')
+        .withArgs(l1Dai.address, l2Dai.address, user1.address, user1.address, depositAmount, defaultData)
     })
+
+    it('mints for a different user')
 
     // pending deposits MUST success even if bridge is closed
     it('completes deposits even when closed', async () => {
@@ -50,12 +56,49 @@ describe('OVM_L2Gateway', () => {
       await l2Gateway.close()
       l2CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l1GatewayMock.address)
 
-      await l2Gateway
+      const finalizeDepositTx = await l2Gateway
         .connect(l2MessengerImpersonator)
         .finalizeDeposit(l1Dai.address, l2Dai.address, user1.address, user1.address, depositAmount, defaultData)
 
       expect(await l2Dai.balanceOf(user1.address)).to.be.eq(depositAmount)
       expect(await l2Dai.totalSupply()).to.be.eq(depositAmount)
+      await expect(finalizeDepositTx)
+        .to.emit(l2Gateway, 'DepositFinalized')
+        .withArgs(l1Dai.address, l2Dai.address, user1.address, user1.address, depositAmount, defaultData)
+    })
+
+    it('reverts when withdrawing not supported tokens', async () => {
+      const [_, l2MessengerImpersonator, user1, dummyL1Erc20, dummyL2Erc20] = await ethers.getSigners()
+      const { l1GatewayMock, l2CrossDomainMessengerMock, l2Gateway, l2Dai, l1Dai } = await setupTest({
+        l2MessengerImpersonator,
+        user1,
+      })
+      l2CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l1GatewayMock.address)
+
+      await expect(
+        l2Gateway
+          .connect(l2MessengerImpersonator)
+          .finalizeDeposit(
+            dummyL1Erc20.address,
+            l2Dai.address,
+            user1.address,
+            user1.address,
+            depositAmount,
+            defaultData,
+          ),
+      ).to.be.revertedWith(errorMessages.tokenMismatch)
+      await expect(
+        l2Gateway
+          .connect(l2MessengerImpersonator)
+          .finalizeDeposit(
+            l1Dai.address,
+            dummyL2Erc20.address,
+            user1.address,
+            user1.address,
+            depositAmount,
+            defaultData,
+          ),
+      ).to.be.revertedWith(errorMessages.tokenMismatch)
     })
 
     // if bridge is closed properly this shouldn't happen
@@ -117,7 +160,7 @@ describe('OVM_L2Gateway', () => {
         user1,
       })
 
-      await l2Gateway.connect(user1).withdraw(l2Dai.address, withdrawAmount, defaultGas, defaultData)
+      const withdrawTx = await l2Gateway.connect(user1).withdraw(l2Dai.address, withdrawAmount, defaultGas, defaultData)
       const withdrawCallToMessengerCall = l2CrossDomainMessengerMock.smocked.sendMessage.calls[0]
 
       expect(await l2Dai.balanceOf(user1.address)).to.equal(INITIAL_TOTAL_L1_SUPPLY - withdrawAmount)
@@ -134,7 +177,23 @@ describe('OVM_L2Gateway', () => {
           defaultData,
         ]),
       )
-      //@todo: assert event
+      await expect(withdrawTx)
+        .to.emit(l2Gateway, 'WithdrawalInitiated')
+        .withArgs(l1Dai.address, l2Dai.address, user1.address, user1.address, withdrawAmount, defaultData)
+    })
+
+    it('sends xchain message and burns tokens with custom gas and data')
+
+    it('reverts when used with unsupported token', async () => {
+      const [_, l2MessengerImpersonator, user1, dummyL2Erc20] = await ethers.getSigners()
+      const { l2Gateway } = await setupWithdrawTest({
+        l2MessengerImpersonator,
+        user1,
+      })
+
+      await expect(
+        l2Gateway.connect(user1).withdraw(dummyL2Erc20.address, withdrawAmount, defaultGas, defaultData),
+      ).to.be.revertedWith(errorMessages.tokenMismatch)
     })
 
     it('reverts when approval is too low', async () => {
@@ -187,7 +246,7 @@ describe('OVM_L2Gateway', () => {
         user1,
       })
 
-      await l2Gateway
+      const withdrawTx = await l2Gateway
         .connect(user1)
         .withdrawTo(l2Dai.address, receiver.address, withdrawAmount, defaultGas, defaultData)
       const withdrawCallToMessengerCall = l2CrossDomainMessengerMock.smocked.sendMessage.calls[0]
@@ -206,6 +265,24 @@ describe('OVM_L2Gateway', () => {
           defaultData,
         ]),
       )
+      await expect(withdrawTx)
+        .to.emit(l2Gateway, 'WithdrawalInitiated')
+        .withArgs(l1Dai.address, l2Dai.address, user1.address, receiver.address, withdrawAmount, defaultData)
+    })
+    it('sends xchain message and burns tokens with custom gas and data')
+
+    it('reverts when used with unsupported token', async () => {
+      const [_, l2MessengerImpersonator, user1, receiver, dummyL2Erc20] = await ethers.getSigners()
+      const { l2Gateway } = await setupWithdrawTest({
+        l2MessengerImpersonator,
+        user1,
+      })
+
+      await expect(
+        l2Gateway
+          .connect(user1)
+          .withdrawTo(dummyL2Erc20.address, receiver.address, withdrawAmount, defaultGas, defaultData),
+      ).to.be.revertedWith(errorMessages.tokenMismatch)
     })
 
     it('reverts when approval is too low', async () => {

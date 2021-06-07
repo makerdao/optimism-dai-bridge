@@ -88,8 +88,9 @@ contract L2Gateway is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
         virtual
         onlyAfterInit()
     {
+        require(_l2Token == address(token), "L2Gateway/token-not-dai");
+
         _initiateWithdrawal(
-            _l2Token,
             msg.sender,
             msg.sender,
             _amount,
@@ -110,8 +111,9 @@ contract L2Gateway is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
         virtual
         onlyAfterInit()
     {
+        require(_l2Token == address(token), "L2Gateway/token-not-dai");
+        
         _initiateWithdrawal(
-            _l2Token,
             msg.sender,
             _to,
             _amount,
@@ -122,7 +124,6 @@ contract L2Gateway is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
 
   // When a withdrawal is initiated, we burn the withdrawer's funds to prevent subsequent L2 usage.
   function _initiateWithdrawal(
-        address _l2Token,
         address _from,
         address _to,
         uint256 _amount,
@@ -138,7 +139,7 @@ contract L2Gateway is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
     bytes memory message = abi.encodeWithSelector(
         iOVM_L1ERC20Bridge.finalizeERC20Withdrawal.selector,
         l1Token,
-        _l2Token,
+        token,
         _from,
         _to,
         _amount,
@@ -152,7 +153,7 @@ contract L2Gateway is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
         message
     );
 
-    emit WithdrawalInitiated(l1Token, _l2Token, msg.sender, _to, _amount, _data);
+    emit WithdrawalInitiated(l1Token, address(token), msg.sender, _to, _amount, _data);
   }
 
   // When a deposit is finalized, we credit the account on L2 with the same amount of tokens.
@@ -170,8 +171,8 @@ contract L2Gateway is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
     onlyAfterInit()
     onlyFromCrossDomainAccount(l1Gateway)
   {
-    require(l1Gateway != address(0), 'L2Gateway/not-init'); 
-    // @todo: ensure that l2token is _token
+    require(_l1Token == l1Token && _l2Token == address(token), "L2Gateway/token-not-dai");
+
     token.mint(_to, _amount);
 
     emit DepositFinalized(_l1Token, _l2Token, _from, _to, _amount, _data);
