@@ -153,9 +153,10 @@ contract L1Gateway is iOVM_L1ERC20Bridge, OVM_CrossDomainEnabled {
         override
         onlyFromCrossDomainAccount(l2Gateway)
     {
+        require(_l1Token == l1ERC20 && _l2Token == l2ERC20, "L1Gateway/token-not-dai");
         // Transfer withdrawn funds out to withdrawer
         TokenLike(l1ERC20).transferFrom(escrow, _to, _amount);
 
-        emit ERC20WithdrawalFinalized(address(l1ERC20), l2Gateway, _from, _to, _amount, _data);
+        emit ERC20WithdrawalFinalized(l1ERC20, l2ERC20, _from, _to, _amount, _data);
     }
 }

@@ -304,7 +304,7 @@ describe('L1Gateway', () => {
       })
       l1CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l2GatewayMock.address)
 
-      await l1Gateway
+      const finalizeWithdrawalTx = await l1Gateway
         .connect(l1MessengerImpersonator)
         .finalizeERC20Withdrawal(
           l1Dai.address,
@@ -317,8 +317,12 @@ describe('L1Gateway', () => {
 
       expect(await l1Dai.balanceOf(user2.address)).to.be.equal(withdrawAmount)
       expect(await l1Dai.balanceOf(l1Escrow.address)).to.be.equal(initialTotalL1Supply - withdrawAmount)
-      // @todo assert event
+      await expect(finalizeWithdrawalTx)
+        .to.emit(l1Gateway, 'ERC20WithdrawalFinalized')
+        .withArgs(l1Dai.address, l2Dai.address, user2.address, user2.address, depositAmount, defaultData)
     })
+
+    it('sends funds from the escrow to the 3rd party')
 
     // pending withdrawals MUST success even if bridge is closed
     it('completes withdrawals even when closed', async () => {
@@ -330,7 +334,7 @@ describe('L1Gateway', () => {
       l1CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l2GatewayMock.address)
 
       await l1Gateway.close()
-      await l1Gateway
+      const finalizeWithdrawalTx = await l1Gateway
         .connect(l1MessengerImpersonator)
         .finalizeERC20Withdrawal(
           l1Dai.address,
@@ -343,7 +347,43 @@ describe('L1Gateway', () => {
 
       expect(await l1Dai.balanceOf(user2.address)).to.be.equal(withdrawAmount)
       expect(await l1Dai.balanceOf(l1Escrow.address)).to.be.equal(initialTotalL1Supply - withdrawAmount)
-      // @todo assert event
+      await expect(finalizeWithdrawalTx)
+        .to.emit(l1Gateway, 'ERC20WithdrawalFinalized')
+        .withArgs(l1Dai.address, l2Dai.address, user2.address, user2.address, depositAmount, defaultData)
+    })
+
+    it('reverts when called with a different token', async () => {
+      const [l1MessengerImpersonator, user1, dummyL1Erc20, dummyL2Erc20] = await ethers.getSigners()
+      const { l1Dai, l2Dai, l1Gateway, l1CrossDomainMessengerMock, l2GatewayMock } = await setupTest({
+        l1MessengerImpersonator,
+        user1,
+      })
+      l1CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l2GatewayMock.address)
+
+      await expect(
+        l1Gateway
+          .connect(l1MessengerImpersonator)
+          .finalizeERC20Withdrawal(
+            dummyL1Erc20.address,
+            l2Dai.address,
+            user1.address,
+            user1.address,
+            depositAmount,
+            defaultData,
+          ),
+      ).to.be.revertedWith(errorMessages.tokenMismatch)
+      await expect(
+        l1Gateway
+          .connect(l1MessengerImpersonator)
+          .finalizeERC20Withdrawal(
+            l1Dai.address,
+            dummyL2Erc20.address,
+            user1.address,
+            user1.address,
+            depositAmount,
+            defaultData,
+          ),
+      ).to.be.revertedWith(errorMessages.tokenMismatch)
     })
 
     // if bridge is closed properly this shouldn't happen
