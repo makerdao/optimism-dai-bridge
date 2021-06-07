@@ -46,25 +46,25 @@ contract L1Gateway is iOVM_L1ERC20Bridge, OVM_CrossDomainEnabled {
   event Rely(address indexed usr);
   event Deny(address indexed usr);
 
-  address public immutable l1ERC20;
+  address public immutable l1Token;
   address public immutable l2Gateway;
-  address public immutable l2ERC20;
+  address public immutable l2Token;
   address public immutable escrow;
   uint256 public isOpen = 1;
 
   constructor(
-    address _l1ERC20,
+    address _l1Token,
     address _l2Gateway,
-    address _l2ERC20,
+    address _l2Token,
     address _l1messenger,
     address _escrow
   ) OVM_CrossDomainEnabled(_l1messenger) { 
     wards[msg.sender] = 1;
     emit Rely(msg.sender);
 
-    l1ERC20 = _l1ERC20;
+    l1Token = _l1Token;
     l2Gateway = _l2Gateway;
-    l2ERC20 = _l2ERC20;
+    l2Token = _l2Token;
     escrow = _escrow;
   }
 
@@ -87,7 +87,7 @@ contract L1Gateway is iOVM_L1ERC20Bridge, OVM_CrossDomainEnabled {
         override
         virtual
     {
-        require(_l1Token == l1ERC20 && _l2Token == l2ERC20, "L1Gateway/token-not-dai");
+        require(_l1Token == l1Token && _l2Token == l2Token, "L1Gateway/token-not-dai");
         _initiateERC20Deposit(msg.sender, msg.sender, _amount, _l2Gas, _data);
     }
 
@@ -103,7 +103,7 @@ contract L1Gateway is iOVM_L1ERC20Bridge, OVM_CrossDomainEnabled {
         override
         virtual
     {
-        require(_l1Token == l1ERC20 && _l2Token == l2ERC20, "L1Gateway/token-not-dai");
+        require(_l1Token == l1Token && _l2Token == l2Token, "L1Gateway/token-not-dai");
         _initiateERC20Deposit(msg.sender, _to, _amount, _l2Gas, _data);
     }
 
@@ -117,13 +117,13 @@ contract L1Gateway is iOVM_L1ERC20Bridge, OVM_CrossDomainEnabled {
         internal
     {
         require(isOpen == 1, 'L1Gateway/closed');
-        TokenLike(l1ERC20).transferFrom(_from, escrow, _amount);
+        TokenLike(l1Token).transferFrom(_from, escrow, _amount);
 
         // Construct calldata for _l2Token.finalizeDeposit(_to, _amount)
         bytes memory message = abi.encodeWithSelector(
             iOVM_L2ERC20Bridge.finalizeDeposit.selector,
-            l1ERC20,
-            l2ERC20,
+            l1Token,
+            l2Token,
             _from,
             _to,
             _amount,
@@ -138,7 +138,7 @@ contract L1Gateway is iOVM_L1ERC20Bridge, OVM_CrossDomainEnabled {
         );
 
         // We omit _data here because events only support bytes32 types.
-        emit ERC20DepositInitiated(address(l1ERC20), l2ERC20, _from, _to, _amount, _data);
+        emit ERC20DepositInitiated(address(l1Token), l2Token, _from, _to, _amount, _data);
     }
 
     function finalizeERC20Withdrawal(
@@ -153,10 +153,10 @@ contract L1Gateway is iOVM_L1ERC20Bridge, OVM_CrossDomainEnabled {
         override
         onlyFromCrossDomainAccount(l2Gateway)
     {
-        require(_l1Token == l1ERC20 && _l2Token == l2ERC20, "L1Gateway/token-not-dai");
+        require(_l1Token == l1Token && _l2Token == l2Token, "L1Gateway/token-not-dai");
         // Transfer withdrawn funds out to withdrawer
-        TokenLike(l1ERC20).transferFrom(escrow, _to, _amount);
+        TokenLike(l1Token).transferFrom(escrow, _to, _amount);
 
-        emit ERC20WithdrawalFinalized(l1ERC20, l2ERC20, _from, _to, _amount, _data);
+        emit ERC20WithdrawalFinalized(l1Token, l2Token, _from, _to, _amount, _data);
     }
 }
