@@ -15,6 +15,7 @@ const errorMessages = {
   invalidXDomainMessageOriginator: 'OVM_XCHAIN: wrong sender of cross-domain message',
   bridgeClosed: 'L1Gateway/closed',
   notOwner: 'L1Gateway/not-authorized',
+  tokenMismatch: 'L1Gateway/token-not-dai',
   daiInsufficientAllowance: 'Dai/insufficient-allowance',
   daiInsufficientBalance: 'Dai/insufficient-balance',
 }
@@ -29,9 +30,10 @@ describe('L1Gateway', () => {
       })
 
       await l1Dai.connect(user1).approve(l1Gateway.address, depositAmount)
-      await l1Gateway
+      const depositTx = l1Gateway
         .connect(user1)
-        .depositERC20(l1Dai.address, l2GatewayMock.address, depositAmount, defaultGas, defaultData)
+        .depositERC20(l1Dai.address, l2Dai.address, depositAmount, defaultGas, defaultData)
+      await depositTx
       const depositCallToMessengerCall = l1CrossDomainMessengerMock.smocked.sendMessage.calls[0]
 
       expect(await l1Dai.balanceOf(user1.address)).to.be.eq(initialTotalL1Supply - depositAmount)
@@ -46,14 +48,70 @@ describe('L1Gateway', () => {
           user1.address,
           user1.address,
           depositAmount,
-          '0x',
+          defaultData,
         ]),
       )
-      //@todo assert event
+      expect(depositCallToMessengerCall._gasLimit).to.equal(defaultGas)
+      await expect(depositTx)
+        .to.emit(l1Gateway, 'ERC20DepositInitiated')
+        .withArgs(l1Dai.address, l2Dai.address, user1.address, user1.address, depositAmount, defaultData)
     })
 
-    it('works with custom gas and data')
-    it('reverts when called with a different token')
+    it('works with custom gas and data', async () => {
+      const customGas = 10
+      const customData = '0x01'
+      const [l1MessengerImpersonator, user1] = await ethers.getSigners()
+      const { l1Dai, l2Dai, l1Gateway, l1CrossDomainMessengerMock, l2GatewayMock, l1Escrow } = await setupTest({
+        l1MessengerImpersonator,
+        user1,
+      })
+
+      await l1Dai.connect(user1).approve(l1Gateway.address, depositAmount)
+      const depositTx = l1Gateway
+        .connect(user1)
+        .depositERC20(l1Dai.address, l2Dai.address, depositAmount, customGas, customData)
+      await depositTx
+      const depositCallToMessengerCall = l1CrossDomainMessengerMock.smocked.sendMessage.calls[0]
+
+      expect(await l1Dai.balanceOf(user1.address)).to.be.eq(initialTotalL1Supply - depositAmount)
+      expect(await l1Dai.balanceOf(l1Gateway.address)).to.be.eq(0)
+      expect(await l1Dai.balanceOf(l1Escrow.address)).to.be.eq(depositAmount)
+
+      expect(depositCallToMessengerCall._target).to.equal(l2GatewayMock.address)
+      expect(depositCallToMessengerCall._message).to.equal(
+        l2GatewayMock.interface.encodeFunctionData('finalizeDeposit', [
+          l1Dai.address,
+          l2Dai.address,
+          user1.address,
+          user1.address,
+          depositAmount,
+          customData,
+        ]),
+      )
+      expect(depositCallToMessengerCall._gasLimit).to.equal(customGas)
+      await expect(depositTx)
+        .to.emit(l1Gateway, 'ERC20DepositInitiated')
+        .withArgs(l1Dai.address, l2Dai.address, user1.address, user1.address, depositAmount, customData)
+    })
+
+    it('reverts when called with a different token', async () => {
+      const [l1MessengerImpersonator, user1, dummyL1Erc20, dummyL2Erc20] = await ethers.getSigners()
+      const { l1Dai, l2Dai, l1Gateway } = await setupTest({
+        l1MessengerImpersonator,
+        user1,
+      })
+
+      await expect(
+        l1Gateway
+          .connect(user1)
+          .depositERC20(dummyL1Erc20.address, l2Dai.address, depositAmount, defaultGas, defaultData),
+      ).to.be.revertedWith(errorMessages.tokenMismatch)
+      await expect(
+        l1Gateway
+          .connect(user1)
+          .depositERC20(l1Dai.address, dummyL2Erc20.address, depositAmount, defaultGas, defaultData),
+      ).to.be.revertedWith(errorMessages.tokenMismatch)
+    })
 
     it('reverts when approval is too low', async () => {
       const [l1MessengerImpersonator, user1] = await ethers.getSigners()
