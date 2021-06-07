@@ -29,7 +29,7 @@ interface Mintable {
 // Burn tokens on L1 and send a message to unlock tokens on L1 to L1 counterpart
 // Note: when bridge is closed it will still process in progress messages
 
-contract L2Gateway is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
+contract L2DAITokenBridge is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
   // --- Auth ---
   mapping (address => uint256) public wards;
   function rely(address usr) external auth {
@@ -41,7 +41,7 @@ contract L2Gateway is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
     emit Deny(usr);
   }
   modifier auth {
-    require(wards[msg.sender] == 1, "L2Gateway/not-authorized");
+    require(wards[msg.sender] == 1, "L2DAITokenBridge/not-authorized");
     _;
   }
 
@@ -50,7 +50,7 @@ contract L2Gateway is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
 
   address public immutable l2Token;
   uint256 public isOpen = 1;
-  address public l1Gateway;
+  address public l1DAITokenBridge;
   address public l1Token;
 
   constructor(address _l2CrossDomainMessenger, address _l2Token) public OVM_CrossDomainEnabled(_l2CrossDomainMessenger) {
@@ -61,14 +61,14 @@ contract L2Gateway is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
   }
 
   modifier onlyAfterInit() {
-    require(l1Gateway != address(0), 'L2Gateway/not-init'); 
+    require(l1DAITokenBridge != address(0), 'L2DAITokenBridge/not-init'); 
     _;
   }
 
   function init(address _l1Gateway, address _l1Token) external auth {
-    require(l1Gateway == address(0), 'L2Gateway/already-init'); 
+    require(l1DAITokenBridge == address(0), 'L2DAITokenBridge/already-init'); 
 
-    l1Gateway = _l1Gateway;
+    l1DAITokenBridge = _l1Gateway;
     l1Token = _l1Token;
   }
 
@@ -87,7 +87,7 @@ contract L2Gateway is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
         virtual
         onlyAfterInit()
     {
-        require(_l2Token == l2Token, "L2Gateway/token-not-dai");
+        require(_l2Token == l2Token, "L2DAITokenBridge/token-not-dai");
 
         _initiateWithdrawal(
             msg.sender,
@@ -110,7 +110,7 @@ contract L2Gateway is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
         virtual
         onlyAfterInit()
     {
-        require(_l2Token == l2Token, "L2Gateway/token-not-dai");
+        require(_l2Token == l2Token, "L2DAITokenBridge/token-not-dai");
 
         _initiateWithdrawal(
             msg.sender,
@@ -132,7 +132,7 @@ contract L2Gateway is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
         internal
     {
     // do not allow initiaitng new xchain messages if bridge is closed
-    require(isOpen == 1, 'L2Gateway/closed');
+    require(isOpen == 1, 'L2DAITokenBridge/closed');
 
     Mintable(l2Token).burn(msg.sender, _amount);
 
@@ -148,7 +148,7 @@ contract L2Gateway is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
 
     // Send message up to L1 bridge
     sendCrossDomainMessage(
-        l1Gateway,
+        l1DAITokenBridge,
         _l1Gas,
         message
     );
@@ -169,9 +169,9 @@ contract L2Gateway is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
     override
     virtual
     onlyAfterInit()
-    onlyFromCrossDomainAccount(l1Gateway)
+    onlyFromCrossDomainAccount(l1DAITokenBridge)
   {
-    require(_l1Token == l1Token && _l2Token == l2Token, "L2Gateway/token-not-dai");
+    require(_l1Token == l1Token && _l2Token == l2Token, "L2DAITokenBridge/token-not-dai");
 
     Mintable(l2Token).mint(_to, _amount);
 

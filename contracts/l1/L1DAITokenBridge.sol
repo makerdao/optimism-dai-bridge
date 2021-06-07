@@ -24,10 +24,10 @@ interface TokenLike {
   function transferFrom(address _from, address _to, uint256 _value) external returns (bool success);
 }
 
-// Managed locked funds in L1Escrow and send / receive messages to L2Gateway counterpart
+// Managed locked funds in L1Escrow and send / receive messages to L2DAITokenBridge counterpart
 // Note: when bridge is closed it will still process in progress messages
 
-contract L1Gateway is iOVM_L1ERC20Bridge, OVM_CrossDomainEnabled {
+contract L1DAITokenBridge is iOVM_L1ERC20Bridge, OVM_CrossDomainEnabled {
   // --- Auth ---
   mapping (address => uint256) public wards;
   function rely(address usr) external auth {
@@ -39,7 +39,7 @@ contract L1Gateway is iOVM_L1ERC20Bridge, OVM_CrossDomainEnabled {
     emit Deny(usr);
   }
   modifier auth {
-    require(wards[msg.sender] == 1, "L1Gateway/not-authorized");
+    require(wards[msg.sender] == 1, "L1DAITokenBridge/not-authorized");
     _;
   }
 
@@ -47,7 +47,7 @@ contract L1Gateway is iOVM_L1ERC20Bridge, OVM_CrossDomainEnabled {
   event Deny(address indexed usr);
 
   address public immutable l1Token;
-  address public immutable l2Gateway;
+  address public immutable l2DAITokenBridge;
   address public immutable l2Token;
   address public immutable escrow;
   uint256 public isOpen = 1;
@@ -63,7 +63,7 @@ contract L1Gateway is iOVM_L1ERC20Bridge, OVM_CrossDomainEnabled {
     emit Rely(msg.sender);
 
     l1Token = _l1Token;
-    l2Gateway = _l2Gateway;
+    l2DAITokenBridge = _l2Gateway;
     l2Token = _l2Token;
     escrow = _escrow;
   }
@@ -87,7 +87,7 @@ contract L1Gateway is iOVM_L1ERC20Bridge, OVM_CrossDomainEnabled {
         override
         virtual
     {
-        require(_l1Token == l1Token && _l2Token == l2Token, "L1Gateway/token-not-dai");
+        require(_l1Token == l1Token && _l2Token == l2Token, "L1DAITokenBridge/token-not-dai");
         
         _initiateERC20Deposit(msg.sender, msg.sender, _amount, _l2Gas, _data);
     }
@@ -104,7 +104,7 @@ contract L1Gateway is iOVM_L1ERC20Bridge, OVM_CrossDomainEnabled {
         override
         virtual
     {
-        require(_l1Token == l1Token && _l2Token == l2Token, "L1Gateway/token-not-dai");
+        require(_l1Token == l1Token && _l2Token == l2Token, "L1DAITokenBridge/token-not-dai");
 
         _initiateERC20Deposit(msg.sender, _to, _amount, _l2Gas, _data);
     }
@@ -118,7 +118,7 @@ contract L1Gateway is iOVM_L1ERC20Bridge, OVM_CrossDomainEnabled {
     )
         internal
     {
-        require(isOpen == 1, 'L1Gateway/closed');
+        require(isOpen == 1, 'L1DAITokenBridge/closed');
 
         TokenLike(l1Token).transferFrom(_from, escrow, _amount);
 
@@ -135,7 +135,7 @@ contract L1Gateway is iOVM_L1ERC20Bridge, OVM_CrossDomainEnabled {
 
         // Send calldata into L2
         sendCrossDomainMessage(
-            l2Gateway,
+            l2DAITokenBridge,
             _l2Gas,
             message
         );
@@ -154,9 +154,9 @@ contract L1Gateway is iOVM_L1ERC20Bridge, OVM_CrossDomainEnabled {
     )
         external
         override
-        onlyFromCrossDomainAccount(l2Gateway)
+        onlyFromCrossDomainAccount(l2DAITokenBridge)
     {
-        require(_l1Token == l1Token && _l2Token == l2Token, "L1Gateway/token-not-dai");
+        require(_l1Token == l1Token && _l2Token == l2Token, "L1DAITokenBridge/token-not-dai");
         // Transfer withdrawn funds out to withdrawer
         TokenLike(l1Token).transferFrom(escrow, _to, _amount);
 
