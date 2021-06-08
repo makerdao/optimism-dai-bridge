@@ -1,6 +1,7 @@
 import { getContractDefinition } from '@eth-optimism/contracts'
 import { smockit } from '@eth-optimism/smock'
-import { ContractFactory } from 'ethers'
+import { expect } from 'chai'
+import { ContractFactory, Wallet } from 'ethers'
 import { ethers } from 'hardhat'
 
 export const makeHexString = (byte: string, len: number): string => {
@@ -48,4 +49,26 @@ export async function deployOptimismContractMock<T extends ContractFactory>(
   const artifact = getContractDefinition(name)
   const factory = new ethers.ContractFactory(artifact.abi, artifact.bytecode) as any
   return await smockit(factory, opts)
+}
+
+export async function assertPublicMethods(name: string, expectedPublicMethods: string[]) {
+  const contract = await ethers.getContractFactory(name)
+
+  const allModifiableFns = Object.values(contract.interface.functions)
+    .filter((f) => {
+      return f.stateMutability === 'nonpayable' || f.stateMutability === 'payable'
+    })
+    .map((f) => f.format())
+
+  expect(allModifiableFns.sort()).to.be.deep.eq(expectedPublicMethods.sort())
+}
+
+export async function getRandomAddress(): Promise<string> {
+  return await Wallet.createRandom().getAddress()
+}
+
+export async function getRandomAddresses(n: number = 10): Promise<string[]> {
+  const arr = [...Array(n).keys()]
+
+  return await Promise.all(arr.map(getRandomAddress))
 }

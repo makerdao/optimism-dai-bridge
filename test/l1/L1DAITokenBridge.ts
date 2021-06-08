@@ -3,7 +3,8 @@ import { expect } from 'chai'
 import { ethers } from 'hardhat'
 
 import { Dai__factory, L1DAITokenBridge__factory, L1Escrow__factory } from '../../typechain'
-import { deploy, deployMock, deployOptimismContractMock } from '../helpers'
+import { testAuth } from '../auth'
+import { assertPublicMethods, deploy, deployMock, deployOptimismContractMock } from '../helpers'
 
 const initialTotalL1Supply = 3000
 const depositAmount = 100
@@ -555,6 +556,47 @@ describe('L1DAITokenBridge', () => {
       await expect(l1DAITokenBridge.connect(user1).close()).to.be.revertedWith(errorMessages.notOwner)
     })
   })
+
+  describe('constructor', () => {
+    it('assigns all variables properly', async () => {
+      const [l1Dai, l2DAITokenBridgeMock, l2Dai, l1CrossDomainMessenger, l1Escrow] = await ethers.getSigners()
+
+      const l1DAITokenBridge = await deploy<L1DAITokenBridge__factory>('L1DAITokenBridge', [
+        l1Dai.address,
+        l2DAITokenBridgeMock.address,
+        l2Dai.address,
+        l1CrossDomainMessenger.address,
+        l1Escrow.address,
+      ])
+
+      expect(await l1DAITokenBridge.l1Token()).to.eq(l1Dai.address)
+      expect(await l1DAITokenBridge.l2Token()).to.eq(l2Dai.address)
+      expect(await l1DAITokenBridge.l2DAITokenBridge()).to.eq(l2DAITokenBridgeMock.address)
+      expect(await l1DAITokenBridge.escrow()).to.eq(l1Escrow.address)
+      expect(await l1DAITokenBridge.messenger()).to.eq(l1CrossDomainMessenger.address)
+    })
+  })
+
+  it('has correct public interface', async () => {
+    await assertPublicMethods('L1DAITokenBridge', [
+      'rely(address)',
+      'deny(address)',
+      'close()',
+      'depositERC20(address,address,uint256,uint32,bytes)',
+      'depositERC20To(address,address,address,uint256,uint32,bytes)',
+      'finalizeERC20Withdrawal(address,address,address,address,uint256,bytes)',
+    ])
+  })
+
+  testAuth(
+    'L1DAITokenBridge',
+    async () => {
+      const [_, l1Dai, l2GatewayMock, l2Dai, l1CrossDomainMessengerMock, l1Escrow] = await ethers.getSigners()
+
+      return [l1Dai, l2GatewayMock, l2Dai, l1CrossDomainMessengerMock, l1Escrow].map((a) => a.address)
+    },
+    [(c) => c.close()],
+  )
 })
 
 async function setupTest(signers: { l1MessengerImpersonator: SignerWithAddress; user1: SignerWithAddress }) {
