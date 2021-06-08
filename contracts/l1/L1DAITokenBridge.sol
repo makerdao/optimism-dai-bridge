@@ -119,7 +119,6 @@ contract L1DAITokenBridge is iOVM_L1ERC20Bridge, OVM_CrossDomainEnabled {
     // Send calldata into L2
     sendCrossDomainMessage(l2DAITokenBridge, _l2Gas, message);
 
-    // We omit _data here because events only support bytes32 types.
     emit ERC20DepositInitiated(l1Token, l2Token, _from, _to, _amount, _data);
   }
 
