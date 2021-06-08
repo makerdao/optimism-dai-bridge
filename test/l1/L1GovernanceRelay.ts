@@ -3,7 +3,8 @@ import { expect } from 'chai'
 import { ethers } from 'hardhat'
 
 import { L1GovernanceRelay__factory } from '../../typechain'
-import { deploy, deployMock, deployOptimismContractMock } from '../helpers'
+import { testAuth } from '../auth'
+import { assertPublicMethods, deploy, deployMock, deployOptimismContractMock, getRandomAddresses } from '../helpers'
 
 const errorMessages = {
   invalidMessenger: 'OVM_XCHAIN: messenger contract unauthenticated',
@@ -41,6 +42,39 @@ describe('L1GovernanceRelay', () => {
       )
     })
   })
+
+  describe('constructor', () => {
+    it('assigns all variables properly', async () => {
+      const [l2GovernanceRelay, l1CrossDomainMessenger] = await ethers.getSigners()
+
+      const l1GovRelay = await deploy<L1GovernanceRelay__factory>('L1GovernanceRelay', [
+        l2GovernanceRelay.address,
+        l1CrossDomainMessenger.address,
+      ])
+
+      expect(await l1GovRelay.l2GovernanceRelay()).to.eq(l2GovernanceRelay.address)
+      expect(await l1GovRelay.messenger()).to.eq(l1CrossDomainMessenger.address)
+    })
+  })
+
+  it('has correct public interface', async () => {
+    await assertPublicMethods('L1GovernanceRelay', ['rely(address)', 'deny(address)', 'relay(address,bytes,uint32)'])
+  })
+
+  testAuth(
+    'L1GovernanceRelay',
+    async () => {
+      const [_, l2GovernanceRelay, l1CrossDomainMessengerMock] = await ethers.getSigners()
+
+      return [l2GovernanceRelay, l1CrossDomainMessengerMock].map((a) => a.address)
+    },
+    [
+      async (c) => {
+        const [a] = await getRandomAddresses()
+        return c.relay(a, '0x', 0)
+      },
+    ],
+  )
 })
 
 async function setupTest(signers: { l1MessengerImpersonator: SignerWithAddress }) {
