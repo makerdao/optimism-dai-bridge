@@ -3,7 +3,8 @@ import { expect } from 'chai'
 import { ethers } from 'hardhat'
 
 import { Dai__factory, L2DAITokenBridge__factory } from '../../typechain'
-import { deploy, deployMock, deployOptimismContractMock } from '../helpers'
+import { testAuth } from '../auth'
+import { assertPublicMethods, deploy, deployMock, deployOptimismContractMock, getRandomAddresses } from '../helpers'
 
 const defaultGas = 0
 const defaultData = '0x'
@@ -431,10 +432,7 @@ describe('OVM_L2Gateway', () => {
 
       await l2DAITokenBridge.init(l1DAITokenBridge.address)
 
-      expect(await l2DAITokenBridge.messenger()).to.eq(xDomainMessenger.address)
       expect(await l2DAITokenBridge.l1DAITokenBridge()).to.eq(l1DAITokenBridge.address)
-      expect(await l2DAITokenBridge.l1Token()).to.eq(l1Dai.address)
-      expect(await l2DAITokenBridge.l2Token()).to.eq(l2Dai.address)
     })
 
     it('allows initialization only once', async () => {
@@ -517,6 +515,50 @@ describe('OVM_L2Gateway', () => {
       await expect(l2DAITokenBridge.connect(user1).close()).to.be.revertedWith(errorMessages.notOwner)
     })
   })
+
+  describe('constructor', () => {
+    it('assigns all variables properly', async () => {
+      const [l2Messenger, l1Dai, l2Dai] = await ethers.getSigners()
+
+      const l1DAITokenBridge = await deploy<L2DAITokenBridge__factory>('L2DAITokenBridge', [
+        l2Messenger.address,
+        l2Dai.address,
+        l1Dai.address,
+      ])
+
+      expect(await l1DAITokenBridge.messenger()).to.eq(l2Messenger.address)
+      expect(await l1DAITokenBridge.l1Token()).to.eq(l1Dai.address)
+      expect(await l1DAITokenBridge.l2Token()).to.eq(l2Dai.address)
+    })
+  })
+
+  it('has correct public interface', async () => {
+    await assertPublicMethods('L2DAITokenBridge', [
+      'rely(address)',
+      'deny(address)',
+      'init(address)',
+      'close()',
+      'withdraw(address,uint256,uint32,bytes)',
+      'withdrawTo(address,address,uint256,uint32,bytes)',
+      'finalizeDeposit(address,address,address,address,uint256,bytes)',
+    ])
+  })
+
+  testAuth(
+    'L2DAITokenBridge',
+    async () => {
+      const [_, l2Messenger, l1Dai, l2Dai] = await ethers.getSigners()
+
+      return [l2Messenger, l2Dai, l1Dai].map((a) => a.address)
+    },
+    [
+      async (c) => {
+        const [a] = await getRandomAddresses()
+        return c.init(a)
+      },
+      (c) => c.close(),
+    ],
+  )
 })
 
 async function setupTest(signers: { l2MessengerImpersonator: SignerWithAddress; user1: SignerWithAddress }) {
