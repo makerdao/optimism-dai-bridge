@@ -15,9 +15,9 @@
 
 pragma solidity >=0.7.6;
 
-import {iOVM_L1ERC20Bridge} from '@eth-optimism/contracts/contracts/optimistic-ethereum/iOVM/bridge/tokens/iOVM_L1ERC20Bridge.sol';
-import {iOVM_L2ERC20Bridge} from '@eth-optimism/contracts/contracts/optimistic-ethereum/iOVM/bridge/tokens/iOVM_L2ERC20Bridge.sol';
-import {OVM_CrossDomainEnabled} from '@eth-optimism/contracts/contracts/optimistic-ethereum/libraries/bridge/OVM_CrossDomainEnabled.sol';
+import {iOVM_L1ERC20Bridge} from "@eth-optimism/contracts/contracts/optimistic-ethereum/iOVM/bridge/tokens/iOVM_L1ERC20Bridge.sol";
+import {iOVM_L2ERC20Bridge} from "@eth-optimism/contracts/contracts/optimistic-ethereum/iOVM/bridge/tokens/iOVM_L2ERC20Bridge.sol";
+import {OVM_CrossDomainEnabled} from "@eth-optimism/contracts/contracts/optimistic-ethereum/libraries/bridge/OVM_CrossDomainEnabled.sol";
 
 interface Mintable {
   function mint(address usr, uint256 wad) external;
@@ -31,7 +31,7 @@ interface Mintable {
 
 contract L2DAITokenBridge is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
   // --- Auth ---
-  mapping (address => uint256) public wards;
+  mapping(address => uint256) public wards;
   function rely(address usr) external auth {
     wards[usr] = 1;
     emit Rely(usr);
@@ -53,7 +53,11 @@ contract L2DAITokenBridge is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
   uint256 public isOpen = 1;
   address public l1DAITokenBridge;
 
-  constructor(address _l2CrossDomainMessenger, address _l2Token, address _l1Token) public OVM_CrossDomainEnabled(_l2CrossDomainMessenger) {
+  constructor(
+    address _l2CrossDomainMessenger,
+    address _l2Token,
+    address _l1Token
+  ) public OVM_CrossDomainEnabled(_l2CrossDomainMessenger) {
     wards[msg.sender] = 1;
     emit Rely(msg.sender);
 
@@ -62,12 +66,12 @@ contract L2DAITokenBridge is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
   }
 
   modifier onlyAfterInit() {
-    require(l1DAITokenBridge != address(0), 'L2DAITokenBridge/not-init'); 
+    require(l1DAITokenBridge != address(0), "L2DAITokenBridge/not-init");
     _;
   }
 
   function init(address _l1Gateway) external auth {
-    require(l1DAITokenBridge == address(0), 'L2DAITokenBridge/already-init'); 
+    require(l1DAITokenBridge == address(0), "L2DAITokenBridge/already-init");
 
     l1DAITokenBridge = _l1Gateway;
   }
@@ -77,66 +81,43 @@ contract L2DAITokenBridge is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
   }
 
   function withdraw(
-        address _l2Token,
-        uint256 _amount,
-        uint32 _l1Gas,
-        bytes calldata _data
-    )
-        external
-        override
-        virtual
-        onlyAfterInit()
-    {
-        require(_l2Token == l2Token, "L2DAITokenBridge/token-not-dai");
+    address _l2Token,
+    uint256 _amount,
+    uint32 _l1Gas,
+    bytes calldata _data
+  ) external virtual override onlyAfterInit() {
+    require(_l2Token == l2Token, "L2DAITokenBridge/token-not-dai");
 
-        _initiateWithdrawal(
-            msg.sender,
-            msg.sender,
-            _amount,
-            _l1Gas,
-            _data
-        );
-    }
+    _initiateWithdrawal(msg.sender, msg.sender, _amount, _l1Gas, _data);
+  }
 
-    function withdrawTo(
-        address _l2Token,
-        address _to,
-        uint256 _amount,
-        uint32 _l1Gas,
-        bytes calldata _data
-    )
-        external
-        override
-        virtual
-        onlyAfterInit()
-    {
-        require(_l2Token == l2Token, "L2DAITokenBridge/token-not-dai");
+  function withdrawTo(
+    address _l2Token,
+    address _to,
+    uint256 _amount,
+    uint32 _l1Gas,
+    bytes calldata _data
+  ) external virtual override onlyAfterInit() {
+    require(_l2Token == l2Token, "L2DAITokenBridge/token-not-dai");
 
-        _initiateWithdrawal(
-            msg.sender,
-            _to,
-            _amount,
-            _l1Gas,
-            _data
-        );
-    }
+    _initiateWithdrawal(msg.sender, _to, _amount, _l1Gas, _data);
+  }
 
   // When a withdrawal is initiated, we burn the withdrawer's funds to prevent subsequent L2 usage.
   function _initiateWithdrawal(
-        address _from,
-        address _to,
-        uint256 _amount,
-        uint32 _l1Gas,
-        bytes calldata _data
-    )
-        internal
-    {
+    address _from,
+    address _to,
+    uint256 _amount,
+    uint32 _l1Gas,
+    bytes calldata _data
+  ) internal {
     // do not allow initiaitng new xchain messages if bridge is closed
-    require(isOpen == 1, 'L2DAITokenBridge/closed');
+    require(isOpen == 1, "L2DAITokenBridge/closed");
 
     Mintable(l2Token).burn(msg.sender, _amount);
 
-    bytes memory message = abi.encodeWithSelector(
+    bytes memory message =
+      abi.encodeWithSelector(
         iOVM_L1ERC20Bridge.finalizeERC20Withdrawal.selector,
         l1Token,
         l2Token,
@@ -144,32 +125,27 @@ contract L2DAITokenBridge is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
         _to,
         _amount,
         _data
-    );
+      );
 
     // Send message up to L1 bridge
-    sendCrossDomainMessage(
-        l1DAITokenBridge,
-        _l1Gas,
-        message
-    );
+    sendCrossDomainMessage(l1DAITokenBridge, _l1Gas, message);
 
     emit WithdrawalInitiated(l1Token, l2Token, msg.sender, _to, _amount, _data);
   }
 
   // When a deposit is finalized, we credit the account on L2 with the same amount of tokens.
   function finalizeDeposit(
-        address _l1Token,
-        address _l2Token,
-        address _from,
-        address _to,
-        uint256 _amount,
-        bytes calldata _data
-    ) 
-    external
-    override
-    virtual
-    onlyAfterInit()
-    onlyFromCrossDomainAccount(l1DAITokenBridge)
+    address _l1Token,
+    address _l2Token,
+    address _from,
+    address _to,
+    uint256 _amount,
+    bytes calldata _data
+  ) external 
+    virtual 
+    override 
+    onlyAfterInit() 
+    onlyFromCrossDomainAccount(l1DAITokenBridge) 
   {
     require(_l1Token == l1Token && _l2Token == l2Token, "L2DAITokenBridge/token-not-dai");
 
