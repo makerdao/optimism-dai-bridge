@@ -3,7 +3,7 @@ import { expect } from 'chai'
 import { ethers } from 'hardhat'
 
 import { Dai__factory, L2GovernanceRelay__factory, TestDaiMintSpell__factory } from '../../typechain'
-import { deploy, deployMock, deployOptimismContractMock } from '../helpers'
+import { assertPublicMethods, deploy, deployMock, deployOptimismContractMock } from '../helpers'
 
 const errorMessages = {
   invalidMessenger: 'OVM_XCHAIN: messenger contract unauthenticated',
@@ -96,6 +96,20 @@ describe('OVM_L2GovernanceRelay', () => {
 
       await expect(l2GovernanceRelay.relay(acc2.address, [])).to.be.revertedWith(errorMessages.notInitialized)
     })
+  })
+
+  describe('constructor', () => {
+    it('assigns all variables properly', async () => {
+      const [l2Messenger] = await ethers.getSigners()
+
+      const l2GovRelay = await deploy<L2GovernanceRelay__factory>('L2GovernanceRelay', [l2Messenger.address])
+
+      expect(await l2GovRelay.messenger()).to.eq(l2Messenger.address)
+    })
+  })
+
+  it('has correct public interface', async () => {
+    await assertPublicMethods('L2GovernanceRelay', ['init(address)', 'relay(address,bytes)'])
   })
 })
 
