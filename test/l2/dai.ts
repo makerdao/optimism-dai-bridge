@@ -2,6 +2,8 @@ import { expect } from 'chai'
 import { ethers, web3 } from 'hardhat'
 
 import { Dai, Dai__factory } from '../../typechain'
+import { testAuth } from '../auth'
+import { assertPublicMethods, getRandomAddresses } from '../helpers'
 
 const { signERC2612Permit } = require('./eth-permit/eth-permit')
 
@@ -286,41 +288,7 @@ describe('Dai', () => {
         })
       })
 
-      describe('auth', async () => {
-        it('returns deployer wards', async () => {
-          const wards = await dai.wards(signers.deployer.address)
-          expect(wards).to.be.eq('1')
-        })
-
-        it('should not allow rely from non-authed user', async () => {
-          await expect(dai.connect(signers.user1).rely(signers.user2.address)).to.be.revertedWith('Dai/not-authorized')
-        })
-
-        it('should not allow deny from non-authed user', async () => {
-          await expect(dai.connect(signers.user1).deny(signers.user2.address)).to.be.revertedWith('Dai/not-authorized')
-        })
-
-        it('should not allow minting from non-authed user', async () => {
-          await expect(dai.connect(signers.user1).mint(signers.user1.address, 1)).to.be.revertedWith(
-            'Dai/not-authorized',
-          )
-        })
-      })
-
       describe('events', async () => {
-        it('emits Rely event on rely', async () => {
-          await expect(dai.connect(signers.deployer).rely(signers.user1.address))
-            .to.emit(dai, 'Rely')
-            .withArgs(signers.user1.address)
-        })
-
-        it('emits Deny event on deny', async () => {
-          await dai.connect(signers.deployer).rely(signers.user1.address)
-          await expect(dai.connect(signers.user1).deny(signers.deployer.address))
-            .to.emit(dai, 'Deny')
-            .withArgs(signers.deployer.address)
-        })
-
         it('emits Transfer event on mint', async () => {
           await expect(dai.mint(signers.user1.address, 10))
             .to.emit(dai, 'Transfer')
@@ -392,4 +360,26 @@ describe('Dai', () => {
       })
     })
   })
+
+  it('has correct public interface', async () => {
+    await assertPublicMethods('Dai', [
+      'rely(address)',
+      'deny(address)',
+      'approve(address,uint256)',
+      'burn(address,uint256)',
+      'decreaseAllowance(address,uint256)',
+      'increaseAllowance(address,uint256)',
+      'mint(address,uint256)',
+      'permit(address,address,uint256,uint256,uint8,bytes32,bytes32)',
+      'transfer(address,uint256)',
+      'transferFrom(address,address,uint256)',
+    ])
+  })
+
+  testAuth('Dai', async () => [], [
+    async (c) => {
+      const [to] = await getRandomAddresses()
+      return c.mint(to, 1)
+    },
+  ])
 })

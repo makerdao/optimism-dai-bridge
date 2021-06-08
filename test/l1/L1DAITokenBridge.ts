@@ -4,7 +4,7 @@ import { ethers } from 'hardhat'
 
 import { Dai__factory, L1DAITokenBridge__factory, L1Escrow__factory } from '../../typechain'
 import { testAuth } from '../auth'
-import { assertPublicMethods, deploy, deployMock, deployOptimismContractMock } from '../helpers'
+import { assertPublicMethods, deploy, deployMock, deployOptimismContractMock, getRandomAddresses } from '../helpers'
 
 const initialTotalL1Supply = 3000
 const depositAmount = 100
@@ -591,9 +591,9 @@ describe('L1DAITokenBridge', () => {
   testAuth(
     'L1DAITokenBridge',
     async () => {
-      const [_, l1Dai, l2GatewayMock, l2Dai, l1CrossDomainMessengerMock, l1Escrow] = await ethers.getSigners()
+      const [l1Dai, l2GatewayMock, l2Dai, l1CrossDomainMessengerMock, l1Escrow] = await getRandomAddresses()
 
-      return [l1Dai, l2GatewayMock, l2Dai, l1CrossDomainMessengerMock, l1Escrow].map((a) => a.address)
+      return [l1Dai, l2GatewayMock, l2Dai, l1CrossDomainMessengerMock, l1Escrow]
     },
     [(c) => c.close()],
   )

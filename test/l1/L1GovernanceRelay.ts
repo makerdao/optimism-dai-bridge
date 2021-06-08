@@ -64,9 +64,9 @@ describe('L1GovernanceRelay', () => {
   testAuth(
     'L1GovernanceRelay',
     async () => {
-      const [_, l2GovernanceRelay, l1CrossDomainMessengerMock] = await ethers.getSigners()
+      const [l2GovernanceRelay, l1CrossDomainMessengerMock] = await getRandomAddresses()
 
-      return [l2GovernanceRelay, l1CrossDomainMessengerMock].map((a) => a.address)
+      return [l2GovernanceRelay, l1CrossDomainMessengerMock]
     },
     [
       async (c) => {

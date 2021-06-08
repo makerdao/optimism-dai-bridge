@@ -547,9 +547,9 @@ describe('OVM_L2Gateway', () => {
   testAuth(
     'L2DAITokenBridge',
     async () => {
-      const [_, l2Messenger, l1Dai, l2Dai] = await ethers.getSigners()
+      const [l2Messenger, l1Dai, l2Dai] = await getRandomAddresses()
 
-      return [l2Messenger, l2Dai, l1Dai].map((a) => a.address)
+      return [l2Messenger, l2Dai, l1Dai]
     },
     [
       async (c) => {
