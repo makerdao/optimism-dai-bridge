@@ -48,10 +48,10 @@ contract L2DAITokenBridge is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
   event Rely(address indexed usr);
   event Deny(address indexed usr);
 
+  address public immutable l1Token;
   address public immutable l2Token;
   uint256 public isOpen = 1;
   address public l1DAITokenBridge;
-  address public l1Token;
 
   constructor(address _l2CrossDomainMessenger, address _l2Token, address _l1Token) public OVM_CrossDomainEnabled(_l2CrossDomainMessenger) {
     wards[msg.sender] = 1;

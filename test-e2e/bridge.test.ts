@@ -39,7 +39,7 @@ describe('bridge', () => {
   let l1GovernanceRelay: L1GovernanceRelay
   let l2Dai: Dai
   let l2DAITokenBridge: L2DAITokenBridge
-  let l2GatewayV2: L2DAITokenBridge
+  let l2DAITokenBridgeV2: L2DAITokenBridge
   let l2GovernanceRelay: L2GovernanceRelay
   let l2UpgradeSpell: TestBridgeUpgradeSpell
   const initialL1DaiNumber = q18(10000)
@@ -142,17 +142,17 @@ describe('bridge', () => {
   })
 
   it('upgrades the bridge through governance relay', async () => {
-    l2GatewayV2 = await deployUsingFactory(l2Signer, await getL2Factory('L2DAITokenBridge'), [
+    l2DAITokenBridgeV2 = await deployUsingFactory(l2Signer, await getL2Factory('L2DAITokenBridge'), [
       optimismConfig._L2_OVM_L2CrossDomainMessenger,
       l2Dai.address,
       l1Dai.address,
       ZERO_GAS_OPTS,
     ])
-    console.log('L2 DAI Token Bridge V2: ', l2GatewayV2.address)
+    console.log('L2 DAI Token Bridge V2: ', l2DAITokenBridgeV2.address)
 
     l1DaiDepositV2 = await deployUsingFactory(l1Signer, await l1.getContractFactory('L1DAITokenBridge'), [
       l1Dai.address,
-      l2GatewayV2.address,
+      l2DAITokenBridgeV2.address,
       l2Dai.address,
       optimismConfig.Proxy__OVM_L1CrossDomainMessenger,
       l1Escrow.address,
@@ -161,7 +161,7 @@ describe('bridge', () => {
     await waitForTx(l1Escrow.approve(l1Dai.address, l1DaiDepositV2.address, MAX_UINT256, ZERO_GAS_OPTS))
     console.log('L1 DAI Deposit V2: ', l1DaiDepositV2.address)
 
-    await waitForTx(l2GatewayV2.init(l1DaiDepositV2.address, ZERO_GAS_OPTS))
+    await waitForTx(l2DAITokenBridgeV2.init(l1DaiDepositV2.address, ZERO_GAS_OPTS))
     console.log('L2 Bridge initialized...')
 
     l2UpgradeSpell = await deployUsingFactory(l2Signer, await getL2Factory('TestBridgeUpgradeSpell'), [ZERO_GAS_OPTS])
@@ -172,14 +172,21 @@ describe('bridge', () => {
     console.log('L1 Bridge Closed')
 
     // Close L2 bridge V1
-    await l1GovernanceRelay
-      .connect(l1Signer)
-      .relay(
-        l2UpgradeSpell.address,
-        l2UpgradeSpell.interface.encodeFunctionData('upgradeBridge', [l2DAITokenBridge.address, l2GatewayV2.address]),
-        spellGasLimit,
-        ZERO_GAS_OPTS,
-      )
+    console.log('Executing spell to close L2 Bridge v1 and grant minting permissions to L2 Bridge v2')
+    await waitToRelayTxsToL2(
+      l1GovernanceRelay
+        .connect(l1Signer)
+        .relay(
+          l2UpgradeSpell.address,
+          l2UpgradeSpell.interface.encodeFunctionData('upgradeBridge', [
+            l2DAITokenBridge.address,
+            l2DAITokenBridgeV2.address,
+          ]),
+          spellGasLimit,
+          ZERO_GAS_OPTS,
+        ),
+      watcher,
+    )
     console.log('L2 Bridge Closed')
 
     console.log('Testing V2 bridge deposit/withdrawal...')
@@ -193,9 +200,9 @@ describe('bridge', () => {
     const balance = await l2Dai.balanceOf(l1Signer.address)
     expect(balance.toString()).to.be.eq(depositAmount)
 
-    await waitForTx(l2Dai.approve(l2GatewayV2.address, depositAmount, ZERO_GAS_OPTS))
+    await waitForTx(l2Dai.approve(l2DAITokenBridgeV2.address, depositAmount, ZERO_GAS_OPTS))
     await waitToRelayMessageToL1(
-      l2GatewayV2.withdraw(l2Dai.address, depositAmount, defaultGasLimit, '0x', ZERO_GAS_OPTS),
+      l2DAITokenBridgeV2.withdraw(l2Dai.address, depositAmount, defaultGasLimit, '0x', ZERO_GAS_OPTS),
       watcher,
     )
 
