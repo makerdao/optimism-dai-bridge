@@ -53,11 +53,12 @@ contract L2DAITokenBridge is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
   address public l1DAITokenBridge;
   address public l1Token;
 
-  constructor(address _l2CrossDomainMessenger, address _l2Token) public OVM_CrossDomainEnabled(_l2CrossDomainMessenger) {
+  constructor(address _l2CrossDomainMessenger, address _l2Token, address _l1Token) public OVM_CrossDomainEnabled(_l2CrossDomainMessenger) {
     wards[msg.sender] = 1;
     emit Rely(msg.sender);
 
     l2Token = _l2Token;
+    l1Token = _l1Token;
   }
 
   modifier onlyAfterInit() {
@@ -65,11 +66,10 @@ contract L2DAITokenBridge is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
     _;
   }
 
-  function init(address _l1Gateway, address _l1Token) external auth {
+  function init(address _l1Gateway) external auth {
     require(l1DAITokenBridge == address(0), 'L2DAITokenBridge/already-init'); 
 
     l1DAITokenBridge = _l1Gateway;
-    l1Token = _l1Token;
   }
 
   function close() external auth {

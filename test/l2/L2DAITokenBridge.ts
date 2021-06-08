@@ -340,9 +340,10 @@ describe('OVM_L2Gateway', () => {
       const l2DAITokenBridge = await deploy<L2DAITokenBridge__factory>('L2DAITokenBridge', [
         xDomainMessenger.address,
         l2Dai.address,
+        l1Dai.address,
       ])
 
-      await l2DAITokenBridge.init(l1DAITokenBridge.address, l1Dai.address)
+      await l2DAITokenBridge.init(l1DAITokenBridge.address)
 
       expect(await l2DAITokenBridge.messenger()).to.eq(xDomainMessenger.address)
       expect(await l2DAITokenBridge.l1DAITokenBridge()).to.eq(l1DAITokenBridge.address)
@@ -351,18 +352,17 @@ describe('OVM_L2Gateway', () => {
     })
 
     it('allows initialization only once', async () => {
-      const [xDomainMessenger, l1Dai, l2Dai, l1DAITokenBridge, l1Dai2, l1Gateway2] = await ethers.getSigners()
+      const [xDomainMessenger, l1Dai, l2Dai, l1DAITokenBridge, l1Gateway2] = await ethers.getSigners()
 
       const l2DAITokenBridge = await deploy<L2DAITokenBridge__factory>('L2DAITokenBridge', [
         xDomainMessenger.address,
         l2Dai.address,
+        l1Dai.address,
       ])
 
-      await l2DAITokenBridge.init(l1DAITokenBridge.address, l1Dai.address)
+      await l2DAITokenBridge.init(l1DAITokenBridge.address)
 
-      await expect(l2DAITokenBridge.init(l1Gateway2.address, l1Dai2.address)).to.be.revertedWith(
-        errorMessages.alreadyInitialized,
-      )
+      await expect(l2DAITokenBridge.init(l1Gateway2.address)).to.be.revertedWith(errorMessages.alreadyInitialized)
     })
 
     it('doesnt allow calls to onlyInitialized functions before initialization', async () => {
@@ -371,6 +371,7 @@ describe('OVM_L2Gateway', () => {
       const l2DAITokenBridge = await deploy<L2DAITokenBridge__factory>('L2DAITokenBridge', [
         xDomainMessenger.address,
         l2Dai.address,
+        l1Dai.address,
       ])
 
       await expect(l2DAITokenBridge.withdraw(l2Dai.address, '100', defaultGas, defaultData)).to.be.revertedWith(
@@ -442,11 +443,12 @@ async function setupTest(signers: { l2MessengerImpersonator: SignerWithAddress; 
   const l2DAITokenBridge = await deploy<L2DAITokenBridge__factory>('L2DAITokenBridge', [
     l2CrossDomainMessengerMock.address,
     l2Dai.address,
+    l1Dai.address,
   ])
   const l1GatewayMock = await deployMock('L1DAITokenBridge')
 
   await l2Dai.rely(l2DAITokenBridge.address)
-  await l2DAITokenBridge.init(l1GatewayMock.address, l1Dai.address)
+  await l2DAITokenBridge.init(l1GatewayMock.address)
 
   return { l2Dai, l1GatewayMock, l2CrossDomainMessengerMock, l2DAITokenBridge, l1Dai }
 }

@@ -24,7 +24,6 @@ const L2_XDOMAIN_MESSENGER = '0x4200000000000000000000000000000000000007'
 
 async function main() {
   console.log('Deploying on kovan')
-  const { ethers: l1 } = hre
   const l1Provider = new JsonRpcProvider(L1_RPC_URL)
   const l1Deployer = new hre.ethers.Wallet(L1_DEPLOYER_PRIV_KEY, l1Provider)
 
@@ -32,7 +31,6 @@ async function main() {
   const l2Deployer = new hre.ethers.Wallet(L2_DEPLOYER_PRIV_KEY, l2Provider)
 
   await deploy({
-    l1: l1,
     l1Deployer: l1Deployer,
     l2Deployer: l2Deployer,
     L1_DAI_ADDRESS,

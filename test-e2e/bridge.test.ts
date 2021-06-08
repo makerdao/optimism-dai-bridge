@@ -57,6 +57,7 @@ describe('bridge', () => {
     l2DAITokenBridge = await deployUsingFactory(l2Signer, await getL2Factory('L2DAITokenBridge'), [
       optimismConfig._L2_OVM_L2CrossDomainMessenger,
       l2Dai.address,
+      l1Dai.address,
       ZERO_GAS_OPTS,
     ])
     console.log('L2 DAI Token Bridge: ', l2DAITokenBridge.address)
@@ -75,7 +76,7 @@ describe('bridge', () => {
     await waitForTx(l1Escrow.approve(l1Dai.address, l1DaiDeposit.address, MAX_UINT256))
     console.log('L1 DAI Deposit: ', l1DaiDeposit.address)
 
-    await waitForTx(l2DAITokenBridge.init(l1DaiDeposit.address, l1Dai.address, ZERO_GAS_OPTS))
+    await waitForTx(l2DAITokenBridge.init(l1DaiDeposit.address, ZERO_GAS_OPTS))
     console.log('L2 DAI initialized...')
 
     l2GovernanceRelay = await deployUsingFactory(l2Signer, await getL2Factory('L2GovernanceRelay'), [
@@ -144,6 +145,7 @@ describe('bridge', () => {
     l2GatewayV2 = await deployUsingFactory(l2Signer, await getL2Factory('L2DAITokenBridge'), [
       optimismConfig._L2_OVM_L2CrossDomainMessenger,
       l2Dai.address,
+      l1Dai.address,
       ZERO_GAS_OPTS,
     ])
     console.log('L2 DAI Token Bridge V2: ', l2GatewayV2.address)
@@ -159,7 +161,7 @@ describe('bridge', () => {
     await waitForTx(l1Escrow.approve(l1Dai.address, l1DaiDepositV2.address, MAX_UINT256, ZERO_GAS_OPTS))
     console.log('L1 DAI Deposit V2: ', l1DaiDepositV2.address)
 
-    await waitForTx(l2GatewayV2.init(l1DaiDepositV2.address, l1Dai.address, ZERO_GAS_OPTS))
+    await waitForTx(l2GatewayV2.init(l1DaiDepositV2.address, ZERO_GAS_OPTS))
     console.log('L2 Bridge initialized...')
 
     l2UpgradeSpell = await deployUsingFactory(l2Signer, await getL2Factory('TestBridgeUpgradeSpell'), [ZERO_GAS_OPTS])

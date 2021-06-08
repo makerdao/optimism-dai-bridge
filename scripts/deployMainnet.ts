@@ -22,7 +22,6 @@ const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 
 async function main() {
   console.log('Deploying on mainnet')
-  const { ethers: l1 } = hre
   await hre.network.provider.request({
     method: 'hardhat_impersonateAccount',
     params: [L1_DEPLOYER_ADDRESS],
@@ -33,7 +32,6 @@ async function main() {
   const l2Deployer = new hre.ethers.Wallet(L2_DEPLOYER_PRIV_KEY, l2Provider)
 
   await deploy({
-    l1: l1,
     l1Deployer: deployer,
     l2Deployer: l2Deployer,
     L1_DAI_ADDRESS,

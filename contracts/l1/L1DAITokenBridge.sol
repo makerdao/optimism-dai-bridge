@@ -141,7 +141,7 @@ contract L1DAITokenBridge is iOVM_L1ERC20Bridge, OVM_CrossDomainEnabled {
         );
 
         // We omit _data here because events only support bytes32 types.
-        emit ERC20DepositInitiated(address(l1Token), l2Token, _from, _to, _amount, _data);
+        emit ERC20DepositInitiated(l1Token, l2Token, _from, _to, _amount, _data);
     }
 
     function finalizeERC20Withdrawal(
