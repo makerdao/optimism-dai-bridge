@@ -335,7 +335,39 @@ describe('L1DAITokenBridge', () => {
         .withArgs(l1Dai.address, l2Dai.address, user2.address, user2.address, depositAmount, defaultData)
     })
 
-    it('sends funds from the escrow to the 3rd party')
+    it('sends funds from the escrow to the 3rd party', async () => {
+      const [l1MessengerImpersonator, user1, sender, receiver] = await ethers.getSigners()
+      const {
+        l1Dai,
+        l1DAITokenBridge,
+        l2Dai,
+        l1CrossDomainMessengerMock,
+        l2GatewayMock,
+        l1Escrow,
+      } = await setupWithdrawTest({
+        l1MessengerImpersonator,
+        user1,
+      })
+      l1CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l2GatewayMock.address)
+
+      const finalizeWithdrawalTx = await l1DAITokenBridge
+        .connect(l1MessengerImpersonator)
+        .finalizeERC20Withdrawal(
+          l1Dai.address,
+          l2Dai.address,
+          sender.address,
+          receiver.address,
+          withdrawAmount,
+          defaultData,
+        )
+
+      expect(await l1Dai.balanceOf(sender.address)).to.be.equal(0)
+      expect(await l1Dai.balanceOf(receiver.address)).to.be.equal(withdrawAmount)
+      expect(await l1Dai.balanceOf(l1Escrow.address)).to.be.equal(initialTotalL1Supply - withdrawAmount)
+      await expect(finalizeWithdrawalTx)
+        .to.emit(l1DAITokenBridge, 'ERC20WithdrawalFinalized')
+        .withArgs(l1Dai.address, l2Dai.address, sender.address, receiver.address, depositAmount, defaultData)
+    })
 
     // pending withdrawals MUST success even if bridge is closed
     it('completes withdrawals even when closed', async () => {

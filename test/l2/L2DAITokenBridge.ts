@@ -44,7 +44,25 @@ describe('OVM_L2Gateway', () => {
         .withArgs(l1Dai.address, l2Dai.address, user1.address, user1.address, depositAmount, defaultData)
     })
 
-    it('mints for a different user')
+    it('mints for a 3d party', async () => {
+      const [_, l2MessengerImpersonator, user1, sender, receiver] = await ethers.getSigners()
+      const { l1GatewayMock, l2CrossDomainMessengerMock, l2DAITokenBridge, l2Dai, l1Dai } = await setupTest({
+        l2MessengerImpersonator,
+        user1,
+      })
+      l2CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l1GatewayMock.address)
+
+      const finalizeDepositTx = await l2DAITokenBridge
+        .connect(l2MessengerImpersonator)
+        .finalizeDeposit(l1Dai.address, l2Dai.address, sender.address, receiver.address, depositAmount, defaultData)
+
+      expect(await l2Dai.balanceOf(sender.address)).to.be.eq(0)
+      expect(await l2Dai.balanceOf(receiver.address)).to.be.eq(depositAmount)
+      expect(await l2Dai.totalSupply()).to.be.eq(depositAmount)
+      await expect(finalizeDepositTx)
+        .to.emit(l2DAITokenBridge, 'DepositFinalized')
+        .withArgs(l1Dai.address, l2Dai.address, sender.address, receiver.address, depositAmount, defaultData)
+    })
 
     // pending deposits MUST success even if bridge is closed
     it('completes deposits even when closed', async () => {
@@ -184,7 +202,40 @@ describe('OVM_L2Gateway', () => {
         .withArgs(l1Dai.address, l2Dai.address, user1.address, user1.address, withdrawAmount, defaultData)
     })
 
-    it('sends xchain message and burns tokens with custom gas and data')
+    it('sends xchain message and burns tokens with custom gas and data', async () => {
+      const customGas = 10
+      const customData = '0x01'
+
+      const [_, l2MessengerImpersonator, user1] = await ethers.getSigners()
+      const { l1GatewayMock, l2CrossDomainMessengerMock, l2Dai, l2DAITokenBridge, l1Dai } = await setupWithdrawTest({
+        l2MessengerImpersonator,
+        user1,
+      })
+
+      const withdrawTx = await l2DAITokenBridge
+        .connect(user1)
+        .withdraw(l2Dai.address, withdrawAmount, customGas, customData)
+      const withdrawCallToMessengerCall = l2CrossDomainMessengerMock.smocked.sendMessage.calls[0]
+
+      expect(await l2Dai.balanceOf(user1.address)).to.equal(INITIAL_TOTAL_L1_SUPPLY - withdrawAmount)
+      expect(await l2Dai.totalSupply()).to.equal(INITIAL_TOTAL_L1_SUPPLY - withdrawAmount)
+
+      expect(withdrawCallToMessengerCall._target).to.equal(l1GatewayMock.address)
+      expect(withdrawCallToMessengerCall._message).to.equal(
+        l1GatewayMock.interface.encodeFunctionData('finalizeERC20Withdrawal', [
+          l1Dai.address,
+          l2Dai.address,
+          user1.address,
+          user1.address,
+          withdrawAmount,
+          customData,
+        ]),
+      )
+      expect(withdrawCallToMessengerCall._gasLimit).to.equal(customGas)
+      await expect(withdrawTx)
+        .to.emit(l2DAITokenBridge, 'WithdrawalInitiated')
+        .withArgs(l1Dai.address, l2Dai.address, user1.address, user1.address, withdrawAmount, customData)
+    })
 
     it('reverts when used with unsupported token', async () => {
       const [_, l2MessengerImpersonator, user1, dummyL2Erc20] = await ethers.getSigners()
@@ -267,11 +318,46 @@ describe('OVM_L2Gateway', () => {
           defaultData,
         ]),
       )
+      expect(withdrawCallToMessengerCall._gasLimit).to.equal(defaultGas)
       await expect(withdrawTx)
         .to.emit(l2DAITokenBridge, 'WithdrawalInitiated')
         .withArgs(l1Dai.address, l2Dai.address, user1.address, receiver.address, withdrawAmount, defaultData)
     })
-    it('sends xchain message and burns tokens with custom gas and data')
+
+    it('sends xchain message and burns tokens with custom gas and data', async () => {
+      const customGas = 10
+      const customData = '0x01'
+
+      const [_, l2MessengerImpersonator, receiver, user1] = await ethers.getSigners()
+      const { l1GatewayMock, l2CrossDomainMessengerMock, l2Dai, l2DAITokenBridge, l1Dai } = await setupWithdrawTest({
+        l2MessengerImpersonator,
+        user1,
+      })
+
+      const withdrawTx = await l2DAITokenBridge
+        .connect(user1)
+        .withdrawTo(l2Dai.address, receiver.address, withdrawAmount, customGas, customData)
+      const withdrawCallToMessengerCall = l2CrossDomainMessengerMock.smocked.sendMessage.calls[0]
+
+      expect(await l2Dai.balanceOf(user1.address)).to.equal(INITIAL_TOTAL_L1_SUPPLY - withdrawAmount)
+      expect(await l2Dai.totalSupply()).to.equal(INITIAL_TOTAL_L1_SUPPLY - withdrawAmount)
+
+      expect(withdrawCallToMessengerCall._target).to.equal(l1GatewayMock.address)
+      expect(withdrawCallToMessengerCall._message).to.equal(
+        l1GatewayMock.interface.encodeFunctionData('finalizeERC20Withdrawal', [
+          l1Dai.address,
+          l2Dai.address,
+          user1.address,
+          receiver.address,
+          withdrawAmount,
+          customData,
+        ]),
+      )
+      expect(withdrawCallToMessengerCall._gasLimit).to.equal(customGas)
+      await expect(withdrawTx)
+        .to.emit(l2DAITokenBridge, 'WithdrawalInitiated')
+        .withArgs(l1Dai.address, l2Dai.address, user1.address, receiver.address, withdrawAmount, customData)
+    })
 
     it('reverts when used with unsupported token', async () => {
       const [_, l2MessengerImpersonator, user1, receiver, dummyL2Erc20] = await ethers.getSigners()
