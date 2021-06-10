@@ -50,7 +50,7 @@ contract L1Gateway is Abs_L1TokenGateway {
 
   constructor(
     address _l1ERC20,
-    address _l2DepositedERC20,
+    address _l2Gateway,
     address _l1messenger,
     address _escrow
   ) Abs_L1TokenGateway(_l2Gateway, _l1messenger) {
