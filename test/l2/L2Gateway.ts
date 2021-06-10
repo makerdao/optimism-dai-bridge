@@ -80,7 +80,7 @@ describe('OVM_L2Gateway', () => {
       )
     })
 
-    it('reverts when called by XDomainMessenger but not relying message from l1ERC20Gateway', async () => {
+    it('reverts when called by XDomainMessenger but not relying message from l1Gateway', async () => {
       const [_, l2MessengerImpersonator, user1, user2] = await ethers.getSigners()
       const { l2CrossDomainMessengerMock, l2Gateway } = await setupTest({
         l2MessengerImpersonator,
@@ -293,7 +293,7 @@ async function setupTest(signers: { l2MessengerImpersonator: SignerWithAddress; 
     'OVM_L2CrossDomainMessenger',
     { address: await signers.l2MessengerImpersonator.getAddress() }, // This allows us to use an ethers override {from: Mock__OVM_L2CrossDomainMessenger.address} to mock calls
   )
-  const l2Dai = await deploy<Dai__factory>('Dai', [])
+  const l2Dai = await deploy<Dai__factory>('Dai')
   const l2Gateway = await deploy<L2Gateway__factory>('L2Gateway', [l2CrossDomainMessengerMock.address, l2Dai.address])
   const l1GatewayMock = await deployMock('L1Gateway')
 

@@ -53,7 +53,7 @@ contract L1Gateway is Abs_L1TokenGateway {
     address _l2DepositedERC20,
     address _l1messenger,
     address _escrow
-  ) Abs_L1TokenGateway(_l2DepositedERC20, _l1messenger) {
+  ) Abs_L1TokenGateway(_l2Gateway, _l1messenger) {
     wards[msg.sender] = 1;
     emit Rely(msg.sender);
 
