@@ -49,7 +49,7 @@ contract L1Gateway is Abs_L1TokenGateway {
   uint256 public isOpen = 1;
 
   constructor(
-    TokenLike _l1ERC20,
+    address _l1ERC20,
     address _l2DepositedERC20,
     address _l1messenger,
     address _escrow
@@ -57,7 +57,7 @@ contract L1Gateway is Abs_L1TokenGateway {
     wards[msg.sender] = 1;
     emit Rely(msg.sender);
 
-    l1ERC20 = _l1ERC20;
+    l1ERC20 = TokenLike(_l1ERC20);
     escrow = _escrow;
   }
 
