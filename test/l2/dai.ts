@@ -7,8 +7,6 @@ import { assertPublicMethods, getRandomAddresses } from '../helpers'
 
 const { signERC2612Permit } = require('./eth-permit/eth-permit')
 
-require('chai').use(require('chai-as-promised')).should()
-
 describe('Dai', () => {
   let signers: any
   let dai: Dai
