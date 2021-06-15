@@ -50,30 +50,21 @@ contract L2DAITokenBridge is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
 
   address public immutable l1Token;
   address public immutable l2Token;
+  address public immutable l1DAITokenBridge;
   uint256 public isOpen = 1;
-  address public l1DAITokenBridge;
 
   constructor(
     address _l2CrossDomainMessenger,
     address _l2Token,
-    address _l1Token
+    address _l1Token,
+    address _l1DAITokenBridge
   ) public OVM_CrossDomainEnabled(_l2CrossDomainMessenger) {
     wards[msg.sender] = 1;
     emit Rely(msg.sender);
 
     l2Token = _l2Token;
     l1Token = _l1Token;
-  }
-
-  modifier onlyAfterInit() {
-    require(l1DAITokenBridge != address(0), "L2DAITokenBridge/not-init");
-    _;
-  }
-
-  function init(address _l1Gateway) external auth {
-    require(l1DAITokenBridge == address(0), "L2DAITokenBridge/already-init");
-
-    l1DAITokenBridge = _l1Gateway;
+    l1DAITokenBridge = _l1DAITokenBridge;
   }
 
   function close() external auth {
@@ -85,7 +76,7 @@ contract L2DAITokenBridge is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
     uint256 _amount,
     uint32 _l1Gas,
     bytes calldata _data
-  ) external virtual override onlyAfterInit() {
+  ) external virtual override {
     require(_l2Token == l2Token, "L2DAITokenBridge/token-not-dai");
 
     _initiateWithdrawal(msg.sender, msg.sender, _amount, _l1Gas, _data);
@@ -97,7 +88,7 @@ contract L2DAITokenBridge is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
     uint256 _amount,
     uint32 _l1Gas,
     bytes calldata _data
-  ) external virtual override onlyAfterInit() {
+  ) external virtual override {
     require(_l2Token == l2Token, "L2DAITokenBridge/token-not-dai");
 
     _initiateWithdrawal(msg.sender, _to, _amount, _l1Gas, _data);
@@ -144,7 +135,6 @@ contract L2DAITokenBridge is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
   ) external 
     virtual 
     override 
-    onlyAfterInit() 
     onlyFromCrossDomainAccount(l1DAITokenBridge) 
   {
     require(_l1Token == l1Token && _l2Token == l2Token, "L2DAITokenBridge/token-not-dai");

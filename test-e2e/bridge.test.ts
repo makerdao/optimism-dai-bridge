@@ -35,8 +35,8 @@ describe('bridge', () => {
   let watcher: any
 
   let l1Dai: Dai
-  let l1DaiDeposit: L1DAITokenBridge
-  let l1DaiDepositV2: L1DAITokenBridge
+  let l1DAITokenBridge: L1DAITokenBridge
+  let l1DAITokenBridgeV2: L1DAITokenBridge
   let l1GovernanceRelay: L1GovernanceRelay
   let l2Dai: Dai
   let l2DAITokenBridge: L2DAITokenBridge
@@ -55,18 +55,23 @@ describe('bridge', () => {
     l2Dai = await deployUsingFactory(l2Signer, await getL2Factory('Dai'), [ZERO_GAS_OPTS])
     console.log('L2 DAI: ', l2Dai.address)
 
+    l1Escrow = await deployUsingFactory(l1Signer, await l1.getContractFactory('L1Escrow'), [ZERO_GAS_OPTS])
+    console.log('L1 Escrow: ', l1Escrow.address)
+
+    const futureL1DAITokenBridgeAddress = getContractAddress({
+      from: l1Signer.address,
+      nonce: await l1Signer.getTransactionCount(),
+    })
     l2DAITokenBridge = await deployUsingFactory(l2Signer, await getL2Factory('L2DAITokenBridge'), [
       optimismConfig._L2_OVM_L2CrossDomainMessenger,
       l2Dai.address,
       l1Dai.address,
+      futureL1DAITokenBridgeAddress,
       ZERO_GAS_OPTS,
     ])
     console.log('L2 DAI Token Bridge: ', l2DAITokenBridge.address)
 
-    l1Escrow = await deployUsingFactory(l1Signer, await l1.getContractFactory('L1Escrow'), [ZERO_GAS_OPTS])
-    console.log('L1 Escrow: ', l1Escrow.address)
-
-    l1DaiDeposit = await deployUsingFactory(l1Signer, await l1.getContractFactory('L1DAITokenBridge'), [
+    l1DAITokenBridge = await deployUsingFactory(l1Signer, await l1.getContractFactory('L1DAITokenBridge'), [
       l1Dai.address,
       l2DAITokenBridge.address,
       l2Dai.address,
@@ -74,11 +79,12 @@ describe('bridge', () => {
       l1Escrow.address,
       ZERO_GAS_OPTS,
     ])
-    await waitForTx(l1Escrow.approve(l1Dai.address, l1DaiDeposit.address, MAX_UINT256))
-    console.log('L1 DAI Deposit: ', l1DaiDeposit.address)
-
-    await waitForTx(l2DAITokenBridge.init(l1DaiDeposit.address, ZERO_GAS_OPTS))
-    console.log('L2 DAI initialized...')
+    await waitForTx(l1Escrow.approve(l1Dai.address, l1DAITokenBridge.address, MAX_UINT256))
+    expect(l1DAITokenBridge.address).to.be.eq(
+      futureL1DAITokenBridgeAddress,
+      'Predicted address of l1DAITokenBridge doesnt match actual address',
+    )
+    console.log('L1 DAI Deposit: ', l1DAITokenBridge.address)
 
     const futureL1GovRelayAddress = getContractAddress({
       from: l1Signer.address,
@@ -115,9 +121,9 @@ describe('bridge', () => {
 
   it('moves l1 tokens to l2', async () => {
     const depositAmount = q18(500)
-    await waitForTx(l1Dai.approve(l1DaiDeposit.address, depositAmount))
+    await waitForTx(l1Dai.approve(l1DAITokenBridge.address, depositAmount))
     await waitToRelayTxsToL2(
-      l1DaiDeposit.depositERC20(l1Dai.address, l2Dai.address, depositAmount, defaultGasLimit, '0x'),
+      l1DAITokenBridge.depositERC20(l1Dai.address, l2Dai.address, depositAmount, defaultGasLimit, '0x'),
       watcher,
     )
 
@@ -127,9 +133,9 @@ describe('bridge', () => {
 
   it('moves l2 tokens to l1', async () => {
     const depositAmount = q18(500)
-    await waitForTx(l1Dai.approve(l1DaiDeposit.address, depositAmount))
+    await waitForTx(l1Dai.approve(l1DAITokenBridge.address, depositAmount))
     await waitToRelayTxsToL2(
-      l1DaiDeposit.depositERC20(l1Dai.address, l2Dai.address, depositAmount, defaultGasLimit, '0x'),
+      l1DAITokenBridge.depositERC20(l1Dai.address, l2Dai.address, depositAmount, defaultGasLimit, '0x'),
       watcher,
     )
 
@@ -149,15 +155,20 @@ describe('bridge', () => {
   })
 
   it('upgrades the bridge through governance relay', async () => {
+    const futureL2DAITokenBridgeV2Address = getContractAddress({
+      from: l1Signer.address,
+      nonce: await l1Signer.getTransactionCount(),
+    })
     l2DAITokenBridgeV2 = await deployUsingFactory(l2Signer, await getL2Factory('L2DAITokenBridge'), [
       optimismConfig._L2_OVM_L2CrossDomainMessenger,
       l2Dai.address,
       l1Dai.address,
+      futureL2DAITokenBridgeV2Address,
       ZERO_GAS_OPTS,
     ])
     console.log('L2 DAI Token Bridge V2: ', l2DAITokenBridgeV2.address)
 
-    l1DaiDepositV2 = await deployUsingFactory(l1Signer, await l1.getContractFactory('L1DAITokenBridge'), [
+    l1DAITokenBridgeV2 = await deployUsingFactory(l1Signer, await l1.getContractFactory('L1DAITokenBridge'), [
       l1Dai.address,
       l2DAITokenBridgeV2.address,
       l2Dai.address,
@@ -165,17 +176,18 @@ describe('bridge', () => {
       l1Escrow.address,
       ZERO_GAS_OPTS,
     ])
-    await waitForTx(l1Escrow.approve(l1Dai.address, l1DaiDepositV2.address, MAX_UINT256, ZERO_GAS_OPTS))
-    console.log('L1 DAI Deposit V2: ', l1DaiDepositV2.address)
-
-    await waitForTx(l2DAITokenBridgeV2.init(l1DaiDepositV2.address, ZERO_GAS_OPTS))
-    console.log('L2 Bridge initialized...')
+    expect(l1DAITokenBridgeV2.address).to.be.eq(
+      futureL2DAITokenBridgeV2Address,
+      'Predicted address of l1DAITokenBridgeV2 doesnt match actual address',
+    )
+    await waitForTx(l1Escrow.approve(l1Dai.address, l1DAITokenBridgeV2.address, MAX_UINT256, ZERO_GAS_OPTS))
+    console.log('L1 DAI Deposit V2: ', l1DAITokenBridgeV2.address)
 
     l2UpgradeSpell = await deployUsingFactory(l2Signer, await getL2Factory('TestBridgeUpgradeSpell'), [ZERO_GAS_OPTS])
     console.log('L2 Bridge Upgrade Spell: ', l2UpgradeSpell.address)
 
     // Close L1 bridge V1
-    await l1DaiDeposit.connect(l1Signer).close(ZERO_GAS_OPTS)
+    await l1DAITokenBridge.connect(l1Signer).close(ZERO_GAS_OPTS)
     console.log('L1 Bridge Closed')
 
     // Close L2 bridge V1
@@ -198,9 +210,16 @@ describe('bridge', () => {
 
     console.log('Testing V2 bridge deposit/withdrawal...')
     const depositAmount = q18(500)
-    await waitForTx(l1Dai.approve(l1DaiDepositV2.address, depositAmount, ZERO_GAS_OPTS))
+    await waitForTx(l1Dai.approve(l1DAITokenBridgeV2.address, depositAmount, ZERO_GAS_OPTS))
     await waitToRelayTxsToL2(
-      l1DaiDepositV2.depositERC20(l1Dai.address, l2Dai.address, depositAmount, defaultGasLimit, '0x', ZERO_GAS_OPTS),
+      l1DAITokenBridgeV2.depositERC20(
+        l1Dai.address,
+        l2Dai.address,
+        depositAmount,
+        defaultGasLimit,
+        '0x',
+        ZERO_GAS_OPTS,
+      ),
       watcher,
     )
 

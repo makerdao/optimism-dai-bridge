@@ -26,10 +26,15 @@ export async function deploy(opts: Options) {
   console.log('L1Escrow: ', l1Escrow.address)
   const l2Dai = await deployUsingFactory(opts.l2Deployer, await getL2Factory('Dai'), [opts.L2_TX_OPTS])
   console.log('L2DAI: ', l2Dai.address)
+  const futureL1DAITokenBridgeAddress = getContractAddress({
+    from: await opts.l1Deployer.getAddress(),
+    nonce: await opts.l1Deployer.getTransactionCount(),
+  })
   const l2DAITokenBridge = await deployUsingFactory(opts.l2Deployer, await getL2Factory('L2DAITokenBridge'), [
     opts.L2_XDOMAIN_MESSENGER,
     l2Dai.address,
     opts.L1_DAI_ADDRESS,
+    futureL1DAITokenBridgeAddress,
     opts.L2_TX_OPTS,
   ])
   console.log('L2DAITokenBridge: ', l2DAITokenBridge.address)
@@ -41,8 +46,11 @@ export async function deploy(opts: Options) {
     l1Escrow.address,
     opts.L1_TX_OPTS,
   ])
+  expect(l1DAITokenBridge.address).to.be.eq(
+    futureL1DAITokenBridgeAddress,
+    'Predicted address of l1DAITokenBridge doesnt match actual address',
+  )
   console.log('L1DAITokenBridge: ', l1DAITokenBridge.address)
-  await l2DAITokenBridge.init(l1DAITokenBridge.address, opts.L2_TX_OPTS)
 
   // Governance deploy
   const futureL1GovRelayAddress = getContractAddress({

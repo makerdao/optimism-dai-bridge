@@ -28,11 +28,11 @@ describe('OVM_L2Gateway', () => {
 
     it('mints new tokens', async () => {
       const [_, l2MessengerImpersonator, user1] = await ethers.getSigners()
-      const { l1GatewayMock, l2CrossDomainMessengerMock, l2DAITokenBridge, l2Dai, l1Dai } = await setupTest({
+      const { l1DAITokenBridgeMock, l2CrossDomainMessengerMock, l2DAITokenBridge, l2Dai, l1Dai } = await setupTest({
         l2MessengerImpersonator,
         user1,
       })
-      l2CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l1GatewayMock.address)
+      l2CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l1DAITokenBridgeMock.address)
 
       const finalizeDepositTx = await l2DAITokenBridge
         .connect(l2MessengerImpersonator)
@@ -47,11 +47,11 @@ describe('OVM_L2Gateway', () => {
 
     it('mints for a 3d party', async () => {
       const [_, l2MessengerImpersonator, user1, sender, receiver] = await ethers.getSigners()
-      const { l1GatewayMock, l2CrossDomainMessengerMock, l2DAITokenBridge, l2Dai, l1Dai } = await setupTest({
+      const { l1DAITokenBridgeMock, l2CrossDomainMessengerMock, l2DAITokenBridge, l2Dai, l1Dai } = await setupTest({
         l2MessengerImpersonator,
         user1,
       })
-      l2CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l1GatewayMock.address)
+      l2CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l1DAITokenBridgeMock.address)
 
       const finalizeDepositTx = await l2DAITokenBridge
         .connect(l2MessengerImpersonator)
@@ -68,12 +68,12 @@ describe('OVM_L2Gateway', () => {
     // pending deposits MUST success even if bridge is closed
     it('completes deposits even when closed', async () => {
       const [_, l2MessengerImpersonator, user1] = await ethers.getSigners()
-      const { l1GatewayMock, l2CrossDomainMessengerMock, l2DAITokenBridge, l2Dai, l1Dai } = await setupTest({
+      const { l1DAITokenBridgeMock, l2CrossDomainMessengerMock, l2DAITokenBridge, l2Dai, l1Dai } = await setupTest({
         l2MessengerImpersonator,
         user1,
       })
       await l2DAITokenBridge.close()
-      l2CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l1GatewayMock.address)
+      l2CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l1DAITokenBridgeMock.address)
 
       const finalizeDepositTx = await l2DAITokenBridge
         .connect(l2MessengerImpersonator)
@@ -88,11 +88,11 @@ describe('OVM_L2Gateway', () => {
 
     it('reverts when withdrawing not supported tokens', async () => {
       const [_, l2MessengerImpersonator, user1, dummyL1Erc20, dummyL2Erc20] = await ethers.getSigners()
-      const { l1GatewayMock, l2CrossDomainMessengerMock, l2DAITokenBridge, l2Dai, l1Dai } = await setupTest({
+      const { l1DAITokenBridgeMock, l2CrossDomainMessengerMock, l2DAITokenBridge, l2Dai, l1Dai } = await setupTest({
         l2MessengerImpersonator,
         user1,
       })
-      l2CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l1GatewayMock.address)
+      l2CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l1DAITokenBridgeMock.address)
 
       await expect(
         l2DAITokenBridge
@@ -123,11 +123,11 @@ describe('OVM_L2Gateway', () => {
     // if bridge is closed properly this shouldn't happen
     it('reverts when DAI minting access was revoked', async () => {
       const [_, l2MessengerImpersonator, user1] = await ethers.getSigners()
-      const { l1GatewayMock, l2CrossDomainMessengerMock, l2DAITokenBridge, l2Dai, l1Dai } = await setupTest({
+      const { l1DAITokenBridgeMock, l2CrossDomainMessengerMock, l2DAITokenBridge, l2Dai, l1Dai } = await setupTest({
         l2MessengerImpersonator,
         user1,
       })
-      l2CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l1GatewayMock.address)
+      l2CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l1DAITokenBridgeMock.address)
 
       await l2Dai.deny(l2DAITokenBridge.address)
 
@@ -140,11 +140,11 @@ describe('OVM_L2Gateway', () => {
 
     it('reverts when called not by XDomainMessenger', async () => {
       const [_, l2MessengerImpersonator, user1, user2] = await ethers.getSigners()
-      const { l1GatewayMock, l2CrossDomainMessengerMock, l2DAITokenBridge, l1Dai, l2Dai } = await setupTest({
+      const { l1DAITokenBridgeMock, l2CrossDomainMessengerMock, l2DAITokenBridge, l1Dai, l2Dai } = await setupTest({
         l2MessengerImpersonator,
         user1,
       })
-      l2CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l1GatewayMock.address)
+      l2CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l1DAITokenBridgeMock.address)
 
       await expect(
         l2DAITokenBridge
@@ -174,7 +174,13 @@ describe('OVM_L2Gateway', () => {
 
     it('sends xchain message and burns tokens', async () => {
       const [_, l2MessengerImpersonator, user1] = await ethers.getSigners()
-      const { l1GatewayMock, l2CrossDomainMessengerMock, l2Dai, l2DAITokenBridge, l1Dai } = await setupWithdrawTest({
+      const {
+        l1DAITokenBridgeMock,
+        l2CrossDomainMessengerMock,
+        l2Dai,
+        l2DAITokenBridge,
+        l1Dai,
+      } = await setupWithdrawTest({
         l2MessengerImpersonator,
         user1,
       })
@@ -187,9 +193,9 @@ describe('OVM_L2Gateway', () => {
       expect(await l2Dai.balanceOf(user1.address)).to.equal(INITIAL_TOTAL_L1_SUPPLY - withdrawAmount)
       expect(await l2Dai.totalSupply()).to.equal(INITIAL_TOTAL_L1_SUPPLY - withdrawAmount)
 
-      expect(withdrawCallToMessengerCall._target).to.equal(l1GatewayMock.address)
+      expect(withdrawCallToMessengerCall._target).to.equal(l1DAITokenBridgeMock.address)
       expect(withdrawCallToMessengerCall._message).to.equal(
-        l1GatewayMock.interface.encodeFunctionData('finalizeERC20Withdrawal', [
+        l1DAITokenBridgeMock.interface.encodeFunctionData('finalizeERC20Withdrawal', [
           l1Dai.address,
           l2Dai.address,
           user1.address,
@@ -208,7 +214,13 @@ describe('OVM_L2Gateway', () => {
       const customData = '0x01'
 
       const [_, l2MessengerImpersonator, user1] = await ethers.getSigners()
-      const { l1GatewayMock, l2CrossDomainMessengerMock, l2Dai, l2DAITokenBridge, l1Dai } = await setupWithdrawTest({
+      const {
+        l1DAITokenBridgeMock,
+        l2CrossDomainMessengerMock,
+        l2Dai,
+        l2DAITokenBridge,
+        l1Dai,
+      } = await setupWithdrawTest({
         l2MessengerImpersonator,
         user1,
       })
@@ -221,9 +233,9 @@ describe('OVM_L2Gateway', () => {
       expect(await l2Dai.balanceOf(user1.address)).to.equal(INITIAL_TOTAL_L1_SUPPLY - withdrawAmount)
       expect(await l2Dai.totalSupply()).to.equal(INITIAL_TOTAL_L1_SUPPLY - withdrawAmount)
 
-      expect(withdrawCallToMessengerCall._target).to.equal(l1GatewayMock.address)
+      expect(withdrawCallToMessengerCall._target).to.equal(l1DAITokenBridgeMock.address)
       expect(withdrawCallToMessengerCall._message).to.equal(
-        l1GatewayMock.interface.encodeFunctionData('finalizeERC20Withdrawal', [
+        l1DAITokenBridgeMock.interface.encodeFunctionData('finalizeERC20Withdrawal', [
           l1Dai.address,
           l2Dai.address,
           user1.address,
@@ -295,7 +307,13 @@ describe('OVM_L2Gateway', () => {
 
     it('sends xchain message and burns tokens', async () => {
       const [_, l2MessengerImpersonator, receiver, user1] = await ethers.getSigners()
-      const { l1GatewayMock, l2CrossDomainMessengerMock, l2Dai, l2DAITokenBridge, l1Dai } = await setupWithdrawTest({
+      const {
+        l1DAITokenBridgeMock,
+        l2CrossDomainMessengerMock,
+        l2Dai,
+        l2DAITokenBridge,
+        l1Dai,
+      } = await setupWithdrawTest({
         l2MessengerImpersonator,
         user1,
       })
@@ -308,9 +326,9 @@ describe('OVM_L2Gateway', () => {
       expect(await l2Dai.balanceOf(user1.address)).to.equal(INITIAL_TOTAL_L1_SUPPLY - withdrawAmount)
       expect(await l2Dai.totalSupply()).to.equal(INITIAL_TOTAL_L1_SUPPLY - withdrawAmount)
 
-      expect(withdrawCallToMessengerCall._target).to.equal(l1GatewayMock.address)
+      expect(withdrawCallToMessengerCall._target).to.equal(l1DAITokenBridgeMock.address)
       expect(withdrawCallToMessengerCall._message).to.equal(
-        l1GatewayMock.interface.encodeFunctionData('finalizeERC20Withdrawal', [
+        l1DAITokenBridgeMock.interface.encodeFunctionData('finalizeERC20Withdrawal', [
           l1Dai.address,
           l2Dai.address,
           user1.address,
@@ -330,7 +348,13 @@ describe('OVM_L2Gateway', () => {
       const customData = '0x01'
 
       const [_, l2MessengerImpersonator, receiver, user1] = await ethers.getSigners()
-      const { l1GatewayMock, l2CrossDomainMessengerMock, l2Dai, l2DAITokenBridge, l1Dai } = await setupWithdrawTest({
+      const {
+        l1DAITokenBridgeMock,
+        l2CrossDomainMessengerMock,
+        l2Dai,
+        l2DAITokenBridge,
+        l1Dai,
+      } = await setupWithdrawTest({
         l2MessengerImpersonator,
         user1,
       })
@@ -343,9 +367,9 @@ describe('OVM_L2Gateway', () => {
       expect(await l2Dai.balanceOf(user1.address)).to.equal(INITIAL_TOTAL_L1_SUPPLY - withdrawAmount)
       expect(await l2Dai.totalSupply()).to.equal(INITIAL_TOTAL_L1_SUPPLY - withdrawAmount)
 
-      expect(withdrawCallToMessengerCall._target).to.equal(l1GatewayMock.address)
+      expect(withdrawCallToMessengerCall._target).to.equal(l1DAITokenBridgeMock.address)
       expect(withdrawCallToMessengerCall._message).to.equal(
-        l1GatewayMock.interface.encodeFunctionData('finalizeERC20Withdrawal', [
+        l1DAITokenBridgeMock.interface.encodeFunctionData('finalizeERC20Withdrawal', [
           l1Dai.address,
           l2Dai.address,
           user1.address,
@@ -420,63 +444,6 @@ describe('OVM_L2Gateway', () => {
     })
   })
 
-  describe('init', () => {
-    it('sets token gateway', async () => {
-      const [xDomainMessenger, l1Dai, l2Dai, l1DAITokenBridge] = await ethers.getSigners()
-
-      const l2DAITokenBridge = await deploy<L2DAITokenBridge__factory>('L2DAITokenBridge', [
-        xDomainMessenger.address,
-        l2Dai.address,
-        l1Dai.address,
-      ])
-
-      await l2DAITokenBridge.init(l1DAITokenBridge.address)
-
-      expect(await l2DAITokenBridge.l1DAITokenBridge()).to.eq(l1DAITokenBridge.address)
-    })
-
-    it('allows initialization only once', async () => {
-      const [xDomainMessenger, l1Dai, l2Dai, l1DAITokenBridge, l1Gateway2] = await ethers.getSigners()
-
-      const l2DAITokenBridge = await deploy<L2DAITokenBridge__factory>('L2DAITokenBridge', [
-        xDomainMessenger.address,
-        l2Dai.address,
-        l1Dai.address,
-      ])
-
-      await l2DAITokenBridge.init(l1DAITokenBridge.address)
-
-      await expect(l2DAITokenBridge.init(l1Gateway2.address)).to.be.revertedWith(errorMessages.alreadyInitialized)
-    })
-
-    it('doesnt allow calls to onlyInitialized functions before initialization', async () => {
-      const [xDomainMessenger, l1Dai, l2Dai, user1] = await ethers.getSigners()
-
-      const l2DAITokenBridge = await deploy<L2DAITokenBridge__factory>('L2DAITokenBridge', [
-        xDomainMessenger.address,
-        l2Dai.address,
-        l1Dai.address,
-      ])
-
-      await expect(l2DAITokenBridge.withdraw(l2Dai.address, '100', defaultGas, defaultData)).to.be.revertedWith(
-        errorMessages.notInitialized,
-      )
-      await expect(
-        l2DAITokenBridge.withdrawTo(l2Dai.address, user1.address, '100', defaultGas, defaultData),
-      ).to.be.revertedWith(errorMessages.notInitialized)
-      await expect(
-        l2DAITokenBridge.finalizeDeposit(
-          l1Dai.address,
-          l2Dai.address,
-          user1.address,
-          user1.address,
-          '100',
-          defaultData,
-        ),
-      ).to.be.revertedWith(errorMessages.notInitialized)
-    })
-  })
-
   describe('close()', () => {
     it('can be called by owner', async () => {
       const [owner, l2MessengerImpersonator, user1] = await ethers.getSigners()
@@ -518,17 +485,19 @@ describe('OVM_L2Gateway', () => {
 
   describe('constructor', () => {
     it('assigns all variables properly', async () => {
-      const [l2Messenger, l1Dai, l2Dai] = await ethers.getSigners()
+      const [l2Messenger, l1Dai, l2Dai, l1DAITokenBridge] = await ethers.getSigners()
 
-      const l1DAITokenBridge = await deploy<L2DAITokenBridge__factory>('L2DAITokenBridge', [
+      const l2DAITokenBridge = await deploy<L2DAITokenBridge__factory>('L2DAITokenBridge', [
         l2Messenger.address,
         l2Dai.address,
         l1Dai.address,
+        l1DAITokenBridge.address,
       ])
 
-      expect(await l1DAITokenBridge.messenger()).to.eq(l2Messenger.address)
-      expect(await l1DAITokenBridge.l1Token()).to.eq(l1Dai.address)
-      expect(await l1DAITokenBridge.l2Token()).to.eq(l2Dai.address)
+      expect(await l2DAITokenBridge.messenger()).to.eq(l2Messenger.address)
+      expect(await l2DAITokenBridge.l1Token()).to.eq(l1Dai.address)
+      expect(await l2DAITokenBridge.l2Token()).to.eq(l2Dai.address)
+      expect(await l2DAITokenBridge.l1DAITokenBridge()).to.eq(l1DAITokenBridge.address)
     })
   })
 
@@ -536,7 +505,6 @@ describe('OVM_L2Gateway', () => {
     await assertPublicMethods('L2DAITokenBridge', [
       'rely(address)',
       'deny(address)',
-      'init(address)',
       'close()',
       'withdraw(address,uint256,uint32,bytes)',
       'withdrawTo(address,address,uint256,uint32,bytes)',
@@ -547,17 +515,11 @@ describe('OVM_L2Gateway', () => {
   testAuth(
     'L2DAITokenBridge',
     async () => {
-      const [l2Messenger, l1Dai, l2Dai] = await getRandomAddresses()
+      const [l2Messenger, l1Dai, l2Dai, l1DAITokenBridge] = await getRandomAddresses()
 
-      return [l2Messenger, l2Dai, l1Dai]
+      return [l2Messenger, l2Dai, l1Dai, l1DAITokenBridge]
     },
-    [
-      async (c) => {
-        const [a] = await getRandomAddresses()
-        return c.init(a)
-      },
-      (c) => c.close(),
-    ],
+    [(c) => c.close()],
   )
 })
 
@@ -568,17 +530,17 @@ async function setupTest(signers: { l2MessengerImpersonator: SignerWithAddress; 
   )
   const l1Dai = await deploy<Dai__factory>('Dai')
   const l2Dai = await deploy<Dai__factory>('Dai')
+  const l1DAITokenBridgeMock = await deployMock('L1DAITokenBridge')
   const l2DAITokenBridge = await deploy<L2DAITokenBridge__factory>('L2DAITokenBridge', [
     l2CrossDomainMessengerMock.address,
     l2Dai.address,
     l1Dai.address,
+    l1DAITokenBridgeMock.address,
   ])
-  const l1GatewayMock = await deployMock('L1DAITokenBridge')
 
   await l2Dai.rely(l2DAITokenBridge.address)
-  await l2DAITokenBridge.init(l1GatewayMock.address)
 
-  return { l2Dai, l1GatewayMock, l2CrossDomainMessengerMock, l2DAITokenBridge, l1Dai }
+  return { l2Dai, l1DAITokenBridgeMock, l2CrossDomainMessengerMock, l2DAITokenBridge, l1Dai }
 }
 
 const INITIAL_TOTAL_L1_SUPPLY = 3000
