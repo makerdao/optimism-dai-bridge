@@ -1,6 +1,5 @@
 import { Wallet } from '@ethersproject/wallet'
 import { expect } from 'chai'
-import { getContractAddress } from 'ethers/lib/utils'
 import { ethers as l1 } from 'hardhat'
 
 import {
@@ -12,6 +11,7 @@ import {
   L2GovernanceRelay,
   TestBridgeUpgradeSpell,
 } from '../typechain'
+import { getAddressOfNextDeployedContract } from './helpers/address'
 import { getActiveWards } from './helpers/auth'
 import { optimismConfig } from './helpers/optimismConfig'
 import {
@@ -58,10 +58,7 @@ describe('bridge', () => {
     l1Escrow = await deployUsingFactory(l1Signer, await l1.getContractFactory('L1Escrow'), [ZERO_GAS_OPTS])
     console.log('L1 Escrow: ', l1Escrow.address)
 
-    const futureL1DAITokenBridgeAddress = getContractAddress({
-      from: l1Signer.address,
-      nonce: await l1Signer.getTransactionCount(),
-    })
+    const futureL1DAITokenBridgeAddress = await getAddressOfNextDeployedContract(l1Signer)
     l2DAITokenBridge = await deployUsingFactory(l2Signer, await getL2Factory('L2DAITokenBridge'), [
       optimismConfig._L2_OVM_L2CrossDomainMessenger,
       l2Dai.address,
@@ -86,10 +83,7 @@ describe('bridge', () => {
     )
     console.log('L1 DAI Deposit: ', l1DAITokenBridge.address)
 
-    const futureL1GovRelayAddress = getContractAddress({
-      from: l1Signer.address,
-      nonce: await l1Signer.getTransactionCount(),
-    })
+    const futureL1GovRelayAddress = await getAddressOfNextDeployedContract(l1Signer)
     l2GovernanceRelay = await deployUsingFactory(l2Signer, await getL2Factory('L2GovernanceRelay'), [
       optimismConfig._L2_OVM_L2CrossDomainMessenger,
       futureL1GovRelayAddress,
@@ -155,10 +149,7 @@ describe('bridge', () => {
   })
 
   it('upgrades the bridge through governance relay', async () => {
-    const futureL2DAITokenBridgeV2Address = getContractAddress({
-      from: l1Signer.address,
-      nonce: await l1Signer.getTransactionCount(),
-    })
+    const futureL2DAITokenBridgeV2Address = await getAddressOfNextDeployedContract(l1Signer)
     l2DAITokenBridgeV2 = await deployUsingFactory(l2Signer, await getL2Factory('L2DAITokenBridge'), [
       optimismConfig._L2_OVM_L2CrossDomainMessenger,
       l2Dai.address,

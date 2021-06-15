@@ -5,6 +5,7 @@ import { expect } from 'chai'
 import { getActiveWards } from '../test-e2e/helpers/auth'
 import { ethers as l1 } from 'hardhat'
 import { getContractAddress } from 'ethers/lib/utils'
+import { getAddressOfNextDeployedContract } from '../test-e2e/helpers/address'
 
 interface Options {
   l1Deployer: Signer
@@ -26,10 +27,7 @@ export async function deploy(opts: Options) {
   console.log('L1Escrow: ', l1Escrow.address)
   const l2Dai = await deployUsingFactory(opts.l2Deployer, await getL2Factory('Dai'), [opts.L2_TX_OPTS])
   console.log('L2DAI: ', l2Dai.address)
-  const futureL1DAITokenBridgeAddress = getContractAddress({
-    from: await opts.l1Deployer.getAddress(),
-    nonce: await opts.l1Deployer.getTransactionCount(),
-  })
+  const futureL1DAITokenBridgeAddress = await getAddressOfNextDeployedContract(opts.l1Deployer)
   const l2DAITokenBridge = await deployUsingFactory(opts.l2Deployer, await getL2Factory('L2DAITokenBridge'), [
     opts.L2_XDOMAIN_MESSENGER,
     l2Dai.address,
@@ -53,10 +51,7 @@ export async function deploy(opts: Options) {
   console.log('L1DAITokenBridge: ', l1DAITokenBridge.address)
 
   // Governance deploy
-  const futureL1GovRelayAddress = getContractAddress({
-    from: await opts.l1Deployer.getAddress(),
-    nonce: await opts.l1Deployer.getTransactionCount(),
-  })
+  const futureL1GovRelayAddress = await getAddressOfNextDeployedContract(opts.l1Deployer)
   const l2GovernanceRelay = await deployUsingFactory(opts.l2Deployer, await getL2Factory('L2GovernanceRelay'), [
     opts.L2_XDOMAIN_MESSENGER,
     futureL1GovRelayAddress,
