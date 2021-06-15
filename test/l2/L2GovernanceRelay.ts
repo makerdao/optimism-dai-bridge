@@ -68,48 +68,22 @@ describe('OVM_L2GovernanceRelay', () => {
     })
   })
 
-  describe('init', () => {
-    it('sets token gateway', async () => {
-      const [acc1, acc2] = await ethers.getSigners()
-
-      const l2GovernanceRelay = await deploy<L2GovernanceRelay__factory>('L2GovernanceRelay', [acc1.address])
-
-      await l2GovernanceRelay.init(acc2.address)
-
-      expect(await l2GovernanceRelay.l1GovernanceRelay()).to.eq(acc2.address)
-    })
-
-    it('allows initialization once not multiple times', async () => {
-      const [acc1, acc2] = await ethers.getSigners()
-
-      const l2GovernanceRelay = await deploy<L2GovernanceRelay__factory>('L2GovernanceRelay', [acc1.address])
-
-      await l2GovernanceRelay.init(acc2.address)
-
-      await expect(l2GovernanceRelay.init(acc2.address)).to.be.revertedWith(errorMessages.alreadyInitialized)
-    })
-
-    it('doesnt allow calls to onlyInitialized functions before initialization', async () => {
-      const [acc1, acc2] = await ethers.getSigners()
-
-      const l2GovernanceRelay = await deploy<L2GovernanceRelay__factory>('L2GovernanceRelay', [acc1.address])
-
-      await expect(l2GovernanceRelay.relay(acc2.address, [])).to.be.revertedWith(errorMessages.notInitialized)
-    })
-  })
-
   describe('constructor', () => {
     it('assigns all variables properly', async () => {
-      const [l2Messenger] = await ethers.getSigners()
+      const [l2Messenger, l1GovRelay] = await ethers.getSigners()
 
-      const l2GovRelay = await deploy<L2GovernanceRelay__factory>('L2GovernanceRelay', [l2Messenger.address])
+      const l2GovRelay = await deploy<L2GovernanceRelay__factory>('L2GovernanceRelay', [
+        l2Messenger.address,
+        l1GovRelay.address,
+      ])
 
       expect(await l2GovRelay.messenger()).to.eq(l2Messenger.address)
+      expect(await l2GovRelay.l1GovernanceRelay()).to.eq(l1GovRelay.address)
     })
   })
 
   it('has correct public interface', async () => {
-    await assertPublicMethods('L2GovernanceRelay', ['init(address)', 'relay(address,bytes)'])
+    await assertPublicMethods('L2GovernanceRelay', ['relay(address,bytes)'])
   })
 })
 
@@ -119,14 +93,15 @@ async function setupTest(signers: { l2MessengerImpersonator: SignerWithAddress; 
     { address: await signers.l2MessengerImpersonator.getAddress() }, // This allows us to use an ethers override {from: Mock__OVM_L2CrossDomainMessenger.address} to mock calls
   )
   const l2Dai = await deploy<Dai__factory>('Dai', [])
+
+  const l1GovernanceRelay = await deployMock('L1GovernanceRelay')
   const l2GovernanceRelay = await deploy<L2GovernanceRelay__factory>('L2GovernanceRelay', [
     l2CrossDomainMessengerMock.address,
+    l1GovernanceRelay.address,
   ])
-  const l2daiMintSpell = await deploy<TestDaiMintSpell__factory>('TestDaiMintSpell', [])
-  const l1GovernanceRelay = await deployMock('L1GovernanceRelay')
-
   await l2Dai.rely(l2GovernanceRelay.address)
-  await l2GovernanceRelay.init(l1GovernanceRelay.address)
+
+  const l2daiMintSpell = await deploy<TestDaiMintSpell__factory>('TestDaiMintSpell', [])
 
   return { l2Dai, l1GovernanceRelay, l2CrossDomainMessengerMock, l2GovernanceRelay, l2daiMintSpell }
 }

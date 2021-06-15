@@ -20,32 +20,16 @@ import {OVM_CrossDomainEnabled} from "@eth-optimism/contracts/contracts/optimist
 // Receive xchain message from L1 counterpart and execute given spell
 
 contract L2GovernanceRelay is OVM_CrossDomainEnabled {
-
-  event Initialized(address l1GovernanceRelay);
-
-  address public l1GovernanceRelay;
+  
+  address public immutable l1GovernanceRelay;
 
   constructor(
-    address _l2CrossDomainMessenger
-  )
-    OVM_CrossDomainEnabled(_l2CrossDomainMessenger)
-  {}
-
-  function init(
+    address _l2CrossDomainMessenger,
     address _l1GovernanceRelay
   )
-    external
+    OVM_CrossDomainEnabled(_l2CrossDomainMessenger)
   {
-    require(address(l1GovernanceRelay) == address(0), "Contract has already been initialized");
-
     l1GovernanceRelay = _l1GovernanceRelay;
-      
-    emit Initialized(_l1GovernanceRelay);
-  }
-
-  modifier onlyInitialized() {
-    require(address(l1GovernanceRelay) != address(0), "Contract has not yet been initialized");
-    _;
   }
 
   /**
@@ -53,7 +37,6 @@ contract L2GovernanceRelay is OVM_CrossDomainEnabled {
    */
   function relay(address target, bytes calldata targetData)
     external
-    onlyInitialized()
     onlyFromCrossDomainAccount(address(l1GovernanceRelay))
   {
     // Ensure no storage changes in the delegate call

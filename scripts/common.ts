@@ -4,6 +4,7 @@ import { Signer } from '@ethersproject/abstract-signer'
 import { expect } from 'chai'
 import { getActiveWards } from '../test-e2e/helpers/auth'
 import { ethers as l1 } from 'hardhat'
+import { getContractAddress } from 'ethers/lib/utils'
 
 interface Options {
   l1Deployer: Signer
@@ -44,8 +45,13 @@ export async function deploy(opts: Options) {
   await l2DAITokenBridge.init(l1DAITokenBridge.address, opts.L2_TX_OPTS)
 
   // Governance deploy
+  const futureL1GovRelayAddress = getContractAddress({
+    from: await opts.l1Deployer.getAddress(),
+    nonce: await opts.l1Deployer.getTransactionCount(),
+  })
   const l2GovernanceRelay = await deployUsingFactory(opts.l2Deployer, await getL2Factory('L2GovernanceRelay'), [
     opts.L2_XDOMAIN_MESSENGER,
+    futureL1GovRelayAddress,
     opts.L2_TX_OPTS,
   ])
   console.log('L2Governance Relay: ', l2GovernanceRelay.address)
@@ -54,8 +60,11 @@ export async function deploy(opts: Options) {
     await l1.getContractFactory('L1GovernanceRelay'),
     [l2GovernanceRelay.address, opts.L1_XDOMAIN_MESSENGER, opts.L1_TX_OPTS],
   )
+  expect(l1GovernanceRelay.address).to.be.eq(
+    futureL1GovRelayAddress,
+    'Predicted address of l1GovernanceRelay doesnt match actual address',
+  )
   console.log('L1Governance Relay: ', l1GovernanceRelay.address)
-  await l2GovernanceRelay.init(l1GovernanceRelay.address, opts.L2_TX_OPTS)
 
   // Permissions
   console.log('Finalizing permissions for L1Escrow...')

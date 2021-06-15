@@ -1,5 +1,6 @@
 import { Wallet } from '@ethersproject/wallet'
 import { expect } from 'chai'
+import { getContractAddress } from 'ethers/lib/utils'
 import { ethers as l1 } from 'hardhat'
 
 import {
@@ -79,8 +80,13 @@ describe('bridge', () => {
     await waitForTx(l2DAITokenBridge.init(l1DaiDeposit.address, ZERO_GAS_OPTS))
     console.log('L2 DAI initialized...')
 
+    const futureL1GovRelayAddress = getContractAddress({
+      from: l1Signer.address,
+      nonce: await l1Signer.getTransactionCount(),
+    })
     l2GovernanceRelay = await deployUsingFactory(l2Signer, await getL2Factory('L2GovernanceRelay'), [
       optimismConfig._L2_OVM_L2CrossDomainMessenger,
+      futureL1GovRelayAddress,
       ZERO_GAS_OPTS,
     ])
     console.log('L2 Governance Relay: ', l2DAITokenBridge.address)
@@ -90,10 +96,11 @@ describe('bridge', () => {
       optimismConfig.Proxy__OVM_L1CrossDomainMessenger,
       ZERO_GAS_OPTS,
     ])
+    expect(l1GovernanceRelay.address).to.be.eq(
+      futureL1GovRelayAddress,
+      'Predicted address of l1GovernanceRelay doesnt match actual address',
+    )
     console.log('L1 Governance Relay: ', l1GovernanceRelay.address)
-
-    await waitForTx(l2GovernanceRelay.init(l1GovernanceRelay.address, ZERO_GAS_OPTS))
-    console.log('Governance relay initialized...')
 
     await waitForTx(l2Dai.rely(l2DAITokenBridge.address, ZERO_GAS_OPTS))
     await waitForTx(l2Dai.rely(l2GovernanceRelay.address, ZERO_GAS_OPTS))
