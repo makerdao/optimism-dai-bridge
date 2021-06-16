@@ -25,6 +25,8 @@ export async function deploy(opts: Options) {
   // Bridge deploy
   const l1Escrow = await deployUsingFactory(opts.l1Deployer, await l1.getContractFactory('L1Escrow'), [opts.L1_TX_OPTS])
   console.log('L1Escrow: ', l1Escrow.address)
+  // note: we might want to use a dedicated deployer address that deploys very first contract on a vanity address
+  // so it's critical that L2DAI is the first contract deployed using l2Deployer
   const l2Dai = await deployUsingFactory(opts.l2Deployer, await getL2Factory('Dai'), [opts.L2_TX_OPTS])
   console.log('L2DAI: ', l2Dai.address)
   const futureL1DAITokenBridgeAddress = await getAddressOfNextDeployedContract(opts.l1Deployer)
