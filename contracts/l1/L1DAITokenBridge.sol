@@ -55,7 +55,7 @@ contract L1DAITokenBridge is iOVM_L1ERC20Bridge, OVM_CrossDomainEnabled {
 
   constructor(
     address _l1Token,
-    address _l2Gateway,
+    address _l2DAITokenBridge,
     address _l2Token,
     address _l1messenger,
     address _escrow
@@ -64,7 +64,7 @@ contract L1DAITokenBridge is iOVM_L1ERC20Bridge, OVM_CrossDomainEnabled {
     emit Rely(msg.sender);
 
     l1Token = _l1Token;
-    l2DAITokenBridge = _l2Gateway;
+    l2DAITokenBridge = _l2DAITokenBridge;
     l2Token = _l2Token;
     escrow = _escrow;
   }
@@ -108,15 +108,14 @@ contract L1DAITokenBridge is iOVM_L1ERC20Bridge, OVM_CrossDomainEnabled {
     uint32 _l2Gas,
     bytes calldata _data
   ) internal {
+    // do not allow initiaitng new xchain messages if bridge is closed
     require(isOpen == 1, "L1DAITokenBridge/closed");
 
     TokenLike(l1Token).transferFrom(_from, escrow, _amount);
 
-    // Construct calldata for _l2Token.finalizeDeposit(_to, _amount)
     bytes memory message =
       abi.encodeWithSelector(iOVM_L2ERC20Bridge.finalizeDeposit.selector, l1Token, l2Token, _from, _to, _amount, _data);
 
-    // Send calldata into L2
     sendCrossDomainMessage(l2DAITokenBridge, _l2Gas, message);
 
     emit ERC20DepositInitiated(l1Token, l2Token, _from, _to, _amount, _data);
@@ -132,7 +131,6 @@ contract L1DAITokenBridge is iOVM_L1ERC20Bridge, OVM_CrossDomainEnabled {
   ) external override onlyFromCrossDomainAccount(l2DAITokenBridge) {
     require(_l1Token == l1Token && _l2Token == l2Token, "L1DAITokenBridge/token-not-dai");
     
-    // Transfer withdrawn funds out to withdrawer
     TokenLike(l1Token).transferFrom(escrow, _to, _amount);
 
     emit ERC20WithdrawalFinalized(l1Token, l2Token, _from, _to, _amount, _data);

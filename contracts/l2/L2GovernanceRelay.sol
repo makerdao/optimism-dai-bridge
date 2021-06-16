@@ -37,16 +37,17 @@ contract L2GovernanceRelay is OVM_CrossDomainEnabled {
    */
   function relay(address target, bytes calldata targetData)
     external
-    onlyFromCrossDomainAccount(address(l1GovernanceRelay))
+    onlyFromCrossDomainAccount(l1GovernanceRelay)
   {
     // Ensure no storage changes in the delegate call
-    address _l1GovernanceRelay = l1GovernanceRelay;
+    // Target address is trusted so this is mostly to avoid a human error
+    // Note: we don't check l1GovernanceRelay because it's immutable
     address _messenger = messenger;
 
     bool ok;
     (ok,) = target.delegatecall(targetData);
     require(ok, "L2GovernanceRelay/delegatecall-error");
 
-    require(_l1GovernanceRelay == l1GovernanceRelay && _messenger == messenger, "L2GovernanceRelay/illegal-storage-change");
+    require(_messenger == messenger, "L2GovernanceRelay/illegal-storage-change");
   }
 }

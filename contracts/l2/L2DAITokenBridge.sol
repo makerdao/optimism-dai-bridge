@@ -118,7 +118,6 @@ contract L2DAITokenBridge is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
         _data
       );
 
-    // Send message up to L1 bridge
     sendCrossDomainMessage(l1DAITokenBridge, _l1Gas, message);
 
     emit WithdrawalInitiated(l1Token, l2Token, msg.sender, _to, _amount, _data);
