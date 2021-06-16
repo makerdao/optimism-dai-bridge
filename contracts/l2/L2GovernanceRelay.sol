@@ -15,7 +15,7 @@
 
 pragma solidity >=0.7.6;
 
-import {OVM_CrossDomainEnabled} from "@eth-optimism/contracts/contracts/optimistic-ethereum/libraries/bridge/OVM_CrossDomainEnabled.sol";
+import {OVM_CrossDomainEnabled} from "@eth-optimism/contracts/libraries/bridge/OVM_CrossDomainEnabled.sol";
 
 // Receive xchain message from L1 counterpart and execute given spell
 

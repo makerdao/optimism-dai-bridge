@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "@codechecks/client": "0.1.10-beta",
-    "@eth-optimism/contracts": "https://gitpkg.now.sh/ethereum-optimism/optimism/packages/contracts?cec9a436bd5b95c57701f528bf46145befff3dda&scripts.postinstall=yarn%20%26%26%20yarn%20build",
+    "@eth-optimism/contracts": "0.0.0-2021515174945",
     "@eth-optimism/hardhat-ovm": "^0.2.2",
     "@eth-optimism/smock": "^1.1.4",
     "@eth-optimism/solc": "0.5.16-alpha.7",
