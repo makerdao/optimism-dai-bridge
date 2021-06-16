@@ -17,6 +17,7 @@ const errorMessages = {
   bridgeClosed: 'L1DAITokenBridge/closed',
   notOwner: 'L1DAITokenBridge/not-authorized',
   tokenMismatch: 'L1DAITokenBridge/token-not-dai',
+  notEOA: 'L1DAITokenBridge/Sender-not-EOA',
   daiInsufficientAllowance: 'Dai/insufficient-allowance',
   daiInsufficientBalance: 'Dai/insufficient-balance',
 }
@@ -110,6 +111,20 @@ describe('L1DAITokenBridge', () => {
           .connect(user1)
           .depositERC20(l1Dai.address, dummyL2Erc20.address, depositAmount, defaultGas, defaultData),
       ).to.be.revertedWith(errorMessages.tokenMismatch)
+    })
+
+    it('reverts when called not by EOA', async () => {
+      const [l1MessengerImpersonator, user1] = await ethers.getSigners()
+      const { l1Dai, l2Dai, l1DAITokenBridge } = await setupTest({
+        l1MessengerImpersonator,
+        user1,
+      })
+
+      await expect(
+        l1DAITokenBridge
+          .connect(l1MessengerImpersonator) // pretend to be a contract, messenger in this case
+          .depositERC20(l1Dai.address, l2Dai.address, depositAmount, defaultGas, defaultData),
+      ).to.be.revertedWith(errorMessages.notEOA)
     })
 
     it('reverts when approval is too low', async () => {

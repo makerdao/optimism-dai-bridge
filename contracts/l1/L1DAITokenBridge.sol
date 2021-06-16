@@ -19,6 +19,7 @@ pragma solidity >=0.7.6;
 import {iOVM_L1ERC20Bridge} from "@eth-optimism/contracts/iOVM/bridge/tokens/iOVM_L1ERC20Bridge.sol";
 import {iOVM_L2ERC20Bridge} from "@eth-optimism/contracts/iOVM/bridge/tokens/iOVM_L2ERC20Bridge.sol";
 import {OVM_CrossDomainEnabled} from "@eth-optimism/contracts/libraries/bridge/OVM_CrossDomainEnabled.sol";
+import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 
 interface TokenLike {
   function transferFrom(address _from, address _to, uint256 _value) external returns (bool success);
@@ -68,13 +69,9 @@ contract L1DAITokenBridge is iOVM_L1ERC20Bridge, OVM_CrossDomainEnabled {
     escrow = _escrow;
   }
 
-  // --- Administration ---
-
   function close() external auth {
     isOpen = 0;
   }
-
-  // --- Internal methods ---
 
   function depositERC20(
     address _l1Token,
@@ -83,6 +80,9 @@ contract L1DAITokenBridge is iOVM_L1ERC20Bridge, OVM_CrossDomainEnabled {
     uint32 _l2Gas,
     bytes calldata _data
   ) external virtual override {
+    // Used to stop deposits from contracts (avoid accidentally lost tokens)
+    // Note: This check could be bypassed by a malicious contract via initcode, but it takes care of the user error we want to avoid.
+    require(!Address.isContract(msg.sender), "L1DAITokenBridge/Sender-not-EOA");
     require(_l1Token == l1Token && _l2Token == l2Token, "L1DAITokenBridge/token-not-dai");
 
     _initiateERC20Deposit(msg.sender, msg.sender, _amount, _l2Gas, _data);
