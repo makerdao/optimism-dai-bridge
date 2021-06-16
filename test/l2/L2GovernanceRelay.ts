@@ -3,13 +3,14 @@ import { expect } from 'chai'
 import { ethers } from 'hardhat'
 
 import { Dai__factory, L2GovernanceRelay__factory, TestDaiMintSpell__factory } from '../../typechain'
+import { BadSpell__factory } from '../../typechain/factories/BadSpell__factory'
 import { assertPublicMethods, deploy, deployMock, deployOptimismContractMock } from '../helpers'
 
 const errorMessages = {
   invalidMessenger: 'OVM_XCHAIN: messenger contract unauthenticated',
   invalidXDomainMessageOriginator: 'OVM_XCHAIN: wrong sender of cross-domain message',
-  alreadyInitialized: 'Contract has already been initialized',
-  notInitialized: 'Contract has not yet been initialized',
+  delegatecallError: 'L2GovernanceRelay/delegatecall-error',
+  illegalStorageChange: 'L2GovernanceRelay/illegal-storage-change',
 }
 
 describe('OVM_L2GovernanceRelay', () => {
@@ -65,6 +66,38 @@ describe('OVM_L2GovernanceRelay', () => {
       await expect(l2GovernanceRelay.connect(l2MessengerImpersonator).relay(user1.address, [])).to.be.revertedWith(
         errorMessages.invalidXDomainMessageOriginator,
       )
+    })
+
+    it('reverts when spell tries to modify storage', async () => {
+      const [_, l2MessengerImpersonator, user1] = await ethers.getSigners()
+      const { l1GovernanceRelay, l2GovernanceRelay, l2CrossDomainMessengerMock } = await setupTest({
+        l2MessengerImpersonator,
+        user1,
+      })
+      const badSpell = await deploy<BadSpell__factory>('BadSpell')
+      l2CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l1GovernanceRelay.address)
+
+      await expect(
+        l2GovernanceRelay
+          .connect(l2MessengerImpersonator)
+          .relay(badSpell.address, badSpell.interface.encodeFunctionData('modifyStorage')),
+      ).to.be.revertedWith(errorMessages.illegalStorageChange)
+    })
+
+    it('reverts when spell reverts', async () => {
+      const [_, l2MessengerImpersonator, user1] = await ethers.getSigners()
+      const { l1GovernanceRelay, l2GovernanceRelay, l2CrossDomainMessengerMock } = await setupTest({
+        l2MessengerImpersonator,
+        user1,
+      })
+      const badSpell = await deploy<BadSpell__factory>('BadSpell')
+      l2CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l1GovernanceRelay.address)
+
+      await expect(
+        l2GovernanceRelay
+          .connect(l2MessengerImpersonator)
+          .relay(badSpell.address, badSpell.interface.encodeFunctionData('abort')),
+      ).to.be.revertedWith(errorMessages.delegatecallError)
     })
   })
 

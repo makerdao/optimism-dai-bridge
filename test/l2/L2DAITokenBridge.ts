@@ -12,8 +12,6 @@ const defaultData = '0x'
 const errorMessages = {
   invalidMessenger: 'OVM_XCHAIN: messenger contract unauthenticated',
   invalidXDomainMessageOriginator: 'OVM_XCHAIN: wrong sender of cross-domain message',
-  alreadyInitialized: 'L2DAITokenBridge/already-init',
-  notInitialized: 'L2DAITokenBridge/not-init',
   tokenMismatch: 'L2DAITokenBridge/token-not-dai',
   bridgeClosed: 'L2DAITokenBridge/closed',
   notOwner: 'L2DAITokenBridge/not-authorized',
