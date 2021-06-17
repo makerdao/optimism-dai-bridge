@@ -21,7 +21,6 @@ import {OVM_CrossDomainEnabled} from "@eth-optimism/contracts/libraries/bridge/O
 
 interface Mintable {
   function mint(address usr, uint256 wad) external;
-
   function burn(address usr, uint256 wad) external;
 }
 
