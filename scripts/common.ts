@@ -1,15 +1,16 @@
-import { Dai, L1DAITokenBridge, L1Escrow, L1GovernanceRelay, L2DAITokenBridge, L2GovernanceRelay } from '../typechain'
-import { deployUsingFactory, getL2Factory, MAX_UINT256, waitForTx } from '../test-e2e/helpers/utils'
 import { Signer } from '@ethersproject/abstract-signer'
 import { expect } from 'chai'
-import { getActiveWards } from '../test-e2e/helpers/auth'
 import { ethers as l1 } from 'hardhat'
-import { getContractAddress } from 'ethers/lib/utils'
+
 import { getAddressOfNextDeployedContract } from '../test-e2e/helpers/address'
+import { getActiveWards } from '../test-e2e/helpers/auth'
+import { deployUsingFactory, getL2Factory, MAX_UINT256, waitForTx } from '../test-e2e/helpers/utils'
 
 interface Options {
   l1Deployer: Signer
   l2Deployer: Signer
+
+  desiredL2DaiAddress?: string
 
   L1_XDOMAIN_MESSENGER: string
   L2_XDOMAIN_MESSENGER: string
@@ -27,8 +28,22 @@ export async function deploy(opts: Options) {
   console.log('L1Escrow: ', l1Escrow.address)
   // note: we might want to use a dedicated deployer address that deploys very first contract on a vanity address
   // so it's critical that L2DAI is the first contract deployed using l2Deployer
+  if (opts.desiredL2DaiAddress) {
+    const nextAddress = await getAddressOfNextDeployedContract(opts.l2Deployer)
+    expect(nextAddress.toLowerCase()).to.be.eq(
+      opts.desiredL2DaiAddress.toLowerCase(),
+      'Expected L2DAI address doesnt match with address that will be deployed',
+    )
+  }
   const l2Dai = await deployUsingFactory(opts.l2Deployer, await getL2Factory('Dai'), [opts.L2_TX_OPTS])
   console.log('L2DAI: ', l2Dai.address)
+  if (opts.desiredL2DaiAddress) {
+    expect(l2Dai.address.toLowerCase()).to.be.eq(
+      opts.desiredL2DaiAddress.toLowerCase(),
+      'Expected L2DAI address doesnt match with actual address. This should never happen',
+    )
+  }
+
   const futureL1DAITokenBridgeAddress = await getAddressOfNextDeployedContract(opts.l1Deployer)
   const l2DAITokenBridge = await deployUsingFactory(opts.l2Deployer, await getL2Factory('L2DAITokenBridge'), [
     opts.L2_XDOMAIN_MESSENGER,
