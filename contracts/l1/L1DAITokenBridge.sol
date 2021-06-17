@@ -108,7 +108,7 @@ contract L1DAITokenBridge is iOVM_L1ERC20Bridge, OVM_CrossDomainEnabled {
     uint32 _l2Gas,
     bytes calldata _data
   ) internal {
-    // do not allow initiaitng new xchain messages if bridge is closed
+    // do not allow initiating new xchain messages if bridge is closed
     require(isOpen == 1, "L1DAITokenBridge/closed");
 
     TokenLike(l1Token).transferFrom(_from, escrow, _amount);

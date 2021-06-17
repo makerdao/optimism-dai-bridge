@@ -20,7 +20,7 @@ const errorMessages = {
   daiNotAuthorized: 'Dai/not-authorized',
 }
 
-describe('OVM_L2Gateway', () => {
+describe('OVM_L2DAITokenBridge', () => {
   describe('finalizeDeposit', () => {
     const depositAmount = 100
 
