@@ -56,22 +56,18 @@ contract L1GovernanceRelay is OVM_CrossDomainEnabled {
     l2GovernanceRelay = _l2GovernanceRelay;
   }
 
-  /**
-   * @dev Forward a call to be repeated on L2.
-   */
+  // Forward a call to be repeated on L2
   function relay(address target, bytes calldata targetData, uint32 l2gas) external auth {
-    // Construct calldata for L2GovernanceRelay.relay(target, targetData)
     bytes memory data = abi.encodeWithSelector(
       L2GovernanceRelay.relay.selector,
       target,
       targetData
     );
 
-    // Send calldata into L2
     sendCrossDomainMessage(
       l2GovernanceRelay,
-      data,
-      l2gas
+      l2gas,
+      data
     );
   }
 }

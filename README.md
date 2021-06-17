@@ -10,10 +10,10 @@ Optimism Dai and upgradable token bridge
 ## Contracts
 
 - `dai.sol` - Improved DAI contract.
-- `L1Gateway.sol` - L1 side of the bridge. Escrows L1 DAI in `L1Escrow` contract. Unlocks L1 DAI upon withdrawal message
-  from `L2Gateway`.
-- `L2Gateway.sol` - L2 side of the bridge. Mints new L2 DAI after receiving a message from `L1Gateway`. Burns L2 DAI
-  tokens when withdrawals happen.
+- `L1DAITokenBridge.sol` - L1 side of the bridge. Escrows L1 DAI in `L1Escrow` contract. Unlocks L1 DAI upon withdrawal
+  message from `L2DAITokenBridge`.
+- `L2DAITokenBridge.sol` - L2 side of the bridge. Mints new L2 DAI after receiving a message from `L1DAITokenBridge`.
+  Burns L2 DAI tokens when withdrawals happen.
 - `L1Escrow` - Hold funds on L1. Allows having many bridges coexist on L1 and share liquidity.
 - `L1GovernanceRelay` & `L2GovernanceRelay` - allows to execute a governance spell on L2.
 
@@ -29,13 +29,14 @@ bridge independently and connect to the same escrow. Thanks to this, no bridge w
 After deploying a new bridge you might consider closing the old one. The procedure is slightly complicated due to async
 messages like `finalizeDeposit` and `finalizeWithdraw` that can be in progress.
 
-An owner calls `L2Gateway.close()` and `L1Gateway.close()` so no new async messages can be sent to the other part of the
-bridge. After all async messages are done processing (can take up to 1 week) bridge is effectively closed. Now, you can
-consider revoking approval to access funds from escrow on L1 and token minting rights on L2.
+An owner calls `L2DAITokenBridge.close()` and `L1DAITokenBridge.close()` so no new async messages can be sent to the
+other part of the bridge. After all async messages are done processing (can take up to 1 week) bridge is effectively
+closed. Now, you can consider revoking approval to access funds from escrow on L1 and token minting rights on L2.
 
 ## Emergency shutdown
 
-If ES is triggered, ESM contract can be used to `deny` access from the `PauseProxy` (governance). In such scenario the bridge continues to work as usual and it's impossible to be closed.
+If ES is triggered, ESM contract can be used to `deny` access from the `PauseProxy` (governance). In such scenario the
+bridge continues to work as usual and it's impossible to be closed.
 
 ## Known Risks
 
@@ -48,13 +49,13 @@ In this section, we describe various risks caused by possible **bugs** in Optimi
 Bug allowing to send arbitrary messages from L1 to L2 ie. making `OVM_L2CrossDomainMessenger` to send arbitrary
 messages, could result in minting of uncollateralized L2 DAI. This can be done via:
 
-- sending `finalizeDeposit` messages directly to `L2Gateway`
+- sending `finalizeDeposit` messages directly to `L2DAITokenBridge`
 - granting minting rights by executing malicious spell with `L2GovernanceRelay`
 
 Immediately withdrawing L2 DAI to L1 DAI is not possible because of the dispute period (1 week). In case of such bug,
-governance can disconnect `L1Gateway` from `L1Escrow`, ensuring that no L1 DAI can be stolen. Even with 2 days delay on
-governance actions, there should be plenty of time to coordinate action. Later off-chain coordination is required to
-send DAI back to rightful owners or redeploy Optimism system.
+governance can disconnect `L1DAITokenBridge` from `L1Escrow`, ensuring that no L1 DAI can be stolen. Even with 2 days
+delay on governance actions, there should be plenty of time to coordinate action. Later off-chain coordination is
+required to send DAI back to rightful owners or redeploy Optimism system.
 
 **L2 -> L1 message passing bug**
 
@@ -66,7 +67,7 @@ Bug allowing to send arbitrary messages from L2 to L1 is potentially more harmfu
 
 If (1) happens, an attacker can immediately drain L1 DAI from `L1Escrow`.
 
-If (2) happens, governance can disconnect `L1Gateway` from `L1Escrow` and prevent from stealing L1 DAI.
+If (2) happens, governance can disconnect `L1DAITokenBridge` from `L1Escrow` and prevent from stealing L1 DAI.
 
 ### Governance mistake during upgrade
 
@@ -74,8 +75,8 @@ Bridge upgrade is not a trivial procedure due to the async messages between L1 a
 _Upgrade guide_ in this document.
 
 If governance spell mistakenly revokes old bridge approval to access escrow funds async withdrawal messages will fail.
-Fortunately reverted messages can be replied at later date, so governance has to re-approve old `L1Gateway` to escrow
-funds and process again pending withdrawals.
+Fortunately reverted messages can be replied at later date, so governance has to re-approve old `L1DAITokenBridge` to
+escrow funds and process again pending withdrawals.
 
 ## Invariants
 
@@ -167,11 +168,11 @@ To quickly test Echidna in Linux or MacOS: [release page](https://github.com/cry
 ### Kovan:
 
 ```
-L1 DAI: 0x4F96Fe3b7A6Cf9725f59d353F723c1bDb64CA6Aa # part of MCD deployment on kovan: https://changelog.makerdao.com/
-L1 Gateway:  0x6ee092cDe7B9660015C020ED4666EE90291aBd5d
-L1 Escrow:  0x9b0506371eee93Bb14427692E42c692827dc4468
-L1 Governance Relay:  0xEBb305baff5D3272e74683699E23D117E0fce143
-L2 DAI:  0xaB90DD8836a2Ac1eEF90B639c6895778ca56B0cA
-L2 Gateway:  0xEEC0359d2e689391FCa953364b53887d66057533
-L2 Governance Relay:  0x65943918c69D1aE0eF05f14f08f691B072Bc06eb
+L1DAI: 0x4F96Fe3b7A6Cf9725f59d353F723c1bDb64CA6Aa # part of MCD deployment on kovan: https://changelog.makerdao.com/
+L1Escrow:  0x42cE949bda03A1B9e8785a6005C9A18DfdBf5037
+L1DAITokenBridge:  0xE3C6629173013F7c8fCAC64e77Fb454948748806
+L1Governance Relay:  0x675383242Dbc07C8e130393037aa4C40cb06e1F3
+L2DAI:  0x8b4E5Ab8c90AF4FBCB8a71A86bdC340d9151c96d
+L2DAITokenBridge:  0x506096F7c814188123b538414AbB19BA44B447D9
+L2Governance Relay:  0x90028dB7CE760ea6e30F88573F335026e05fAA19
 ```

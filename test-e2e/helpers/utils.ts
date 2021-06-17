@@ -1,8 +1,9 @@
 import { Watcher } from '@eth-optimism/watcher'
 import { assert } from 'console'
-import { Contract, ethers, providers, Signer, Wallet } from 'ethers'
+import { ContractFactory, ethers, providers, Signer, Wallet } from 'ethers'
 import { readFileSync } from 'fs'
 import { artifacts as hhArtifacts } from 'hardhat'
+import hh from 'hardhat'
 import { join } from 'path'
 
 import { artifacts } from './artifacts'
@@ -63,13 +64,13 @@ export async function printRollupStatus(l1Provider: providers.BaseProvider) {
   console.log('State Commitment Chain all elements: ', stcAllElements.toString())
 }
 
-export async function deployContract<T extends Contract = Contract>(
+export async function deployUsingFactory<T extends ContractFactory>(
   signer: Signer,
-  artifact: any,
-  args: any[] = [],
-): Promise<T> {
-  const contractFactory = new ethers.ContractFactory(artifact.interface, artifact.bytecode, signer)
-  const contractDeployed = await contractFactory.deploy(...args)
+  factory: T,
+  args?: Parameters<T['deploy']>,
+): Promise<ReturnType<T['deploy']>> {
+  const contractFactory = new ethers.ContractFactory(factory.interface, factory.bytecode, signer)
+  const contractDeployed = await contractFactory.deploy(...(args || []))
 
   await contractDeployed.deployed()
 
@@ -123,7 +124,7 @@ export async function setupTest(): Promise<{
   }
 }
 
-export async function getL2Factory(name: string) {
+export const getL2Factory: typeof hh.ethers.getContractFactory = async function getL2Factory(name: string) {
   const l1ArtifactPaths = await hhArtifacts.getArtifactPaths()
   const desiredArtifacts = l1ArtifactPaths.filter((a) => a.endsWith(`/${name}.json`))
   assert(desiredArtifacts.length === 1, "Couldn't find desired artifact or found too many")
@@ -136,4 +137,4 @@ export async function getL2Factory(name: string) {
   const artifact = JSON.parse(readFileSync(l2ArtifactPath, 'utf-8'))
 
   return new ethers.ContractFactory(artifact.abi, artifact.bytecode)
-}
+} as any
