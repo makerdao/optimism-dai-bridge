@@ -4,7 +4,7 @@ pragma solidity >=0.7.6;
 
 interface BridgeLike {
   function close() external;
-  function token() external view returns (address);
+  function l2Token() external view returns (address);
 }
 
 interface AuthLike {
@@ -19,9 +19,10 @@ contract TestBridgeUpgradeSpell {
 
   function upgradeBridge(address _oldBridge, address _newBridge) external {
     BridgeLike oldBridge = BridgeLike(_oldBridge);
-    AuthLike dai = AuthLike(oldBridge.token());
+    AuthLike dai = AuthLike(oldBridge.l2Token());
 
     oldBridge.close();
+    // note: ususally you wouldn't "deny" right away b/c of async messages
     dai.deny(_oldBridge);
     dai.rely(_newBridge);
   }

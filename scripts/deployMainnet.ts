@@ -4,11 +4,12 @@
  * In such setup xchain messages doesn't work.
  */
 require('dotenv').config()
-import hre from 'hardhat'
 import { JsonRpcProvider } from '@ethersproject/providers'
-import { deploy } from './common'
-import { ZERO_GAS_OPTS } from '../test-e2e/helpers/utils'
+import hre from 'hardhat'
 import { assert } from 'ts-essentials'
+
+import { ZERO_GAS_OPTS } from '../test-e2e/helpers/utils'
+import { deploy } from './common'
 
 const L1_PAUSE_PROXY_ADDRESS = '0xBE8E3e3618f7474F8cB1d074A26afFef007E98FB'
 const L1_ESM_ADDRESS = '0x29CfBd381043D00a98fD9904a431015Fef07af2f'
@@ -22,7 +23,6 @@ const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 
 async function main() {
   console.log('Deploying on mainnet')
-  const { ethers: l1 } = hre
   await hre.network.provider.request({
     method: 'hardhat_impersonateAccount',
     params: [L1_DEPLOYER_ADDRESS],
@@ -32,8 +32,7 @@ async function main() {
   const l2Provider = new JsonRpcProvider(L2_RPC_URL)
   const l2Deployer = new hre.ethers.Wallet(L2_DEPLOYER_PRIV_KEY, l2Provider)
 
-  await deploy({
-    l1: l1,
+  const deploymentInfo = await deploy({
     l1Deployer: deployer,
     l2Deployer: l2Deployer,
     L1_DAI_ADDRESS,
@@ -44,6 +43,18 @@ async function main() {
     L1_TX_OPTS: ZERO_GAS_OPTS,
     L2_TX_OPTS: ZERO_GAS_OPTS,
   })
+
+  const allContractInfo = {
+    l1Dai: L1_DAI_ADDRESS,
+    l1Escrow: deploymentInfo.l1Escrow.address,
+    l1DAITokenBridge: deploymentInfo.l1DAITokenBridge.address,
+    l1GovernanceRelay: deploymentInfo.l1GovernanceRelay.address,
+    l2DAITokenBridge: deploymentInfo.l2DAITokenBridge.address,
+    l2Dai: deploymentInfo.l2Dai.address,
+    l2GovernanceRelay: deploymentInfo.l2GovernanceRelay.address,
+  }
+
+  console.log(JSON.stringify(allContractInfo, null, 2))
 }
 
 main()

@@ -3,13 +3,14 @@ import { expect } from 'chai'
 import { ethers } from 'hardhat'
 
 import { Dai__factory, L2GovernanceRelay__factory, TestDaiMintSpell__factory } from '../../typechain'
-import { deploy, deployMock, deployOptimismContractMock } from '../helpers'
+import { BadSpell__factory } from '../../typechain/factories/BadSpell__factory'
+import { assertPublicMethods, deploy, deployMock, deployOptimismContractMock } from '../helpers'
 
 const errorMessages = {
   invalidMessenger: 'OVM_XCHAIN: messenger contract unauthenticated',
   invalidXDomainMessageOriginator: 'OVM_XCHAIN: wrong sender of cross-domain message',
-  alreadyInitialized: 'Contract has already been initialized',
-  notInitialized: 'Contract has not yet been initialized',
+  delegatecallError: 'L2GovernanceRelay/delegatecall-error',
+  illegalStorageChange: 'L2GovernanceRelay/illegal-storage-change',
 }
 
 describe('OVM_L2GovernanceRelay', () => {
@@ -66,36 +67,56 @@ describe('OVM_L2GovernanceRelay', () => {
         errorMessages.invalidXDomainMessageOriginator,
       )
     })
+
+    it('reverts when spell tries to modify storage', async () => {
+      const [_, l2MessengerImpersonator, user1] = await ethers.getSigners()
+      const { l1GovernanceRelay, l2GovernanceRelay, l2CrossDomainMessengerMock } = await setupTest({
+        l2MessengerImpersonator,
+        user1,
+      })
+      const badSpell = await deploy<BadSpell__factory>('BadSpell')
+      l2CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l1GovernanceRelay.address)
+
+      await expect(
+        l2GovernanceRelay
+          .connect(l2MessengerImpersonator)
+          .relay(badSpell.address, badSpell.interface.encodeFunctionData('modifyStorage')),
+      ).to.be.revertedWith(errorMessages.illegalStorageChange)
+    })
+
+    it('reverts when spell reverts', async () => {
+      const [_, l2MessengerImpersonator, user1] = await ethers.getSigners()
+      const { l1GovernanceRelay, l2GovernanceRelay, l2CrossDomainMessengerMock } = await setupTest({
+        l2MessengerImpersonator,
+        user1,
+      })
+      const badSpell = await deploy<BadSpell__factory>('BadSpell')
+      l2CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l1GovernanceRelay.address)
+
+      await expect(
+        l2GovernanceRelay
+          .connect(l2MessengerImpersonator)
+          .relay(badSpell.address, badSpell.interface.encodeFunctionData('abort')),
+      ).to.be.revertedWith(errorMessages.delegatecallError)
+    })
   })
 
-  describe('init', () => {
-    it('sets token gateway', async () => {
-      const [acc1, acc2] = await ethers.getSigners()
+  describe('constructor', () => {
+    it('assigns all variables properly', async () => {
+      const [l2Messenger, l1GovRelay] = await ethers.getSigners()
 
-      const l2GovernanceRelay = await deploy<L2GovernanceRelay__factory>('L2GovernanceRelay', [acc1.address])
+      const l2GovRelay = await deploy<L2GovernanceRelay__factory>('L2GovernanceRelay', [
+        l2Messenger.address,
+        l1GovRelay.address,
+      ])
 
-      await l2GovernanceRelay.init(acc2.address)
-
-      expect(await l2GovernanceRelay.l1GovernanceRelay()).to.eq(acc2.address)
+      expect(await l2GovRelay.messenger()).to.eq(l2Messenger.address)
+      expect(await l2GovRelay.l1GovernanceRelay()).to.eq(l1GovRelay.address)
     })
+  })
 
-    it('allows initialization once not multiple times', async () => {
-      const [acc1, acc2] = await ethers.getSigners()
-
-      const l2GovernanceRelay = await deploy<L2GovernanceRelay__factory>('L2GovernanceRelay', [acc1.address])
-
-      await l2GovernanceRelay.init(acc2.address)
-
-      await expect(l2GovernanceRelay.init(acc2.address)).to.be.revertedWith(errorMessages.alreadyInitialized)
-    })
-
-    it('doesnt allow calls to onlyInitialized functions before initialization', async () => {
-      const [acc1, acc2] = await ethers.getSigners()
-
-      const l2GovernanceRelay = await deploy<L2GovernanceRelay__factory>('L2GovernanceRelay', [acc1.address])
-
-      await expect(l2GovernanceRelay.relay(acc2.address, [])).to.be.revertedWith(errorMessages.notInitialized)
-    })
+  it('has correct public interface', async () => {
+    await assertPublicMethods('L2GovernanceRelay', ['relay(address,bytes)'])
   })
 })
 
@@ -105,14 +126,15 @@ async function setupTest(signers: { l2MessengerImpersonator: SignerWithAddress; 
     { address: await signers.l2MessengerImpersonator.getAddress() }, // This allows us to use an ethers override {from: Mock__OVM_L2CrossDomainMessenger.address} to mock calls
   )
   const l2Dai = await deploy<Dai__factory>('Dai', [])
+
+  const l1GovernanceRelay = await deployMock('L1GovernanceRelay')
   const l2GovernanceRelay = await deploy<L2GovernanceRelay__factory>('L2GovernanceRelay', [
     l2CrossDomainMessengerMock.address,
+    l1GovernanceRelay.address,
   ])
-  const l2daiMintSpell = await deploy<TestDaiMintSpell__factory>('TestDaiMintSpell', [])
-  const l1GovernanceRelay = await deployMock('L1GovernanceRelay')
-
   await l2Dai.rely(l2GovernanceRelay.address)
-  await l2GovernanceRelay.init(l1GovernanceRelay.address)
+
+  const l2daiMintSpell = await deploy<TestDaiMintSpell__factory>('TestDaiMintSpell', [])
 
   return { l2Dai, l1GovernanceRelay, l2CrossDomainMessengerMock, l2GovernanceRelay, l2daiMintSpell }
 }
