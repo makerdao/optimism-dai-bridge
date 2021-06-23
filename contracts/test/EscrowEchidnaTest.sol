@@ -3,55 +3,27 @@
 pragma solidity 0.7.6;
 
 import "../l1/L1Escrow.sol";
-import "../l1/L1Gateway.sol";
-import "../l2/L2Gateway.sol";
 import "../l2/dai.sol";
 import "./l1dai.sol";
-import "@eth-optimism/contracts/iOVM/bridge/messaging/iAbs_BaseCrossDomainMessenger.sol";
-
-contract MockMessenger is iAbs_BaseCrossDomainMessenger {
-  function xDomainMessageSender()
-    public
-    override
-    view
-    returns (address)
-  {
-    require(false, "not implemented");
-  }
-  function sendMessage(
-    address _target,
-    bytes calldata _message,
-    uint32 _gasLimit
-  ) external override {
-      (bool success,) = _target.call(_message);
-  }
-}
 
 /// @dev Escrow Echidna Testing
-contract EscrowEchidnaTest is MockMessenger {
+contract EscrowEchidnaTest {
 
     L1Dai internal dai;
     L1Escrow internal escrow;
-    MockMessenger internal messenger;
-    L2Gateway internal gate2;
-    L1Gateway internal gate1;
     Dai internal oDai;
 
     uint256 internal constant chainId = 1;
     uint256 internal constant WAD = 10**18;
     uint256 internal constant MAX_SUPPLY = 10**15 * WAD;
 
-    /// @dev
+    /// @dev Instantiate the dai, oDai and escrow contract, and set dai allowance
     constructor () {
         dai = new L1Dai(chainId);
         oDai = new Dai();
         escrow = new L1Escrow();
-        messenger = new MockMessenger();
-        gate2 = new L2Gateway(address(messenger), address(oDai));
-        gate1 = new L1Gateway(address(dai), address(gate2), address(messenger), address(escrow));
-        gate2.init(gate1);
-        escrow.approve(address(dai), address(gate1), type(uint256).max);
-        dai.approve(address(gate1), type(uint256).max);
+        escrow.approve(address(dai), address(this), type(uint256).max);
+        dai.approve(address(this), type(uint256).max);
     }
 
     // --- Math ---
@@ -61,28 +33,35 @@ contract EscrowEchidnaTest is MockMessenger {
     }
     function sub(uint256 x, uint256 y) internal pure returns (uint256 z) {
         z = x - y;
-        assert (z <= x); // check if there is a subtraction overflow
+        assert (z <= x); // check if there is a subtraction underflow
     }
 
-    /// @dev
+    /// @dev Test that supply and balance hold on deposit
     function deposit(uint256 wad) public {
         uint256 supply = dai.totalSupply();
         uint256 thisBalance = dai.balanceOf(address(this));
         uint256 escrowBalance = dai.balanceOf(address(escrow));
-        wad = 1 + wad % sub(MAX_SUPPLY, supply);
+        wad = wad % MAX_SUPPLY;
+        if (wad < WAD) wad = (1 + wad) * WAD;
         dai.mint(address(this), wad);
         assert(dai.balanceOf(address(this)) == add(thisBalance, wad));
-        gate1.deposit(wad);
+        dai.transferFrom(address(this), address(escrow), wad);
+        oDai.mint(address(this), wad);
         assert(dai.balanceOf(address(escrow)) == add(escrowBalance, wad));
+        assert(oDai.totalSupply() > 0); // sanity check
         assert(dai.balanceOf(address(escrow)) == oDai.totalSupply());
     }
+
+    /// @dev Test that supply and balance hold on withdraw
     function withdraw(uint256 wad) public {
-        deposit(wad);
         uint256 supply = oDai.totalSupply();
-        wad = 1 + wad % sub(MAX_SUPPLY, supply);
+        wad = wad % MAX_SUPPLY;
+        if (wad < WAD) wad = (1 + wad) * WAD;
+        deposit(wad);
         uint256 escrowBalance = dai.balanceOf(address(escrow));
         uint256 thisBalance = dai.balanceOf(address(this));
-        gate2.withdraw(wad);
+        oDai.burn(address(this), wad);
+        dai.transferFrom(address(escrow), address(this), wad);
         assert(dai.balanceOf(address(escrow)) == sub(escrowBalance, wad));
         assert(dai.balanceOf(address(this)) == add(thisBalance, wad));
         assert(dai.balanceOf(address(escrow)) == oDai.totalSupply());
