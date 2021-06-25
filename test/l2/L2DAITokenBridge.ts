@@ -260,26 +260,12 @@ describe('OVM_L2DAITokenBridge', () => {
       ).to.be.revertedWith(errorMessages.tokenMismatch)
     })
 
-    it('reverts when approval is too low', async () => {
-      const [_, l2MessengerImpersonator, user1, user2] = await ethers.getSigners()
-      const { l2Dai, l2DAITokenBridge } = await setupWithdrawTest({
-        l2MessengerImpersonator,
-        user1,
-      })
-      await l2Dai.connect(user1).transfer(user2.address, withdrawAmount)
-
-      await expect(
-        l2DAITokenBridge.connect(user2).withdraw(l2Dai.address, withdrawAmount, defaultGas, defaultData),
-      ).to.be.revertedWith(errorMessages.daiInsufficientAllowance)
-    })
-
     it('reverts when not enough funds', async () => {
       const [_, l2MessengerImpersonator, user1, user2] = await ethers.getSigners()
       const { l2Dai, l2DAITokenBridge } = await setupWithdrawTest({
         l2MessengerImpersonator,
         user1,
       })
-      await l2Dai.connect(user1).approve(l2DAITokenBridge.address, withdrawAmount)
 
       await expect(
         l2DAITokenBridge.connect(user2).withdraw(l2Dai.address, withdrawAmount, defaultGas, defaultData),
@@ -396,28 +382,12 @@ describe('OVM_L2DAITokenBridge', () => {
       ).to.be.revertedWith(errorMessages.tokenMismatch)
     })
 
-    it('reverts when approval is too low', async () => {
-      const [_, l2MessengerImpersonator, receiver, user1, user2] = await ethers.getSigners()
-      const { l2Dai, l2DAITokenBridge } = await setupWithdrawTest({
-        l2MessengerImpersonator,
-        user1,
-      })
-      await l2Dai.connect(user1).transfer(user2.address, withdrawAmount)
-
-      await expect(
-        l2DAITokenBridge
-          .connect(user2)
-          .withdrawTo(l2Dai.address, receiver.address, withdrawAmount, defaultGas, defaultData),
-      ).to.be.revertedWith(errorMessages.daiInsufficientAllowance)
-    })
-
     it('reverts when not enough funds', async () => {
       const [_, l2MessengerImpersonator, receiver, user1, user2] = await ethers.getSigners()
       const { l2Dai, l2DAITokenBridge } = await setupWithdrawTest({
         l2MessengerImpersonator,
         user1,
       })
-      await l2Dai.connect(user1).approve(l2DAITokenBridge.address, withdrawAmount)
 
       await expect(
         l2DAITokenBridge
@@ -547,7 +517,6 @@ async function setupWithdrawTest(signers: { l2MessengerImpersonator: SignerWithA
   const contracts = await setupTest(signers)
 
   await contracts.l2Dai.mint(signers.user1.address, INITIAL_TOTAL_L1_SUPPLY)
-  await contracts.l2Dai.connect(signers.user1).approve(contracts.l2DAITokenBridge.address, ethers.constants.MaxUint256)
 
   return contracts
 }
