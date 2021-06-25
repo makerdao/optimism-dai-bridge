@@ -67,12 +67,26 @@ export async function printRollupStatus(l1Provider: providers.BaseProvider) {
 export async function deployUsingFactory<T extends ContractFactory>(
   signer: Signer,
   factory: T,
-  args?: Parameters<T['deploy']>,
+  args: Parameters<T['deploy']>,
 ): Promise<ReturnType<T['deploy']>> {
   const contractFactory = new ethers.ContractFactory(factory.interface, factory.bytecode, signer)
-  const contractDeployed = await contractFactory.deploy(...(args || []))
+  const contractDeployed = await contractFactory.deploy(...(args as any))
 
   await contractDeployed.deployed()
+
+  return contractDeployed as any
+}
+
+export async function deployUsingFactoryAndVerify<T extends ContractFactory>(
+  signer: Signer,
+  factory: T,
+  args: Parameters<T['deploy']>,
+): Promise<ReturnType<T['deploy']>> {
+  const contractDeployed = await deployUsingFactory(signer, factory, args)
+
+  console.log(
+    `npx hardhat verify ${contractDeployed.address} ${args.filter((a: any) => a.gasPrice === undefined).join(' ')}`,
+  )
 
   return contractDeployed as any
 }

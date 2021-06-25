@@ -136,7 +136,6 @@ describe('bridge', () => {
     const balance = await l2Dai.balanceOf(l1Signer.address)
     expect(balance.toString()).to.be.eq(depositAmount)
 
-    await waitForTx(l2Dai.approve(l2DAITokenBridge.address, depositAmount, ZERO_GAS_OPTS))
     await waitToRelayMessageToL1(
       l2DAITokenBridge.withdraw(l2Dai.address, depositAmount, defaultGasLimit, '0x', ZERO_GAS_OPTS),
       watcher,
@@ -217,7 +216,6 @@ describe('bridge', () => {
     const balance = await l2Dai.balanceOf(l1Signer.address)
     expect(balance.toString()).to.be.eq(depositAmount)
 
-    await waitForTx(l2Dai.approve(l2DAITokenBridgeV2.address, depositAmount, ZERO_GAS_OPTS))
     await waitToRelayMessageToL1(
       l2DAITokenBridgeV2.withdraw(l2Dai.address, depositAmount, defaultGasLimit, '0x', ZERO_GAS_OPTS),
       watcher,
