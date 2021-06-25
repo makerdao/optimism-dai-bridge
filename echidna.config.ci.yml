@@ -4,3 +4,7 @@ format: 'text'
 checkAsserts: true
 #coverage controls coverage guided testing
 coverage: false
+#deployer is address of the contract deployer (who often is privileged owner, etc.)
+deployer: '0x41414141'
+#sender is set of addresses transactions may originate from
+sender: ['0x42424242', '0x43434343']
