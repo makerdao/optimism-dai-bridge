@@ -82,7 +82,7 @@ export async function deployUsingFactoryAndVerify<T extends ContractFactory>(
   factory: T,
   args: Parameters<T['deploy']>,
 ): Promise<ReturnType<T['deploy']>> {
-  const contractDeployed = await deployUsingFactoryAndVerify(signer, factory, args)
+  const contractDeployed = await deployUsingFactory(signer, factory, args)
 
   console.log(
     `npx hardhat verify ${contractDeployed.address} ${args.filter((a: any) => a.gasPrice === undefined).join(' ')}`,
