@@ -4,7 +4,7 @@ import { ethers as l1 } from 'hardhat'
 
 import { getAddressOfNextDeployedContract } from '../test-e2e/helpers/address'
 import { getActiveWards } from '../test-e2e/helpers/auth'
-import { deployUsingFactory, getL2Factory, MAX_UINT256, waitForTx } from '../test-e2e/helpers/utils'
+import { deployUsingFactoryAndVerify, getL2Factory, MAX_UINT256, waitForTx } from '../test-e2e/helpers/utils'
 
 interface Options {
   l1Deployer: Signer
@@ -24,7 +24,9 @@ interface Options {
 
 export async function deploy(opts: Options) {
   // Bridge deploy
-  const l1Escrow = await deployUsingFactory(opts.l1Deployer, await l1.getContractFactory('L1Escrow'), [opts.L1_TX_OPTS])
+  const l1Escrow = await deployUsingFactoryAndVerify(opts.l1Deployer, await l1.getContractFactory('L1Escrow'), [
+    opts.L1_TX_OPTS,
+  ])
   console.log('L1Escrow: ', l1Escrow.address)
   // note: we might want to use a dedicated deployer address that deploys very first contract on a vanity address
   // so it's critical that L2DAI is the first contract deployed using l2Deployer
@@ -35,7 +37,7 @@ export async function deploy(opts: Options) {
       'Expected L2DAI address doesnt match with address that will be deployed',
     )
   }
-  const l2Dai = await deployUsingFactory(opts.l2Deployer, await getL2Factory('Dai'), [opts.L2_TX_OPTS])
+  const l2Dai = await deployUsingFactoryAndVerify(opts.l2Deployer, await getL2Factory('Dai'), [opts.L2_TX_OPTS])
   console.log('L2DAI: ', l2Dai.address)
   if (opts.desiredL2DaiAddress) {
     expect(l2Dai.address.toLowerCase()).to.be.eq(
@@ -45,7 +47,7 @@ export async function deploy(opts: Options) {
   }
 
   const futureL1DAITokenBridgeAddress = await getAddressOfNextDeployedContract(opts.l1Deployer)
-  const l2DAITokenBridge = await deployUsingFactory(opts.l2Deployer, await getL2Factory('L2DAITokenBridge'), [
+  const l2DAITokenBridge = await deployUsingFactoryAndVerify(opts.l2Deployer, await getL2Factory('L2DAITokenBridge'), [
     opts.L2_XDOMAIN_MESSENGER,
     l2Dai.address,
     opts.L1_DAI_ADDRESS,
@@ -53,14 +55,18 @@ export async function deploy(opts: Options) {
     opts.L2_TX_OPTS,
   ])
   console.log('L2DAITokenBridge: ', l2DAITokenBridge.address)
-  const l1DAITokenBridge = await deployUsingFactory(opts.l1Deployer, await l1.getContractFactory('L1DAITokenBridge'), [
-    opts.L1_DAI_ADDRESS,
-    l2DAITokenBridge.address,
-    l2Dai.address,
-    opts.L1_XDOMAIN_MESSENGER,
-    l1Escrow.address,
-    opts.L1_TX_OPTS,
-  ])
+  const l1DAITokenBridge = await deployUsingFactoryAndVerify(
+    opts.l1Deployer,
+    await l1.getContractFactory('L1DAITokenBridge'),
+    [
+      opts.L1_DAI_ADDRESS,
+      l2DAITokenBridge.address,
+      l2Dai.address,
+      opts.L1_XDOMAIN_MESSENGER,
+      l1Escrow.address,
+      opts.L1_TX_OPTS,
+    ],
+  )
   expect(l1DAITokenBridge.address).to.be.eq(
     futureL1DAITokenBridgeAddress,
     'Predicted address of l1DAITokenBridge doesnt match actual address',
@@ -69,13 +75,13 @@ export async function deploy(opts: Options) {
 
   // Governance deploy
   const futureL1GovRelayAddress = await getAddressOfNextDeployedContract(opts.l1Deployer)
-  const l2GovernanceRelay = await deployUsingFactory(opts.l2Deployer, await getL2Factory('L2GovernanceRelay'), [
-    opts.L2_XDOMAIN_MESSENGER,
-    futureL1GovRelayAddress,
-    opts.L2_TX_OPTS,
-  ])
+  const l2GovernanceRelay = await deployUsingFactoryAndVerify(
+    opts.l2Deployer,
+    await getL2Factory('L2GovernanceRelay'),
+    [opts.L2_XDOMAIN_MESSENGER, futureL1GovRelayAddress, opts.L2_TX_OPTS],
+  )
   console.log('L2Governance Relay: ', l2GovernanceRelay.address)
-  const l1GovernanceRelay = await deployUsingFactory(
+  const l1GovernanceRelay = await deployUsingFactoryAndVerify(
     opts.l1Deployer,
     await l1.getContractFactory('L1GovernanceRelay'),
     [l2GovernanceRelay.address, opts.L1_XDOMAIN_MESSENGER, opts.L1_TX_OPTS],
