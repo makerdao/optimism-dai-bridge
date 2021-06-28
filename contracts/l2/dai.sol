@@ -106,7 +106,7 @@ contract Dai {
 
     return true;
   }
-  function transferFrom(address from, address to, uint256 value) external returns (bool) {
+  function transferFrom(address from, address to, uint256 value) public returns (bool) {
     require(to != address(0) && to != address(this), "Dai/invalid-address");
     uint256 balance = balanceOf[from];
     require(balance >= value, "Dai/insufficient-balance");
@@ -178,6 +178,17 @@ contract Dai {
     totalSupply     = _sub(totalSupply, value);
 
     emit Transfer(from, address(0), value);
+  }
+
+  // --- Alias ---
+  function push(address usr, uint wad) external {
+    transferFrom(msg.sender, usr, wad);
+  }
+  function pull(address usr, uint wad) external {
+    transferFrom(usr, msg.sender, wad);
+  }
+  function move(address src, address dst, uint wad) external {
+    transferFrom(src, dst, wad);
   }
 
   // --- Approve by signature ---
