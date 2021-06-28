@@ -21,7 +21,7 @@ pragma solidity 0.7.6;
 // Improved Dai token
 
 contract Dai {
-    
+
   // --- Auth ---
   mapping (address => uint256) public wards;
   function rely(address usr) external auth {
@@ -54,10 +54,10 @@ contract Dai {
   event Deny(address indexed usr);
 
   // --- Math ---
-  function add(uint256 x, uint256 y) internal pure returns (uint256 z) {
+  function _add(uint256 x, uint256 y) internal pure returns (uint256 z) {
     require((z = x + y) >= x);
   }
-  function sub(uint256 x, uint256 y) internal pure returns (uint256 z) {
+  function _sub(uint256 x, uint256 y) internal pure returns (uint256 z) {
     require((z = x - y) <= x);
   }
 
@@ -135,7 +135,7 @@ contract Dai {
     return true;
   }
   function increaseAllowance(address spender, uint256 addedValue) external returns (bool) {
-    uint256 newValue = add(allowance[msg.sender][spender], addedValue);
+    uint256 newValue = _add(allowance[msg.sender][spender], addedValue);
     allowance[msg.sender][spender] = newValue;
 
     emit Approval(msg.sender, spender, newValue);
@@ -152,12 +152,12 @@ contract Dai {
 
     return true;
   }
-  
+
   // --- Mint/Burn ---
   function mint(address to, uint256 value) external auth {
     require(to != address(0) && to != address(this), "Dai/invalid-address");
-    balanceOf[to] = add(balanceOf[to], value);
-    totalSupply   = add(totalSupply, value);
+    balanceOf[to] = _add(balanceOf[to], value);
+    totalSupply   = _add(totalSupply, value);
 
     emit Transfer(address(0), to, value);
   }
@@ -175,7 +175,7 @@ contract Dai {
     }
 
     balanceOf[from] = balance - value;
-    totalSupply     = sub(totalSupply, value);
+    totalSupply     = _sub(totalSupply, value);
 
     emit Transfer(from, address(0), value);
   }
