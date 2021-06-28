@@ -68,6 +68,28 @@ describe('Dai', () => {
         expect(balanceAfter).to.be.eq(balanceBefore)
       })
 
+      it('transfers dai using push', async () => {
+        const balanceBefore = await dai.balanceOf(signers.user2.address)
+        await dai.connect(signers.user1).push(signers.user2.address, 1)
+        const balanceAfter = await dai.balanceOf(signers.user2.address)
+        expect(balanceAfter).to.be.eq(balanceBefore.add(1))
+      })
+
+      it('transfers dai using pull', async () => {
+        const balanceBefore = await dai.balanceOf(signers.user2.address)
+        await dai.connect(signers.user1).approve(signers.user2.address, 1)
+        await dai.connect(signers.user2).pull(signers.user1.address, 1)
+        const balanceAfter = await dai.balanceOf(signers.user2.address)
+        expect(balanceAfter).to.be.eq(balanceBefore.add(1))
+      })
+
+      it('transfers dai using move', async () => {
+        const balanceBefore = await dai.balanceOf(signers.user2.address)
+        await dai.connect(signers.user1).move(signers.user1.address, signers.user2.address, 1)
+        const balanceAfter = await dai.balanceOf(signers.user2.address)
+        expect(balanceAfter).to.be.eq(balanceBefore.add(1))
+      })
+
       it('should not transfer beyond balance', async () => {
         await expect(dai.connect(signers.user1).transfer(signers.user2.address, 100)).to.be.revertedWith(
           'Dai/insufficient-balance',
@@ -375,7 +397,10 @@ describe('Dai', () => {
       'decreaseAllowance(address,uint256)',
       'increaseAllowance(address,uint256)',
       'mint(address,uint256)',
+      'move(address,address,uint256)',
       'permit(address,address,uint256,uint256,uint8,bytes32,bytes32)',
+      'pull(address,uint256)',
+      'push(address,uint256)',
       'transfer(address,uint256)',
       'transferFrom(address,address,uint256)',
     ])
