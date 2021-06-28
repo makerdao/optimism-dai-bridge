@@ -6,52 +6,46 @@
 require('dotenv').config()
 import { JsonRpcProvider } from '@ethersproject/providers'
 import hre from 'hardhat'
-import { assert } from 'ts-essentials'
+import { mapValues } from 'lodash'
 
 import { ZERO_GAS_OPTS } from '../test-e2e/helpers/utils'
-import { deploy } from './common'
+import { deploy, getRequiredEnv } from './common'
 
-const L1_PAUSE_PROXY_ADDRESS = '0xBE8E3e3618f7474F8cB1d074A26afFef007E98FB'
-const L1_ESM_ADDRESS = '0x29CfBd381043D00a98fD9904a431015Fef07af2f'
-const L1_DAI_ADDRESS = '0x6B175474E89094C44Da98b954EedeAC495271d0F'
-const L1_DEPLOYER_ADDRESS = '0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B'
-const L2_XDOMAIN_MESSENGER = '0x4200000000000000000000000000000000000007'
-assert(process.env.L2_TESTNET_DEPLOYER_PRIV_KEY, 'Please provide L2_TESTNET_DEPLOYER_PRIV_KEY in .env file')
-const L2_DEPLOYER_PRIV_KEY = process.env.L2_TESTNET_DEPLOYER_PRIV_KEY
-const L2_RPC_URL = 'https://kovan.optimism.io/'
-const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
+const L1_MAINNET_RPC_URL = getRequiredEnv('L1_MAINNET_RPC_URL')
+const L1_MAINNET_DEPLOYER_PRIV_KEY = getRequiredEnv('L1_MAINNET_DEPLOYER_PRIV_KEY')
+const L2_MAINNET_RPC_URL = getRequiredEnv('L2_MAINNET_RPC_URL')
+const L2_MAINNET_DEPLOYER_PRIV_KEY = getRequiredEnv('L2_MAINNET_DEPLOYER_PRIV_KEY')
+
+const L1_MAINNET_PAUSE_PROXY_ADDRESS = '0xBE8E3e3618f7474F8cB1d074A26afFef007E98FB'
+const L1_MAINNET_ESM_ADDRESS = '0x29CfBd381043D00a98fD9904a431015Fef07af2f'
+const L1_MAINNET_DAI_ADDRESS = '0x6B175474E89094C44Da98b954EedeAC495271d0F'
+const L1_MAINNET_XDOMAIN_MESSENGER = '0x25ace71c97B33Cc4729CF772ae268934F7ab5fA1'
+const L2_MAINNET_XDOMAIN_MESSENGER = '0x4200000000000000000000000000000000000007'
 
 async function main() {
   console.log('Deploying on mainnet')
-  await hre.network.provider.request({
-    method: 'hardhat_impersonateAccount',
-    params: [L1_DEPLOYER_ADDRESS],
-  })
-  const deployer = hre.ethers.provider.getSigner(L1_DEPLOYER_ADDRESS)
+  const l1Provider = new JsonRpcProvider(L1_MAINNET_RPC_URL)
+  const l1Deployer = new hre.ethers.Wallet(L1_MAINNET_DEPLOYER_PRIV_KEY, l1Provider)
 
-  const l2Provider = new JsonRpcProvider(L2_RPC_URL)
-  const l2Deployer = new hre.ethers.Wallet(L2_DEPLOYER_PRIV_KEY, l2Provider)
+  const l2Provider = new JsonRpcProvider(L2_MAINNET_RPC_URL)
+  const l2Deployer = new hre.ethers.Wallet(L2_MAINNET_DEPLOYER_PRIV_KEY, l2Provider)
 
   const deploymentInfo = await deploy({
-    l1Deployer: deployer,
+    desiredL2DaiAddress: '0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1',
+    l1Deployer: l1Deployer,
     l2Deployer: l2Deployer,
-    L1_DAI_ADDRESS,
-    L1_PAUSE_PROXY_ADDRESS,
-    L1_ESM_ADDRESS,
-    L2_XDOMAIN_MESSENGER,
-    L1_XDOMAIN_MESSENGER: ZERO_ADDRESS, // not deployed on forked mainnet for now
-    L1_TX_OPTS: ZERO_GAS_OPTS,
+    L1_DAI_ADDRESS: L1_MAINNET_DAI_ADDRESS,
+    L1_PAUSE_PROXY_ADDRESS: L1_MAINNET_PAUSE_PROXY_ADDRESS,
+    L1_ESM_ADDRESS: L1_MAINNET_ESM_ADDRESS,
+    L1_XDOMAIN_MESSENGER: L1_MAINNET_XDOMAIN_MESSENGER,
+    L2_XDOMAIN_MESSENGER: L2_MAINNET_XDOMAIN_MESSENGER,
+    L1_TX_OPTS: {},
     L2_TX_OPTS: ZERO_GAS_OPTS,
   })
 
   const allContractInfo = {
-    l1Dai: L1_DAI_ADDRESS,
-    l1Escrow: deploymentInfo.l1Escrow.address,
-    l1DAITokenBridge: deploymentInfo.l1DAITokenBridge.address,
-    l1GovernanceRelay: deploymentInfo.l1GovernanceRelay.address,
-    l2DAITokenBridge: deploymentInfo.l2DAITokenBridge.address,
-    l2Dai: deploymentInfo.l2Dai.address,
-    l2GovernanceRelay: deploymentInfo.l2GovernanceRelay.address,
+    l1Dai: L1_MAINNET_DAI_ADDRESS,
+    ...mapValues(deploymentInfo, (v) => v.address),
   }
 
   console.log(JSON.stringify(allContractInfo, null, 2))
