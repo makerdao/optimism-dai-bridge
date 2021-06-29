@@ -4,6 +4,7 @@ import { ContractFactory, ethers, providers, Signer, Wallet } from 'ethers'
 import { readFileSync } from 'fs'
 import { artifacts as hhArtifacts } from 'hardhat'
 import hh from 'hardhat'
+import { isEmpty } from 'lodash'
 import { join } from 'path'
 
 import { artifacts } from './artifacts'
@@ -85,7 +86,9 @@ export async function deployUsingFactoryAndVerify<T extends ContractFactory>(
   const contractDeployed = await deployUsingFactory(signer, factory, args)
 
   console.log(
-    `npx hardhat verify ${contractDeployed.address} ${args.filter((a: any) => a.gasPrice === undefined).join(' ')}`,
+    `npx hardhat verify ${contractDeployed.address} ${args
+      .filter((a: any) => a.gasPrice === undefined && !isEmpty(a))
+      .join(' ')}`,
   )
 
   return contractDeployed as any

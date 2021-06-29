@@ -16,7 +16,7 @@
     "test": "hardhat test",
     "test-e2e": "mocha --config .mocharc-e2e.js",
     "test:fix": "yarn lint:fix && yarn format:fix && yarn test && yarn typecheck",
-    "deploy:mainnet-fork": "FORKMODE=1 TS_NODE_TRANSPILE_ONLY=1 ts-node ./scripts/deployMainnet.ts",
+    "deploy:mainnet": "TS_NODE_TRANSPILE_ONLY=1 ts-node ./scripts/deployMainnet.ts",
     "deploy:kovan": "TS_NODE_TRANSPILE_ONLY=1 ts-node ./scripts/deployKovan.ts"
   },
   "dependencies": {
@@ -36,6 +36,7 @@
     "@typechain/ethers-v5": "^7.0.0",
     "@typechain/hardhat": "^2.0.0",
     "@types/chai": "^4.2.12",
+    "@types/lodash": "^4.14.170",
     "@types/mocha": "^8.0.3",
     "@types/node": "^14.6.0",
     "@types/utf8": "^2.1.6",
@@ -56,6 +57,7 @@
     "ethers": "^5.1.3",
     "hardhat": "=2.1.1",
     "hardhat-gas-reporter": "^1.0.4",
+    "lodash": "^4.17.21",
     "mocha": "^8.1.1",
     "prettier": "^2.2.1",
     "ts-essentials": "^7.0.1",
