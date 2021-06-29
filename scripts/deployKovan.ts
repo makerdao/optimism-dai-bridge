@@ -6,7 +6,6 @@ import { JsonRpcProvider } from '@ethersproject/providers'
 import hre from 'hardhat'
 import { mapValues } from 'lodash'
 
-import { ZERO_GAS_OPTS } from '../test-e2e/helpers/utils'
 import { deploy, getRequiredEnv } from './common'
 
 // optimism's addresses: https://github.com/ethereum-optimism/optimism/tree/master/packages/contracts/deployments
@@ -42,7 +41,7 @@ async function main() {
     L1_TX_OPTS: {
       gasPrice: 3000000000, // 3 gwei
     },
-    L2_TX_OPTS: ZERO_GAS_OPTS,
+    L2_TX_OPTS: {},
   })
 
   const allContractInfo = {
