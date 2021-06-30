@@ -421,8 +421,9 @@ describe('OVM_L2DAITokenBridge', () => {
       })
 
       expect(await l2DAITokenBridge.isOpen()).to.be.eq(1)
-      await l2DAITokenBridge.connect(owner).close()
+      const closeTx = await l2DAITokenBridge.connect(owner).close()
 
+      await expect(closeTx).to.emit(l2DAITokenBridge, 'Closed')
       expect(await l2DAITokenBridge.isOpen()).to.be.eq(0)
     })
 
