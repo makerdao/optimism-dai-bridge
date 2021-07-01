@@ -16,6 +16,7 @@ jobs:
         testName:
           - DaiEchidnaTest
           - EscrowEchidnaTest
+          - EscrowMockEchidnaTest
 
     steps:
       - uses: actions/checkout@v2
