@@ -13,8 +13,8 @@ contract Alice {
     }
 }
 
-/// @dev Escrow Echidna Testing
-contract EscrowEchidnaTest {
+/// @dev Escrow Mock Echidna Testing
+contract EscrowMockEchidnaTest {
 
     L1Dai internal dai;
     L1Escrow internal escrow;
