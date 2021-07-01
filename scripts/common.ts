@@ -1,6 +1,7 @@
 import { Signer } from '@ethersproject/abstract-signer'
 import { expect } from 'chai'
 import { ethers as l1 } from 'hardhat'
+import { assert } from 'ts-essentials'
 
 import { getAddressOfNextDeployedContract } from '../test-e2e/helpers/address'
 import { getActiveWards } from '../test-e2e/helpers/auth'
@@ -137,4 +138,11 @@ export async function deploy(opts: Options) {
     l2DAITokenBridge,
     l2GovernanceRelay,
   }
+}
+
+export function getRequiredEnv(key: string): string {
+  const value = process.env[key]
+  assert(value, `Please provide ${key} in .env file`)
+
+  return value
 }

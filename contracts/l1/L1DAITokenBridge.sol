@@ -53,6 +53,8 @@ contract L1DAITokenBridge is iOVM_L1ERC20Bridge, OVM_CrossDomainEnabled {
   address public immutable escrow;
   uint256 public isOpen = 1;
 
+  event Closed();
+
   constructor(
     address _l1Token,
     address _l2DAITokenBridge,
@@ -71,6 +73,8 @@ contract L1DAITokenBridge is iOVM_L1ERC20Bridge, OVM_CrossDomainEnabled {
 
   function close() external auth {
     isOpen = 0;
+
+    emit Closed();
   }
 
   function depositERC20(

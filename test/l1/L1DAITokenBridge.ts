@@ -570,7 +570,9 @@ describe('L1DAITokenBridge', () => {
       })
 
       expect(await l1DAITokenBridge.isOpen()).to.be.eq(1)
-      await l1DAITokenBridge.connect(owner).close()
+      const closeTx = await l1DAITokenBridge.connect(owner).close()
+
+      await expect(closeTx).to.emit(l1DAITokenBridge, 'Closed')
 
       expect(await l1DAITokenBridge.isOpen()).to.be.eq(0)
     })

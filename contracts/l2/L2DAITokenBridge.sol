@@ -52,6 +52,8 @@ contract L2DAITokenBridge is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
   address public immutable l1DAITokenBridge;
   uint256 public isOpen = 1;
 
+  event Closed();
+
   constructor(
     address _l2CrossDomainMessenger,
     address _l2Token,
@@ -68,6 +70,8 @@ contract L2DAITokenBridge is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
 
   function close() external auth {
     isOpen = 0;
+
+    emit Closed();
   }
 
   function withdraw(
