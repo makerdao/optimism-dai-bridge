@@ -10,3 +10,7 @@ testLimit: 1000000
 estimateGas: true
 #directory to save the corpus; by default is disabled
 corpusDir: 'corpus'
+#deployer is address of the contract deployer (who often is privileged owner, etc.)
+deployer: '0x41414141'
+#sender is set of addresses transactions may originate from
+sender: ['0x42424242', '0x43434343']
