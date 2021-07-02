@@ -165,7 +165,7 @@ To quickly test Echidna in Linux or MacOS: [release page](https://github.com/cry
   `$ solc-select use 0.7.6`
 
 - Run Echidna Tests:  
-  `$ echidna-test . --contract DaiEchidnaTest --config echidna.config.yml`
+  `$ echidna-test . --contract DaiEchidnaTest --config echidna.config.yml --check-asserts`
 
 ## Deployments:
 
