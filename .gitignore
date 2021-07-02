@@ -9,3 +9,4 @@ cache-ovm
 .env
 gasReporterOutput.json
 corpus/
+.*
