@@ -219,3 +219,14 @@ rule permit(address owner, address spender, uint256 wad, uint256 deadline, uint8
 
     assert(allowance(e, owner, spender) == wad, "Permit did not set the allowance as expected");
 }
+
+// Verify that permit reverts when block.timestamp is more than deadline
+rule permit_revert_deadline(address owner, address spender, uint256 wad, uint256 deadline, uint8 v, bytes32 r, bytes32 s) {
+    env e;
+
+    require e.block.timestamp > deadline;
+
+    permit@withrevert(e, owner, spender, wad, deadline, v, r, s);
+
+    assert(lastReverted, "Dai/permit-expired");
+}
