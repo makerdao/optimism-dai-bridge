@@ -200,6 +200,18 @@ rule increaseAllowance(address spender, uint256 value) {
     assert(allowance(e, e.msg.sender, spender) == spenderAllowance + value, "increaseAllowance did not increase the allowance as expected");
 }
 
+// Verify it reverts when overflows
+rule increaseAllowance_revert_overflow(address spender, uint256 value) {
+    env e;
+
+    uint256 spenderAllowance = allowance(e, e.msg.sender, spender);
+    require spenderAllowance + value > max_uint;
+
+    increaseAllowance@withrevert(e, spender, value);
+
+    assert(lastReverted, "");
+}
+
 // Verify that allowance hold on decreaseAllowance
 rule decreaseAllowance(address spender, uint256 value) {
     env e;
@@ -209,6 +221,18 @@ rule decreaseAllowance(address spender, uint256 value) {
     decreaseAllowance(e, spender, value);
 
     assert(allowance(e, e.msg.sender, spender) == spenderAllowance - value, "decreaseAllowance did not decrease the allowance as expected");
+}
+
+// Verify it reverts when underflows
+rule decreaseAllowance_revert_underflow(address spender, uint256 value) {
+    env e;
+
+    uint256 spenderAllowance = allowance(e, e.msg.sender, spender);
+    require spenderAllowance - value < 0;
+
+    decreaseAllowance@withrevert(e, spender, value);
+
+    assert(lastReverted, "Dai/insufficient-allowance");
 }
 
 // Verify that allowance hold on permit
