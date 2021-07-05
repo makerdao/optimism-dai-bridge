@@ -126,9 +126,7 @@ rule transferFrom(address from, address to, uint256 wad) {
 rule approve(address spender, uint256 wad) {
     env e;
 
-    require e.msg.sender != spender;
-
     approve(e, spender, wad);
 
     assert(allowance(e, e.msg.sender, spender) == wad, "Approve did not set the allowance as expected");
-}
+} 
