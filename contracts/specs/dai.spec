@@ -163,11 +163,14 @@ rule transferFrom(address from, address to, uint256 value) {
 
     uint256 senderBalance = balanceOf(e, from);
     uint256 toBalance = balanceOf(e, to);
+    uint256 allowed = allowance(e, from, e.msg.sender);
 
     require toBalance + value <= max_uint; // assuming not overflow in practise
 
     transferFrom(e, from, to, value);
 
+    if from != e.msg.sender && allowed != max_uint
+        assert(allowance(e, from, e.msg.sender) == allowed - value);
     assert(balanceOf(e, from) == senderBalance - value, "TransferFrom did not decrease the balance as expected");
     assert(balanceOf(e, to) == toBalance + value, "TransferFrom did not increase the balance as expected");
 }
