@@ -99,3 +99,14 @@ rule transferFrom(address from, address to, uint256 wad) {
     assert(balanceOf(e, from) == senderBalance - wad, "TransferFrom did not decrease the balance as expected");
     assert(balanceOf(e, to) == toBalance + wad, "TransferFrom did not increase the balance as expected");
 }
+
+// Verify that allowance hold on approve
+rule approve(address spender, uint256 wad) {
+    env e;
+
+    require e.msg.sender != spender;
+
+    approve(e, spender, wad);
+
+    assert(allowance(e, e.msg.sender, spender) == wad, "Approve did not set the allowance as expected");
+}
