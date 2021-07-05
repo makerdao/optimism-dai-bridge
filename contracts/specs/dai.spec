@@ -79,6 +79,29 @@ rule burn(address from, uint256 value) {
     assert(totalSupply(e) == supplyBefore - value, "Burn did not decrease the supply as expected");
 }
 
+// Verify that burn reverts when insufficient balance
+rule burn_revert_balance(address from, uint256 value) {
+    env e;
+
+    require balanceOf(e, from) < value;
+
+    burn@withrevert(e, from, value);
+
+    assert(lastReverted, "It didn't revert");
+}
+
+// Verify that burn reverts when insufficient allowance
+rule burn_revert_allowance(address from, uint256 value) {
+    env e;
+
+    require from != e.msg.sender && wards(e, e.msg.sender) != 1;
+    require allowance(e, from, e.msg.sender) < value;
+
+    burn@withrevert(e, from, value);
+
+    assert(lastReverted, "It didn't revert");
+}
+
 // Verify that balance hold on transfer
 rule transfer(address to, uint256 value) {
     env e;
@@ -146,7 +169,7 @@ rule transferFrom(address from, address to, uint256 value) {
     assert(balanceOf(e, to) == toBalance + value, "TransferFrom did not increase the balance as expected");
 }
 
-// Verify that balance hold on transferFrom in the edge case from == to 
+// Verify that balance hold on transferFrom in the edge case from == to
 rule transferFrom_to_sender(address fromTo, uint256 value) {
     env e;
 
@@ -275,6 +298,46 @@ rule permit_revert_deadline(address owner, address spender, uint256 value, uint2
     require e.block.timestamp > deadline;
 
     permit@withrevert(e, owner, spender, value, deadline, v, r, s);
+
+    assert(lastReverted, "It didn't revert");
+}
+
+// Verify that wards hold on rely
+rule rely(address usr) {
+    env e;
+
+    rely(e, usr);
+
+    assert(wards(e, usr) == 1, "Rely did not set the wards as expected");
+}
+
+// Verify that rely reverts on not authorized addresses
+rule rely_revert_auth(address usr) {
+    env e;
+
+    require wards(e, e.msg.sender) == 0;
+
+    rely@withrevert(e, usr);
+
+    assert(lastReverted, "It didn't revert");
+}
+
+// Verify that wards hold on deny
+rule deny(address usr) {
+    env e;
+
+    deny(e, usr);
+
+    assert(wards(e, usr) == 0, "Deny did not set the wards as expected");
+}
+
+// Verify that deny reverts on not authorized addresses
+rule deny_revert_auth(address usr) {
+    env e;
+
+    require wards(e, e.msg.sender) == 0;
+
+    deny@withrevert(e, usr);
 
     assert(lastReverted, "It didn't revert");
 }
