@@ -25,10 +25,6 @@ interface Options {
 
 export async function deploy(opts: Options) {
   // Bridge deploy
-  const l1Escrow = await deployUsingFactoryAndVerify(opts.l1Deployer, await l1.getContractFactory('L1Escrow'), [
-    opts.L1_TX_OPTS,
-  ])
-  console.log('L1Escrow: ', l1Escrow.address)
   // note: we might want to use a dedicated deployer address that deploys very first contract on a vanity address
   // so it's critical that L2DAI is the first contract deployed using l2Deployer
   if (opts.desiredL2DaiAddress) {
@@ -46,6 +42,11 @@ export async function deploy(opts: Options) {
       'Expected L2DAI address doesnt match with actual address. This should never happen',
     )
   }
+
+  const l1Escrow = await deployUsingFactoryAndVerify(opts.l1Deployer, await l1.getContractFactory('L1Escrow'), [
+    opts.L1_TX_OPTS,
+  ])
+  console.log('L1Escrow: ', l1Escrow.address)
 
   const futureL1DAITokenBridgeAddress = await getAddressOfNextDeployedContract(opts.l1Deployer)
   const l2DAITokenBridge = await deployUsingFactoryAndVerify(opts.l2Deployer, await getL2Factory('L2DAITokenBridge'), [
