@@ -73,15 +73,14 @@ rule transfer(address to, uint256 wad) {
 }
 
 // Verify that balance hold on transfer in the edge case msg.sender == to
-rule transfer_to_sender(address to, uint256 wad) {
+rule transfer_to_sender(uint256 wad) {
     env e;
 
-    require e.msg.sender == to;
-    uint256 balanceBefore = balanceOf(e, to);
+    uint256 balanceBefore = balanceOf(e, e.msg.sender);
 
-    transfer(e, to, wad);
+    transfer(e, e.msg.sender, wad);
 
-    assert(balanceOf(e, to) == balanceBefore, "Transfer did not keep the balance in edge case as expected");
+    assert(balanceOf(e, e.msg.sender) == balanceBefore, "Transfer did not keep the balance in edge case as expected");
 }
 
 // Verify that balance hold on transferFrom
