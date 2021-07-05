@@ -26,7 +26,7 @@ rule mint_revert_auth(address to, uint256 value) {
     mint@withrevert(e, to, value);
 
     // Check that mint reverts if called by not authorized addresses
-    assert(lastReverted, "Dai/not-authorized");
+    assert(lastReverted, "It didn't revert");
 }
 
 // Verify that mint reverts on supply overflow
@@ -38,7 +38,7 @@ rule mint_revert_overflow_supply(address to, uint256 value) {
     mint@withrevert(e, to, value);
 
     // Check that mint reverts if overflows
-    assert(lastReverted, "");
+    assert(lastReverted, "It didn't revert");
 }
 
 // Verify that mint reverts on supply balance
@@ -50,7 +50,7 @@ rule mint_revert_overflow_balance(address to, uint256 value) {
     mint@withrevert(e, to, value);
 
     // Check that mint reverts if overflows
-    assert(lastReverted, "");
+    assert(lastReverted, "It didn't revert");
 }
 
 // Verify that mint reverts when to is equal to address zero or dai contract
@@ -63,7 +63,7 @@ rule mint_revert_to(address to, uint256 value) {
     mint@withrevert(e, to, value);
 
     // Check that mint reverts if to is either address zero or dai contract
-    assert(lastReverted, "Dai/invalid-address");
+    assert(lastReverted, "It didn't revert");
 }
 
 // Verify that supply and balance hold on burn
@@ -115,7 +115,7 @@ rule transfer_revert_to(address to, uint256 value) {
 
     transfer@withrevert(e, to, value);
 
-    assert(lastReverted, "Dai/invalid-address");
+    assert(lastReverted, "It didn't revert");
 }
 
 // Verify it fails when the sender doesn't have enough balance
@@ -126,7 +126,7 @@ rule transfer_revert_balance(address to, uint256 value) {
 
     transfer@withrevert(e, to, value);
 
-    assert(lastReverted, "Dai/insufficient-balance");
+    assert(lastReverted, "It didn't revert");
 }
 
 // Verify that balance hold on transferFrom
@@ -165,7 +165,7 @@ rule transferFrom_revert_to(address from, address to, uint256 value) {
 
     transferFrom@withrevert(e, from, to, value);
 
-    assert(lastReverted, "Dai/invalid-address");
+    assert(lastReverted, "It didn't revert");
 }
 
 // Verify it fails when from doesn't have enough balance
@@ -176,7 +176,7 @@ rule transferFrom_revert_balance(address from, address to, uint256 value) {
 
     transferFrom@withrevert(e, from, to, value);
 
-    assert(lastReverted, "Dai/insufficient-balance");
+    assert(lastReverted, "It didn't revert");
 }
 
 // Verify it fails when the sender doesn't have enough allowance
@@ -188,7 +188,7 @@ rule transferFrom_revert_allowance(address from, address to, uint256 value) {
 
     transferFrom@withrevert(e, from, to, value);
 
-    assert(lastReverted, "Dai/insufficient-allowance");
+    assert(lastReverted, "It didn't revert");
 }
 
 // Verify it won't fail if there isn't allowance but from is sender
@@ -233,7 +233,7 @@ rule increaseAllowance_revert_overflow(address spender, uint256 value) {
 
     increaseAllowance@withrevert(e, spender, value);
 
-    assert(lastReverted, "");
+    assert(lastReverted, "It didn't revert");
 }
 
 // Verify that allowance hold on decreaseAllowance
@@ -256,7 +256,7 @@ rule decreaseAllowance_revert_underflow(address spender, uint256 value) {
 
     decreaseAllowance@withrevert(e, spender, value);
 
-    assert(lastReverted, "Dai/insufficient-allowance");
+    assert(lastReverted, "It didn't revert");
 }
 
 // Verify that allowance hold on permit
@@ -276,5 +276,5 @@ rule permit_revert_deadline(address owner, address spender, uint256 value, uint2
 
     permit@withrevert(e, owner, spender, value, deadline, v, r, s);
 
-    assert(lastReverted, "Dai/permit-expired");
+    assert(lastReverted, "It didn't revert");
 }
