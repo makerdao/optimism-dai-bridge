@@ -152,3 +152,12 @@ rule decreaseAllowance(address spender, uint256 wad) {
 
     assert(allowance(e, e.msg.sender, spender) == spenderAllowance - wad, "decreaseAllowance did not decrease the allowance as expected");
 }
+
+// Verify that allowance hold on permit
+rule permit(address owner, address spender, uint256 wad, uint256 deadline, uint8 v, bytes32 r, bytes32 s) {
+    env e;
+
+    permit(e, owner, spender, wad, deadline, v, r, s);
+
+    assert(allowance(e, owner, spender) == wad, "Permit did not set the allowance as expected");
+}
