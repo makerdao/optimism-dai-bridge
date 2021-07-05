@@ -129,4 +129,26 @@ rule approve(address spender, uint256 wad) {
     approve(e, spender, wad);
 
     assert(allowance(e, e.msg.sender, spender) == wad, "Approve did not set the allowance as expected");
-} 
+}
+
+// Verify that allowance hold on increaseAllowance
+rule increaseAllowance(address spender, uint256 wad) {
+    env e;
+
+    uint256 spenderAllowance = allowance(e, e.msg.sender, spender);
+
+    increaseAllowance(e, spender, wad);
+
+    assert(allowance(e, e.msg.sender, spender) == spenderAllowance + wad, "increaseAllowance did not increase the allowance as expected");
+}
+
+// Verify that allowance hold on decreaseAllowance
+rule decreaseAllowance(address spender, uint256 wad) {
+    env e;
+
+    uint256 spenderAllowance = allowance(e, e.msg.sender, spender);
+
+    decreaseAllowance(e, spender, wad);
+
+    assert(allowance(e, e.msg.sender, spender) == spenderAllowance - wad, "decreaseAllowance did not decrease the allowance as expected");
+}
