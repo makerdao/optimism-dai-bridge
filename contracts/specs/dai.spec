@@ -1,6 +1,6 @@
 // dai.spec
 // Verify that supply and balance hold on mint
-rule mint(address to, uint256 wad) {
+rule mint(address to, uint256 value) {
     // The env type represents the EVM parameters passed in every
     //   call (msg.*, tx.*, block.* variables in solidity).
     env e;
@@ -9,54 +9,54 @@ rule mint(address to, uint256 wad) {
     uint256 supplyBefore = totalSupply(e);
     uint256 senderBalance = balanceOf(e, to);
 
-    mint(e, to, wad);
+    mint(e, to, value);
 
     uint256 supplyAfter = totalSupply(e);
 
-    assert(balanceOf(e, to) == senderBalance + wad, "Mint did not increase the balance as expected");
-    assert(supplyBefore + wad == supplyAfter, "Mint did not increase the supply as expected");
+    assert(balanceOf(e, to) == senderBalance + value, "Mint did not increase the balance as expected");
+    assert(supplyBefore + value == supplyAfter, "Mint did not increase the supply as expected");
 }
 
 // Verify that mint reverts on un-authed address
-rule mint_revert_auth(address to, uint256 wad) {
+rule mint_revert_auth(address to, uint256 value) {
     env e;
 
     require wards(e, e.msg.sender) == 0;
 
-    mint@withrevert(e, to, wad);
+    mint@withrevert(e, to, value);
 
     // Check that mint reverts if called by not authorized addresses
     assert(lastReverted, "Dai/not-authorized");
 }
 
 // Verify that mint reverts when to is equal to address zero or dai contract
-rule mint_revert_to(address to, uint256 wad) {
+rule mint_revert_to(address to, uint256 value) {
     env e;
 
     require e.msg.sender != to;
     require to == 0 || to == currentContract;
 
-    mint@withrevert(e, to, wad);
+    mint@withrevert(e, to, value);
 
     // Check that mint reverts if to is either address zero or dai contract
     assert(lastReverted, "Dai/invalid-address");
 }
 
 // Verify that supply and balance hold on burn
-rule burn(address from, uint256 wad) {
+rule burn(address from, uint256 value) {
     env e;
 
     uint256 supplyBefore = totalSupply(e);
     uint256 senderBalance = balanceOf(e, from);
 
-    burn(e, from, wad);
+    burn(e, from, value);
 
-    assert(balanceOf(e, from) == senderBalance - wad, "Burn did not decrease the balance as expected");
-    assert(totalSupply(e) == supplyBefore - wad, "Burn did not decrease the supply as expected");
+    assert(balanceOf(e, from) == senderBalance - value, "Burn did not decrease the balance as expected");
+    assert(totalSupply(e) == supplyBefore - value, "Burn did not decrease the supply as expected");
 }
 
 // Verify that balance hold on transfer
-rule transfer(address to, uint256 wad) {
+rule transfer(address to, uint256 value) {
     env e;
 
     require e.msg.sender != to;
@@ -64,49 +64,49 @@ rule transfer(address to, uint256 wad) {
     uint256 senderBalance = balanceOf(e, e.msg.sender);
     uint256 toBalance = balanceOf(e, to);
 
-    require toBalance + wad <= max_uint; // assuming not overflow in practise
+    require toBalance + value <= max_uint; // assuming not overflow in practise
 
-    transfer(e, to, wad);
+    transfer(e, to, value);
 
-    assert(balanceOf(e, e.msg.sender) == senderBalance - wad, "Transfer did not decrease the balance as expected");
-    assert(balanceOf(e, to) == toBalance + wad, "Transfer did not increase the balance as expected");
+    assert(balanceOf(e, e.msg.sender) == senderBalance - value, "Transfer did not decrease the balance as expected");
+    assert(balanceOf(e, to) == toBalance + value, "Transfer did not increase the balance as expected");
 }
 
 // Verify that balance hold on transfer in the edge case msg.sender == to
-rule transfer_to_sender(uint256 wad) {
+rule transfer_to_sender(uint256 value) {
     env e;
 
     uint256 balanceBefore = balanceOf(e, e.msg.sender);
 
-    transfer(e, e.msg.sender, wad);
+    transfer(e, e.msg.sender, value);
 
     assert(balanceOf(e, e.msg.sender) == balanceBefore, "Transfer did not keep the balance in edge case as expected");
 }
 
 // Verify it fails when the to is address(0) or the Dai contract itself
-rule transfer_revert_to(address to, uint256 wad) {
+rule transfer_revert_to(address to, uint256 value) {
     env e;
 
     require to == 0 || to == currentContract;
 
-    transfer@withrevert(e, to, wad);
+    transfer@withrevert(e, to, value);
 
     assert(lastReverted, "Dai/invalid-address");
 }
 
 // Verify it fails when the sender doesn't have enough balance
-rule transfer_revert_balance(address to, uint256 wad) {
+rule transfer_revert_balance(address to, uint256 value) {
     env e;
 
-    require balanceOf(e, e.msg.sender) < wad;
+    require balanceOf(e, e.msg.sender) < value;
 
-    transfer@withrevert(e, to, wad);
+    transfer@withrevert(e, to, value);
 
     assert(lastReverted, "Dai/insufficient-balance");
 }
 
 // Verify that balance hold on transferFrom
-rule transferFrom(address from, address to, uint256 wad) {
+rule transferFrom(address from, address to, uint256 value) {
     env e;
 
     require from != to;
@@ -114,119 +114,119 @@ rule transferFrom(address from, address to, uint256 wad) {
     uint256 senderBalance = balanceOf(e, from);
     uint256 toBalance = balanceOf(e, to);
 
-    require toBalance + wad <= max_uint; // assuming not overflow in practise
+    require toBalance + value <= max_uint; // assuming not overflow in practise
 
-    transferFrom(e, from, to, wad);
+    transferFrom(e, from, to, value);
 
-    assert(balanceOf(e, from) == senderBalance - wad, "TransferFrom did not decrease the balance as expected");
-    assert(balanceOf(e, to) == toBalance + wad, "TransferFrom did not increase the balance as expected");
+    assert(balanceOf(e, from) == senderBalance - value, "TransferFrom did not decrease the balance as expected");
+    assert(balanceOf(e, to) == toBalance + value, "TransferFrom did not increase the balance as expected");
 }
 
 // Verify that balance hold on transferFrom in the edge case from == to 
-rule transferFrom_to_sender(address fromTo, uint256 wad) {
+rule transferFrom_to_sender(address fromTo, uint256 value) {
     env e;
 
     uint256 balanceBefore = balanceOf(e, fromTo);
 
-    transferFrom(e, fromTo, fromTo, wad);
+    transferFrom(e, fromTo, fromTo, value);
 
     assert(balanceOf(e, fromTo) == balanceBefore, "TransferFrom did not kept the balance as expected");
 }
 
 // Verify it fails when to is address(0) or the Dai contract itself
-rule transferFrom_revert_to(address from, address to, uint256 wad) {
+rule transferFrom_revert_to(address from, address to, uint256 value) {
     env e;
 
     require to == 0 || to == currentContract;
 
-    transferFrom@withrevert(e, from, to, wad);
+    transferFrom@withrevert(e, from, to, value);
 
     assert(lastReverted, "Dai/invalid-address");
 }
 
 // Verify it fails when from doesn't have enough balance
-rule transferFrom_revert_balance(address from, address to, uint256 wad) {
+rule transferFrom_revert_balance(address from, address to, uint256 value) {
     env e;
 
-    require balanceOf(e, from) < wad;
+    require balanceOf(e, from) < value;
 
-    transferFrom@withrevert(e, from, to, wad);
+    transferFrom@withrevert(e, from, to, value);
 
     assert(lastReverted, "Dai/insufficient-balance");
 }
 
 // Verify it fails when the sender doesn't have enough allowance
-rule transferFrom_revert_allowance(address from, address to, uint256 wad) {
+rule transferFrom_revert_allowance(address from, address to, uint256 value) {
     env e;
 
     require(e.msg.sender != from);
-    require allowance(e, from, e.msg.sender) < wad;
+    require allowance(e, from, e.msg.sender) < value;
 
-    transferFrom@withrevert(e, from, to, wad);
+    transferFrom@withrevert(e, from, to, value);
 
     assert(lastReverted, "Dai/insufficient-allowance");
 }
 
 // Verify it won't fail if there isn't allowance but from is sender
-rule transferFrom_allowance_to(address from, address to, uint256 wad) {
+rule transferFrom_allowance_to(address from, address to, uint256 value) {
     env e;
 
     require(e.msg.sender == from);
     require to != 0 && to != currentContract;
-    require allowance(e, from, e.msg.sender) < wad;
+    require allowance(e, from, e.msg.sender) < value;
 
-    transferFrom@withrevert(e, from, to, wad); // We make sure it won't fail due allowance as from is the sender
+    transferFrom@withrevert(e, from, to, value); // We make sure it won't fail due allowance as from is the sender
 
     assert(true, "");
 }
 
 // Verify that allowance hold on approve
-rule approve(address spender, uint256 wad) {
+rule approve(address spender, uint256 value) {
     env e;
 
-    approve@withrevert(e, spender, wad); // Using @withrevert we make sure this never reverts
+    approve@withrevert(e, spender, value); // Using @withrevert we make sure this never reverts
 
-    assert(allowance(e, e.msg.sender, spender) == wad, "Approve did not set the allowance as expected");
+    assert(allowance(e, e.msg.sender, spender) == value, "Approve did not set the allowance as expected");
 }
 
 // Verify that allowance hold on increaseAllowance
-rule increaseAllowance(address spender, uint256 wad) {
+rule increaseAllowance(address spender, uint256 value) {
     env e;
 
     uint256 spenderAllowance = allowance(e, e.msg.sender, spender);
 
-    increaseAllowance(e, spender, wad);
+    increaseAllowance(e, spender, value);
 
-    assert(allowance(e, e.msg.sender, spender) == spenderAllowance + wad, "increaseAllowance did not increase the allowance as expected");
+    assert(allowance(e, e.msg.sender, spender) == spenderAllowance + value, "increaseAllowance did not increase the allowance as expected");
 }
 
 // Verify that allowance hold on decreaseAllowance
-rule decreaseAllowance(address spender, uint256 wad) {
+rule decreaseAllowance(address spender, uint256 value) {
     env e;
 
     uint256 spenderAllowance = allowance(e, e.msg.sender, spender);
 
-    decreaseAllowance(e, spender, wad);
+    decreaseAllowance(e, spender, value);
 
-    assert(allowance(e, e.msg.sender, spender) == spenderAllowance - wad, "decreaseAllowance did not decrease the allowance as expected");
+    assert(allowance(e, e.msg.sender, spender) == spenderAllowance - value, "decreaseAllowance did not decrease the allowance as expected");
 }
 
 // Verify that allowance hold on permit
-rule permit(address owner, address spender, uint256 wad, uint256 deadline, uint8 v, bytes32 r, bytes32 s) {
+rule permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s) {
     env e;
 
-    permit(e, owner, spender, wad, deadline, v, r, s);
+    permit(e, owner, spender, value, deadline, v, r, s);
 
-    assert(allowance(e, owner, spender) == wad, "Permit did not set the allowance as expected");
+    assert(allowance(e, owner, spender) == value, "Permit did not set the allowance as expected");
 }
 
 // Verify that permit reverts when block.timestamp is more than deadline
-rule permit_revert_deadline(address owner, address spender, uint256 wad, uint256 deadline, uint8 v, bytes32 r, bytes32 s) {
+rule permit_revert_deadline(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s) {
     env e;
 
     require e.block.timestamp > deadline;
 
-    permit@withrevert(e, owner, spender, wad, deadline, v, r, s);
+    permit@withrevert(e, owner, spender, value, deadline, v, r, s);
 
     assert(lastReverted, "Dai/permit-expired");
 }
