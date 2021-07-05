@@ -72,9 +72,12 @@ rule burn(address from, uint256 value) {
 
     uint256 supplyBefore = totalSupply(e);
     uint256 senderBalance = balanceOf(e, from);
+    uint256 allowed = allowance(e, from, e.msg.sender);
 
     burn(e, from, value);
 
+    if from != e.msg.sender && wards(e, e.msg.sender) != 1 && allowed != max_uint
+        assert(allowance(e, from, e.msg.sender) == allowed - value);
     assert(balanceOf(e, from) == senderBalance - value, "Burn did not decrease the balance as expected");
     assert(totalSupply(e) == supplyBefore - value, "Burn did not decrease the supply as expected");
 }
