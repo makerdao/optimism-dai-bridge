@@ -29,6 +29,30 @@ rule mint_revert_auth(address to, uint256 value) {
     assert(lastReverted, "Dai/not-authorized");
 }
 
+// Verify that mint reverts on supply overflow
+rule mint_revert_overflow_supply(address to, uint256 value) {
+    env e;
+
+    require totalSupply(e) + value > max_uint;
+
+    mint@withrevert(e, to, value);
+
+    // Check that mint reverts if overflows
+    assert(lastReverted, "");
+}
+
+// Verify that mint reverts on supply balance
+rule mint_revert_overflow_balance(address to, uint256 value) {
+    env e;
+
+    require balanceOf(e, to) + value > max_uint;
+
+    mint@withrevert(e, to, value);
+
+    // Check that mint reverts if overflows
+    assert(lastReverted, "");
+}
+
 // Verify that mint reverts when to is equal to address zero or dai contract
 rule mint_revert_to(address to, uint256 value) {
     env e;
