@@ -83,6 +83,28 @@ rule transfer_to_sender(uint256 wad) {
     assert(balanceOf(e, e.msg.sender) == balanceBefore, "Transfer did not keep the balance in edge case as expected");
 }
 
+// Verify it fails when the to is address(0) or the Dai contract itself
+rule transfer_to_reverts(address to, uint256 wad) {
+    env e;
+
+    require to == 0 || to == currentContract;
+
+    transfer@withrevert(e, to, wad);
+
+    assert(lastReverted, "Dai/invalid-address");
+}
+
+// Verify it fails when the sender doesn't have enough balance
+rule transfer_balance_reverts(address to, uint256 wad) {
+    env e;
+
+    require balanceOf(e, e.msg.sender) < wad;
+
+    transfer@withrevert(e, to, wad);
+
+    assert(lastReverted, "Dai/insufficient-balance");
+}
+
 // Verify that balance hold on transferFrom
 rule transferFrom(address from, address to, uint256 wad) {
     env e;
