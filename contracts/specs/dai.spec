@@ -1,69 +1,26 @@
 // dai.spec
-// Verify that supply and balance hold on mint
+// Verify that supply and balance behave correctly on mint
 rule mint(address to, uint256 value) {
     // The env type represents the EVM parameters passed in every
     //   call (msg.*, tx.*, block.* variables in solidity).
     env e;
 
     // Save the totalSupply and sender balance before minting
-    uint256 supplyBefore = totalSupply(e);
-    uint256 senderBalance = balanceOf(e, to);
-
-    mint(e, to, value);
-
-    uint256 supplyAfter = totalSupply(e);
-
-    assert(balanceOf(e, to) == senderBalance + value, "Mint did not increase the balance as expected");
-    assert(supplyBefore + value == supplyAfter, "Mint did not increase the supply as expected");
-}
-
-// Verify that mint reverts on un-authed address
-rule mint_revert_auth(address to, uint256 value) {
-    env e;
-
-    require wards(e, e.msg.sender) == 0;
+    uint256 supply = totalSupply(e);
+    uint256 toBalance = balanceOf(e, to);
+    uint256 ward = wards(e, e.msg.sender);
 
     mint@withrevert(e, to, value);
 
-    // Check that mint reverts if called by not authorized addresses
-    assert(lastReverted, "It didn't revert");
-}
+    if (!lastReverted) {
+        assert(balanceOf(e, to) == toBalance + value, "Mint did not increase the balance as expected");
+        assert(totalSupply(e) == supply + value, "Mint did not increase the supply as expected");
+    }
 
-// Verify that mint reverts on supply overflow
-rule mint_revert_overflow_supply(address to, uint256 value) {
-    env e;
-
-    require totalSupply(e) + value > max_uint;
-
-    mint@withrevert(e, to, value);
-
-    // Check that mint reverts if overflows
-    assert(lastReverted, "It didn't revert");
-}
-
-// Verify that mint reverts on supply balance
-rule mint_revert_overflow_balance(address to, uint256 value) {
-    env e;
-
-    require balanceOf(e, to) + value > max_uint;
-
-    mint@withrevert(e, to, value);
-
-    // Check that mint reverts if overflows
-    assert(lastReverted, "It didn't revert");
-}
-
-// Verify that mint reverts when to is equal to address zero or dai contract
-rule mint_revert_to(address to, uint256 value) {
-    env e;
-
-    require e.msg.sender != to;
-    require to == 0 || to == currentContract;
-
-    mint@withrevert(e, to, value);
-
-    // Check that mint reverts if to is either address zero or dai contract
-    assert(lastReverted, "It didn't revert");
+    assert(ward == 0 => lastReverted, "Lack of auth did not revert");
+    assert(supply + value > max_uint => lastReverted, "Supply overflow did not revert");
+    assert(toBalance + value > max_uint => lastReverted, "Balance overflow did not revert");
+    assert(to == 0 || to == currentContract => lastReverted, "Incorrect address did not revert");
 }
 
 // Verify that supply and balance hold on burn
