@@ -109,50 +109,24 @@ rule burn_revert_allowance(address from, uint256 value) {
 rule transfer(address to, uint256 value) {
     env e;
 
-    require e.msg.sender != to;
-
     uint256 senderBalance = balanceOf(e, e.msg.sender);
     uint256 toBalance = balanceOf(e, to);
 
-    require toBalance + value <= max_uint; // assuming not overflow in practise
-
-    transfer(e, to, value);
-
-    assert(balanceOf(e, e.msg.sender) == senderBalance - value, "Transfer did not decrease the balance as expected");
-    assert(balanceOf(e, to) == toBalance + value, "Transfer did not increase the balance as expected");
-}
-
-// Verify that balance hold on transfer in the edge case msg.sender == to
-rule transfer_to_sender(uint256 value) {
-    env e;
-
-    uint256 balanceBefore = balanceOf(e, e.msg.sender);
-
-    transfer(e, e.msg.sender, value);
-
-    assert(balanceOf(e, e.msg.sender) == balanceBefore, "Transfer did not keep the balance in edge case as expected");
-}
-
-// Verify it fails when the to is address(0) or the Dai contract itself
-rule transfer_revert_to(address to, uint256 value) {
-    env e;
-
-    require to == 0 || to == currentContract;
+    require toBalance + value <= max_uint; // Avoid evaluating the overflow case
 
     transfer@withrevert(e, to, value);
 
-    assert(lastReverted, "It didn't revert");
-}
+    if (!lastReverted) {
+        if (e.msg.sender != to) {
+            assert(balanceOf(e, e.msg.sender) == senderBalance - value, "Transfer did not decrease the balance as expected");
+            assert(balanceOf(e, to) == toBalance + value, "Transfer did not increase the balance as expected");
+        } else {
+            assert(balanceOf(e, e.msg.sender) == senderBalance && senderBalance == toBalance, "Transfer did not keep the balance in edge case as expected");
+        }
+    }
 
-// Verify it fails when the sender doesn't have enough balance
-rule transfer_revert_balance(address to, uint256 value) {
-    env e;
-
-    require balanceOf(e, e.msg.sender) < value;
-
-    transfer@withrevert(e, to, value);
-
-    assert(lastReverted, "It didn't revert");
+    assert to == 0 || to == currentContract => lastReverted , "incorrect address";
+    assert senderBalance < value => lastReverted , "insufficient balance";
 }
 
 // Verify that balance hold on transferFrom
