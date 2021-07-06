@@ -76,7 +76,7 @@ rule transfer(address to, uint256 value) {
 rule transferFrom(address from, address to, uint256 value) {
     env e;
 
-    uint256 senderBalance = balanceOf(e, from);
+    uint256 fromBalance = balanceOf(e, from);
     uint256 toBalance = balanceOf(e, to);
     uint256 allowed = allowance(e, from, e.msg.sender);
 
@@ -91,15 +91,15 @@ rule transferFrom(address from, address to, uint256 value) {
             assert(allowance(e, from, e.msg.sender) == allowed, "Allowance did not remain the same");
         }
         if (from != to) {
-            assert(balanceOf(e, from) == senderBalance - value, "TransferFrom did not decrease the balance as expected");
+            assert(balanceOf(e, from) == fromBalance - value, "TransferFrom did not decrease the balance as expected");
             assert(balanceOf(e, to) == toBalance + value, "TransferFrom did not increase the balance as expected");
         } else {
-            assert(balanceOf(e, from) == senderBalance && senderBalance == toBalance, "TransferFrom did not kept the balance as expected");
+            assert(balanceOf(e, from) == fromBalance && fromBalance == toBalance, "TransferFrom did not kept the balance as expected");
         }
     }
 
     assert(to == 0 || to == currentContract => lastReverted , "Incorrect address did not revert");
-    assert(senderBalance < value => lastReverted , "Insufficient balance did not revert");
+    assert(fromBalance < value => lastReverted , "Insufficient balance did not revert");
     assert(allowed < value && e.msg.sender != from => lastReverted, "Insufficient allowance did not revert");
 }
 
