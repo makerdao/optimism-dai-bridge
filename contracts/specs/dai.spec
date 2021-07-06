@@ -105,7 +105,7 @@ rule burn_revert_allowance(address from, uint256 value) {
     assert(lastReverted, "It didn't revert");
 }
 
-// Verify that balance behave correctly on transfer
+// Verify that balance behaves correctly on transfer
 rule transfer(address to, uint256 value) {
     env e;
 
@@ -160,7 +160,7 @@ rule transferFrom(address from, address to, uint256 value) {
     assert(allowed < value && e.msg.sender != from => lastReverted, "Insufficient allowance did not revert");
 }
 
-// Verify that allowance hold on approve
+// Verify that allowance behaves correctly on approve
 rule approve(address spender, uint256 value) {
     env e;
 
@@ -169,7 +169,7 @@ rule approve(address spender, uint256 value) {
     assert(allowance(e, e.msg.sender, spender) == value, "Approve did not set the allowance as expected");
 }
 
-// Verify that allowance hold on increaseAllowance
+// Verify that allowance behaves correctly on increaseAllowance
 rule increaseAllowance(address spender, uint256 value) {
     env e;
 
@@ -184,7 +184,7 @@ rule increaseAllowance(address spender, uint256 value) {
     assert(spenderAllowance + value > max_uint => lastReverted, "Overflow did not revert");
 }
 
-// Verify that allowance hold on decreaseAllowance
+// Verify that allowance behaves correctly on decreaseAllowance
 rule decreaseAllowance(address spender, uint256 value) {
     env e;
 
@@ -219,7 +219,7 @@ rule permit_revert_deadline(address owner, address spender, uint256 value, uint2
     assert(lastReverted, "It didn't revert");
 }
 
-// Verify that wards hold on rely
+// Verify that wards behaves correctly on rely
 rule rely(address usr) {
     env e;
 
@@ -234,7 +234,7 @@ rule rely(address usr) {
     assert(ward == 0 => lastReverted, "Lack of auth did not revert");
 }
 
-// Verify that wards hold on deny
+// Verify that wards behaves correctly on deny
 rule deny(address usr) {
     env e;
 
