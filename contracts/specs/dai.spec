@@ -142,24 +142,18 @@ rule decreaseAllowance(address spender, uint256 value) {
     assert(spenderAllowance - value < 0 => lastReverted, "Underflow did not revert");
 }
 
-// Verify that allowance hold on permit
+// Verify that allowance behaves correctly on permit
 rule permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s) {
     env e;
 
-    permit(e, owner, spender, value, deadline, v, r, s);
-
-    assert(allowance(e, owner, spender) == value, "Permit did not set the allowance as expected");
-}
-
-// Verify that permit reverts when block.timestamp is more than deadline
-rule permit_revert_deadline(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s) {
-    env e;
-
-    require e.block.timestamp > deadline;
-
     permit@withrevert(e, owner, spender, value, deadline, v, r, s);
 
-    assert(lastReverted, "It didn't revert");
+    if (!lastReverted) {
+        assert(allowance(e, owner, spender) == value, "Permit did not set the allowance as expected");
+    }
+
+    assert(e.block.timestamp > deadline => lastReverted, "Deadline exceed did not revert");
+    // TODO: Add the other revert conditions
 }
 
 // Verify that wards behaves correctly on rely
