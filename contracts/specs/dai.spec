@@ -23,43 +23,29 @@ rule mint(address to, uint256 value) {
     assert(to == 0 || to == currentContract => lastReverted, "Incorrect address did not revert");
 }
 
-// Verify that supply and balance hold on burn
+// Verify that supply and balance behave correctly on burn
 rule burn(address from, uint256 value) {
     env e;
 
-    uint256 supplyBefore = totalSupply(e);
-    uint256 senderBalance = balanceOf(e, from);
+    uint256 supply = totalSupply(e);
+    uint256 fromBalance = balanceOf(e, from);
     uint256 allowed = allowance(e, from, e.msg.sender);
-
-    burn(e, from, value);
-
-    if from != e.msg.sender && wards(e, e.msg.sender) != 1 && allowed != max_uint
-        assert(allowance(e, from, e.msg.sender) == allowed - value);
-    assert(balanceOf(e, from) == senderBalance - value, "Burn did not decrease the balance as expected");
-    assert(totalSupply(e) == supplyBefore - value, "Burn did not decrease the supply as expected");
-}
-
-// Verify that burn reverts when insufficient balance
-rule burn_revert_balance(address from, uint256 value) {
-    env e;
-
-    require balanceOf(e, from) < value;
+    uint256 ward = wards(e, e.msg.sender);
 
     burn@withrevert(e, from, value);
 
-    assert(lastReverted, "It didn't revert");
-}
+    if (!lastReverted) {
+        if from != e.msg.sender && wards(e, e.msg.sender) != 1 && allowed != max_uint {
+            assert(allowance(e, from, e.msg.sender) == allowed - value);
+        } else {
+            assert(allowance(e, from, e.msg.sender) == allowed);
+        }
+        assert(balanceOf(e, from) == fromBalance - value, "Burn did not decrease the balance as expected");
+        assert(totalSupply(e) == supply - value, "Burn did not decrease the supply as expected");
+    }
 
-// Verify that burn reverts when insufficient allowance
-rule burn_revert_allowance(address from, uint256 value) {
-    env e;
-
-    require from != e.msg.sender && wards(e, e.msg.sender) != 1;
-    require allowance(e, from, e.msg.sender) < value;
-
-    burn@withrevert(e, from, value);
-
-    assert(lastReverted, "It didn't revert");
+    assert(fromBalance < value => lastReverted, "Balance underflow did not revert");
+    assert(from != e.msg.sender && ward != 1 && allowed < value => lastReverted, "Allowance underflow did not revert");
 }
 
 // Verify that balance behaves correctly on transfer
