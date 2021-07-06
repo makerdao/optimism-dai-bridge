@@ -105,7 +105,7 @@ rule burn_revert_allowance(address from, uint256 value) {
     assert(lastReverted, "It didn't revert");
 }
 
-// Verify that balance hold on transfer
+// Verify that balance behave correctly on transfer
 rule transfer(address to, uint256 value) {
     env e;
 
@@ -129,82 +129,35 @@ rule transfer(address to, uint256 value) {
     assert senderBalance < value => lastReverted , "insufficient balance";
 }
 
-// Verify that balance hold on transferFrom
+// Verify that balance and allowance behave correctly on transferFrom
 rule transferFrom(address from, address to, uint256 value) {
     env e;
-
-    require from != to;
 
     uint256 senderBalance = balanceOf(e, from);
     uint256 toBalance = balanceOf(e, to);
     uint256 allowed = allowance(e, from, e.msg.sender);
 
-    require toBalance + value <= max_uint; // assuming not overflow in practise
-
-    transferFrom(e, from, to, value);
-
-    if from != e.msg.sender && allowed != max_uint
-        assert(allowance(e, from, e.msg.sender) == allowed - value);
-    assert(balanceOf(e, from) == senderBalance - value, "TransferFrom did not decrease the balance as expected");
-    assert(balanceOf(e, to) == toBalance + value, "TransferFrom did not increase the balance as expected");
-}
-
-// Verify that balance hold on transferFrom in the edge case from == to
-rule transferFrom_to_sender(address fromTo, uint256 value) {
-    env e;
-
-    uint256 balanceBefore = balanceOf(e, fromTo);
-
-    transferFrom(e, fromTo, fromTo, value);
-
-    assert(balanceOf(e, fromTo) == balanceBefore, "TransferFrom did not kept the balance as expected");
-}
-
-// Verify it fails when to is address(0) or the Dai contract itself
-rule transferFrom_revert_to(address from, address to, uint256 value) {
-    env e;
-
-    require to == 0 || to == currentContract;
+    require toBalance + value <= max_uint; // Avoid evaluating the overflow case
 
     transferFrom@withrevert(e, from, to, value);
 
-    assert(lastReverted, "It didn't revert");
-}
+    if (!lastReverted) {
+        if e.msg.sender != from && allowed != max_uint {
+            assert(allowance(e, from, e.msg.sender) == allowed - value, "Allowance did not decrease in value");
+        } else {
+            assert(allowance(e, from, e.msg.sender) == allowed, "Allowance did not remain the same");
+        }
+        if (from != to) {
+            assert(balanceOf(e, from) == senderBalance - value, "TransferFrom did not decrease the balance as expected");
+            assert(balanceOf(e, to) == toBalance + value, "TransferFrom did not increase the balance as expected");
+        } else {
+            assert(balanceOf(e, from) == senderBalance && senderBalance == toBalance, "TransferFrom did not kept the balance as expected");
+        }
+    }
 
-// Verify it fails when from doesn't have enough balance
-rule transferFrom_revert_balance(address from, address to, uint256 value) {
-    env e;
-
-    require balanceOf(e, from) < value;
-
-    transferFrom@withrevert(e, from, to, value);
-
-    assert(lastReverted, "It didn't revert");
-}
-
-// Verify it fails when the sender doesn't have enough allowance
-rule transferFrom_revert_allowance(address from, address to, uint256 value) {
-    env e;
-
-    require(e.msg.sender != from);
-    require allowance(e, from, e.msg.sender) < value;
-
-    transferFrom@withrevert(e, from, to, value);
-
-    assert(lastReverted, "It didn't revert");
-}
-
-// Verify it won't fail if there isn't allowance but from is sender
-rule transferFrom_allowance_to(address from, address to, uint256 value) {
-    env e;
-
-    require(e.msg.sender == from);
-    require to != 0 && to != currentContract;
-    require allowance(e, from, e.msg.sender) < value;
-
-    transferFrom@withrevert(e, from, to, value); // We make sure it won't fail due allowance as from is the sender
-
-    assert(true, "");
+    assert to == 0 || to == currentContract => lastReverted , "incorrect address";
+    assert senderBalance < value => lastReverted , "insufficient balance";
+    assert allowed < value && e.msg.sender != from => lastReverted, "insufficient allowance";
 }
 
 // Verify that allowance hold on approve
