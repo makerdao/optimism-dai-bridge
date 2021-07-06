@@ -223,38 +223,28 @@ rule permit_revert_deadline(address owner, address spender, uint256 value, uint2
 rule rely(address usr) {
     env e;
 
-    rely(e, usr);
-
-    assert(wards(e, usr) == 1, "Rely did not set the wards as expected");
-}
-
-// Verify that rely reverts on not authorized addresses
-rule rely_revert_auth(address usr) {
-    env e;
-
-    require wards(e, e.msg.sender) == 0;
+    uint256 ward = wards(e, e.msg.sender);
 
     rely@withrevert(e, usr);
 
-    assert(lastReverted, "It didn't revert");
+    if (!lastReverted) {
+        assert(wards(e, usr) == 1, "Rely did not set the wards as expected");
+    }
+
+    assert(ward == 0 => lastReverted, "Lack of auth did not revert");
 }
 
 // Verify that wards hold on deny
 rule deny(address usr) {
     env e;
 
-    deny(e, usr);
-
-    assert(wards(e, usr) == 0, "Deny did not set the wards as expected");
-}
-
-// Verify that deny reverts on not authorized addresses
-rule deny_revert_auth(address usr) {
-    env e;
-
-    require wards(e, e.msg.sender) == 0;
+    uint256 ward = wards(e, e.msg.sender);
 
     deny@withrevert(e, usr);
 
-    assert(lastReverted, "It didn't revert");
+    if (!lastReverted) {
+        assert(wards(e, usr) == 0, "Deny did not set the wards as expected");
+    }
+
+    assert(ward == 0 => lastReverted, "Lack of auth did not revert");
 }
