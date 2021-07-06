@@ -1,51 +1,33 @@
 // dai.spec
-// Verify that supply and balance behave correctly on mint
-rule mint(address to, uint256 value) {
-    // The env type represents the EVM parameters passed in every
-    //   call (msg.*, tx.*, block.* variables in solidity).
+
+// Verify that wards behaves correctly on rely
+rule rely(address usr) {
     env e;
 
-    // Save the totalSupply and sender balance before minting
-    uint256 supply = totalSupply(e);
-    uint256 toBalance = balanceOf(e, to);
     uint256 ward = wards(e, e.msg.sender);
 
-    mint@withrevert(e, to, value);
+    rely@withrevert(e, usr);
 
     if (!lastReverted) {
-        assert(balanceOf(e, to) == toBalance + value, "Mint did not increase the balance as expected");
-        assert(totalSupply(e) == supply + value, "Mint did not increase the supply as expected");
+        assert(wards(e, usr) == 1, "Rely did not set the wards as expected");
     }
 
     assert(ward == 0 => lastReverted, "Lack of auth did not revert");
-    assert(supply + value > max_uint => lastReverted, "Supply overflow did not revert");
-    assert(toBalance + value > max_uint => lastReverted, "Balance overflow did not revert");
-    assert(to == 0 || to == currentContract => lastReverted, "Incorrect address did not revert");
 }
 
-// Verify that supply and balance behave correctly on burn
-rule burn(address from, uint256 value) {
+// Verify that wards behaves correctly on deny
+rule deny(address usr) {
     env e;
 
-    uint256 supply = totalSupply(e);
-    uint256 fromBalance = balanceOf(e, from);
-    uint256 allowed = allowance(e, from, e.msg.sender);
     uint256 ward = wards(e, e.msg.sender);
 
-    burn@withrevert(e, from, value);
+    deny@withrevert(e, usr);
 
     if (!lastReverted) {
-        if from != e.msg.sender && wards(e, e.msg.sender) != 1 && allowed != max_uint {
-            assert(allowance(e, from, e.msg.sender) == allowed - value);
-        } else {
-            assert(allowance(e, from, e.msg.sender) == allowed);
-        }
-        assert(balanceOf(e, from) == fromBalance - value, "Burn did not decrease the balance as expected");
-        assert(totalSupply(e) == supply - value, "Burn did not decrease the supply as expected");
+        assert(wards(e, usr) == 0, "Deny did not set the wards as expected");
     }
 
-    assert(fromBalance < value => lastReverted, "Balance underflow did not revert");
-    assert(from != e.msg.sender && ward != 1 && allowed < value => lastReverted, "Allowance underflow did not revert");
+    assert(ward == 0 => lastReverted, "Lack of auth did not revert");
 }
 
 // Verify that balance behaves correctly on transfer
@@ -142,6 +124,53 @@ rule decreaseAllowance(address spender, uint256 value) {
     assert(spenderAllowance - value < 0 => lastReverted, "Underflow did not revert");
 }
 
+// Verify that supply and balance behave correctly on mint
+rule mint(address to, uint256 value) {
+    env e;
+
+    // Save the totalSupply and sender balance before minting
+    uint256 supply = totalSupply(e);
+    uint256 toBalance = balanceOf(e, to);
+    uint256 ward = wards(e, e.msg.sender);
+
+    mint@withrevert(e, to, value);
+
+    if (!lastReverted) {
+        assert(balanceOf(e, to) == toBalance + value, "Mint did not increase the balance as expected");
+        assert(totalSupply(e) == supply + value, "Mint did not increase the supply as expected");
+    }
+
+    assert(ward == 0 => lastReverted, "Lack of auth did not revert");
+    assert(supply + value > max_uint => lastReverted, "Supply overflow did not revert");
+    assert(toBalance + value > max_uint => lastReverted, "Balance overflow did not revert");
+    assert(to == 0 || to == currentContract => lastReverted, "Incorrect address did not revert");
+}
+
+// Verify that supply and balance behave correctly on burn
+rule burn(address from, uint256 value) {
+    env e;
+
+    uint256 supply = totalSupply(e);
+    uint256 fromBalance = balanceOf(e, from);
+    uint256 allowed = allowance(e, from, e.msg.sender);
+    uint256 ward = wards(e, e.msg.sender);
+
+    burn@withrevert(e, from, value);
+
+    if (!lastReverted) {
+        if from != e.msg.sender && wards(e, e.msg.sender) != 1 && allowed != max_uint {
+            assert(allowance(e, from, e.msg.sender) == allowed - value);
+        } else {
+            assert(allowance(e, from, e.msg.sender) == allowed);
+        }
+        assert(balanceOf(e, from) == fromBalance - value, "Burn did not decrease the balance as expected");
+        assert(totalSupply(e) == supply - value, "Burn did not decrease the supply as expected");
+    }
+
+    assert(fromBalance < value => lastReverted, "Balance underflow did not revert");
+    assert(from != e.msg.sender && ward != 1 && allowed < value => lastReverted, "Allowance underflow did not revert");
+}
+
 // Verify that allowance behaves correctly on permit
 rule permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s) {
     env e;
@@ -154,34 +183,4 @@ rule permit(address owner, address spender, uint256 value, uint256 deadline, uin
 
     assert(e.block.timestamp > deadline => lastReverted, "Deadline exceed did not revert");
     // TODO: Add the other revert conditions
-}
-
-// Verify that wards behaves correctly on rely
-rule rely(address usr) {
-    env e;
-
-    uint256 ward = wards(e, e.msg.sender);
-
-    rely@withrevert(e, usr);
-
-    if (!lastReverted) {
-        assert(wards(e, usr) == 1, "Rely did not set the wards as expected");
-    }
-
-    assert(ward == 0 => lastReverted, "Lack of auth did not revert");
-}
-
-// Verify that wards behaves correctly on deny
-rule deny(address usr) {
-    env e;
-
-    uint256 ward = wards(e, e.msg.sender);
-
-    deny@withrevert(e, usr);
-
-    if (!lastReverted) {
-        assert(wards(e, usr) == 0, "Deny did not set the wards as expected");
-    }
-
-    assert(ward == 0 => lastReverted, "Lack of auth did not revert");
 }
