@@ -1,10 +1,9 @@
 node_modules/
 artifacts/
 cache/
-artifacts-l2
 typechain
 crytic-export/
-artifacts-ovm
+# artifacts-ovm
 cache-ovm
 .env
 gasReporterOutput.json
