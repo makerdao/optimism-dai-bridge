@@ -125,8 +125,8 @@ rule transfer(address to, uint256 value) {
         }
     }
 
-    assert to == 0 || to == currentContract => lastReverted , "incorrect address";
-    assert senderBalance < value => lastReverted , "insufficient balance";
+    assert(to == 0 || to == currentContract => lastReverted , "Incorrect address didn't revert");
+    assert(senderBalance < value => lastReverted , "Insufficient balance didn't revert");
 }
 
 // Verify that balance and allowance behave correctly on transferFrom
@@ -155,9 +155,9 @@ rule transferFrom(address from, address to, uint256 value) {
         }
     }
 
-    assert to == 0 || to == currentContract => lastReverted , "incorrect address";
-    assert senderBalance < value => lastReverted , "insufficient balance";
-    assert allowed < value && e.msg.sender != from => lastReverted, "insufficient allowance";
+    assert(to == 0 || to == currentContract => lastReverted , "Incorrect address didn't revert");
+    assert(senderBalance < value => lastReverted , "Insufficient balance didn't revert");
+    assert(allowed < value && e.msg.sender != from => lastReverted, "Insufficient allowance didn't revert");
 }
 
 // Verify that allowance hold on approve
