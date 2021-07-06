@@ -90,8 +90,8 @@ rule transfer(address to, uint256 value) {
         }
     }
 
-    assert(to == 0 || to == currentContract => lastReverted , "Incorrect address didn't revert");
-    assert(senderBalance < value => lastReverted , "Insufficient balance didn't revert");
+    assert(to == 0 || to == currentContract => lastReverted, "Incorrect address didn't revert");
+    assert(senderBalance < value => lastReverted, "Insufficient balance didn't revert");
     assert(e.msg.value > 0 => lastReverted, "Sending ETH did not revert");
 }
 
@@ -121,8 +121,8 @@ rule transferFrom(address from, address to, uint256 value) {
         }
     }
 
-    assert(to == 0 || to == currentContract => lastReverted , "Incorrect address did not revert");
-    assert(fromBalance < value => lastReverted , "Insufficient balance did not revert");
+    assert(to == 0 || to == currentContract => lastReverted, "Incorrect address did not revert");
+    assert(fromBalance < value => lastReverted, "Insufficient balance did not revert");
     assert(allowed < value && e.msg.sender != from => lastReverted, "Insufficient allowance did not revert");
     assert(e.msg.value > 0 => lastReverted, "Sending ETH did not revert");
 }
