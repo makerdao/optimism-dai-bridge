@@ -184,14 +184,25 @@ rule increaseAllowance(address spender, uint256 value) {
 
     uint256 spenderAllowance = allowance(e.msg.sender, spender);
 
+    increaseAllowance(e, spender, value);
+
+    assert(allowance(e.msg.sender, spender) == spenderAllowance + value, "increaseAllowance did not increase the allowance as expected");
+}
+
+// Verify revert rules on increaseAllowance
+rule increaseAllowance_revert(address spender, uint256 value) {
+    env e;
+
+    uint256 spenderAllowance = allowance(e.msg.sender, spender);
+
     increaseAllowance@withrevert(e, spender, value);
 
-    if (!lastReverted) {
-        assert(allowance(e.msg.sender, spender) == spenderAllowance + value, "increaseAllowance did not increase the allowance as expected");
-    }
+    bool revert1 = spenderAllowance + value > max_uint;
+    bool revert2 = e.msg.value > 0;
 
-    assert(spenderAllowance + value > max_uint => lastReverted, "Overflow did not revert");
-    assert(e.msg.value > 0 => lastReverted, "Sending ETH did not revert");
+    assert(revert1 => lastReverted, "Overflow did not revert");
+    assert(revert2 => lastReverted, "Sending ETH did not revert");
+    assert(lastReverted => revert1 || revert2, "Revert rules are not covering all the cases");
 }
 
 // Verify that allowance behaves correctly on decreaseAllowance
@@ -200,14 +211,25 @@ rule decreaseAllowance(address spender, uint256 value) {
 
     uint256 spenderAllowance = allowance(e.msg.sender, spender);
 
+    decreaseAllowance(e, spender, value);
+
+    assert(allowance(e.msg.sender, spender) == spenderAllowance - value, "decreaseAllowance did not decrease the allowance as expected");
+}
+
+// Verify revert rules on decreaseAllowance
+rule decreaseAllowance_revert(address spender, uint256 value) {
+    env e;
+
+    uint256 spenderAllowance = allowance(e.msg.sender, spender);
+
     decreaseAllowance@withrevert(e, spender, value);
 
-    if (!lastReverted) {
-        assert(allowance(e.msg.sender, spender) == spenderAllowance - value, "decreaseAllowance did not decrease the allowance as expected");
-    }
+    bool revert1 = spenderAllowance - value < 0;
+    bool revert2 = e.msg.value > 0;
 
-    assert(spenderAllowance - value < 0 => lastReverted, "Underflow did not revert");
-    assert(e.msg.value > 0 => lastReverted, "Sending ETH did not revert");
+    assert(revert1 => lastReverted, "Underflow did not revert");
+    assert(revert2 => lastReverted, "Sending ETH did not revert");
+    assert(lastReverted => revert1 || revert2, "Revert rules are not covering all the cases");
 }
 
 // Verify that supply and balance behave correctly on mint
