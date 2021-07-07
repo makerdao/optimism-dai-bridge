@@ -129,29 +129,40 @@ rule transferFrom(address from, address to, uint256 value) {
     uint256 fromBalance = balanceOf(from);
     uint256 toBalance = balanceOf(to);
     uint256 allowed = allowance(from, e.msg.sender);
+    bool deductAllowance = e.msg.sender != from && allowed != max_uint;
+    bool fromSameAsTo = from == to;
 
     require(toBalance + value <= max_uint); // Avoid evaluating the overflow case
 
+    transferFrom(e, from, to, value);
+
+    assert(deductAllowance => allowance(from, e.msg.sender) == allowed - value, "Allowance did not decrease in value");
+    assert(!deductAllowance => allowance(from, e.msg.sender) == allowed, "Allowance did not remain the same");
+    assert(!fromSameAsTo => balanceOf(from) == fromBalance - value, "TransferFrom did not decrease the balance as expected");
+    assert(!fromSameAsTo => balanceOf(to) == toBalance + value, "TransferFrom did not increase the balance as expected");
+    assert(fromSameAsTo => balanceOf(from) == fromBalance && fromBalance == toBalance, "TransferFrom did not kept the balance as expected");
+}
+
+// Verify revert rules on transferFrom
+rule transferFrom_revert(address from, address to, uint256 value) {
+    env e;
+
+    uint256 fromBalance = balanceOf(from);
+    uint256 toBalance = balanceOf(to);
+    uint256 allowed = allowance(from, e.msg.sender);
+
     transferFrom@withrevert(e, from, to, value);
 
-    if (!lastReverted) {
-        if e.msg.sender != from && allowed != max_uint {
-            assert(allowance(from, e.msg.sender) == allowed - value, "Allowance did not decrease in value");
-        } else {
-            assert(allowance(from, e.msg.sender) == allowed, "Allowance did not remain the same");
-        }
-        if (from != to) {
-            assert(balanceOf(from) == fromBalance - value, "TransferFrom did not decrease the balance as expected");
-            assert(balanceOf(to) == toBalance + value, "TransferFrom did not increase the balance as expected");
-        } else {
-            assert(balanceOf(from) == fromBalance && fromBalance == toBalance, "TransferFrom did not kept the balance as expected");
-        }
-    }
+    bool revert1 = to == 0 || to == currentContract;
+    bool revert2 = fromBalance < value;
+    bool revert3 = allowed < value && e.msg.sender != from;
+    bool revert4 = e.msg.value > 0;
 
-    assert(to == 0 || to == currentContract => lastReverted, "Incorrect address did not revert");
-    assert(fromBalance < value => lastReverted, "Insufficient balance did not revert");
-    assert(allowed < value && e.msg.sender != from => lastReverted, "Insufficient allowance did not revert");
-    assert(e.msg.value > 0 => lastReverted, "Sending ETH did not revert");
+    assert(revert1 => lastReverted, "Incorrect address did not revert");
+    assert(revert2 => lastReverted, "Insufficient balance did not revert");
+    assert(revert3 => lastReverted, "Insufficient allowance did not revert");
+    assert(revert4 => lastReverted, "Sending ETH did not revert");
+    assert(lastReverted => revert1 || revert2 || revert3 || revert4, "Revert rules are not covering all the cases");
 }
 
 // Verify that allowance behaves correctly on approve
