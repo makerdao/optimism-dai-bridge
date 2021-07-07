@@ -87,20 +87,38 @@ rule transfer(address to, uint256 value) {
 
     require(toBalance + value <= max_uint); // Avoid evaluating the overflow case
 
+    transfer(e, to, value);
+
+    assert(e.msg.sender != to =>
+            balanceOf(e.msg.sender) == senderBalance - value &&
+            balanceOf(to) == toBalance + value,
+            "Transfer did not change balances as expected"
+    );
+
+    assert(e.msg.sender == to =>
+            balanceOf(e.msg.sender) == senderBalance &&
+            senderBalance == toBalance,
+            "Transfer did not keep the balance in edge case as expected"
+    );
+}
+
+// Verify revert rules on transfer
+rule transfer_revert(address to, uint256 value) {
+    env e;
+
+    uint256 senderBalance = balanceOf(e.msg.sender);
+    uint256 toBalance = balanceOf(to);
+
     transfer@withrevert(e, to, value);
 
-    if (!lastReverted) {
-        if (e.msg.sender != to) {
-            assert(balanceOf(e.msg.sender) == senderBalance - value, "Transfer did not decrease the balance as expected");
-            assert(balanceOf(to) == toBalance + value, "Transfer did not increase the balance as expected");
-        } else {
-            assert(balanceOf(e.msg.sender) == senderBalance && senderBalance == toBalance, "Transfer did not keep the balance in edge case as expected");
-        }
-    }
+    bool revert1 = to == 0 || to == currentContract;
+    bool revert2 = senderBalance < value;
+    bool revert3 = e.msg.value > 0;
 
-    assert(to == 0 || to == currentContract => lastReverted, "Incorrect address didn't revert");
-    assert(senderBalance < value => lastReverted, "Insufficient balance didn't revert");
-    assert(e.msg.value > 0 => lastReverted, "Sending ETH did not revert");
+    assert(revert1 => lastReverted, "Incorrect address didn't revert");
+    assert(revert2 => lastReverted, "Insufficient balance didn't revert");
+    assert(revert3 => lastReverted, "Sending ETH did not revert");
+    assert(lastReverted => revert1 || revert2 || revert3, "Revert rules are not covering all the cases");
 }
 
 // Verify that balance and allowance behave correctly on transferFrom
