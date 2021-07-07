@@ -277,7 +277,6 @@ rule mint_revert(address to, uint256 value) {
 
     // Save the totalSupply and sender balance before minting
     uint256 supply = totalSupply();
-    uint256 toBalance = balanceOf(to);
     uint256 ward = wards(e.msg.sender);
 
     mint@withrevert(e, to, value);
@@ -325,7 +324,7 @@ rule burn_revert(address from, uint256 value) {
     uint256 allowed = allowance(from, e.msg.sender);
     uint256 ward = wards(e.msg.sender);
 
-    burn(e, from, value);
+    burn@withrevert(e, from, value);
 
     bool revert1 = fromBalance < value;
     bool revert2 = from != e.msg.sender && ward !=1 && allowed < value;
