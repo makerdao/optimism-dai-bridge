@@ -269,18 +269,37 @@ rule mint(address to, uint256 value) {
 
     require(supply >= toBalance);
 
+    mint(e, to, value);
+
+    assert(balanceOf(to) == toBalance + value, "Mint did not increase the balance as expected");
+    assert(totalSupply() == supply + value, "Mint did not increase the supply as expected");
+}
+
+// Verify revert rules on mint
+rule mint_revert(address to, uint256 value) {
+    env e;
+
+    // Save the totalSupply and sender balance before minting
+    uint256 supply = totalSupply();
+    uint256 toBalance = balanceOf(to);
+    uint256 ward = wards(e.msg.sender);
+
+    require(supply >= toBalance);
+
     mint@withrevert(e, to, value);
 
-    if (!lastReverted) {
-        assert(balanceOf(to) == toBalance + value, "Mint did not increase the balance as expected");
-        assert(totalSupply() == supply + value, "Mint did not increase the supply as expected");
-    }
+    bool revert1 = ward == 0;
+    bool revert2 = supply + value > max_uint;
+    bool revert3 = toBalance + value > max_uint;
+    bool revert4 = to == 0 || to == currentContract;
+    bool revert5 = e.msg.value > 0;
 
-    assert(ward == 0 => lastReverted, "Lack of auth did not revert");
-    assert(supply + value > max_uint => lastReverted, "Supply overflow did not revert");
-    assert(toBalance + value > max_uint => lastReverted, "Balance overflow did not revert");
-    assert(to == 0 || to == currentContract => lastReverted, "Incorrect address did not revert");
-    assert(e.msg.value > 0 => lastReverted, "Sending ETH did not revert");
+    assert(revert1 => lastReverted, "Lack of auth did not revert");
+    assert(revert2 => lastReverted, "Supply overflow did not revert");
+    assert(revert3 => lastReverted, "Balance overflow did not revert");
+    assert(revert4 => lastReverted, "Incorrect address did not revert");
+    assert(revert5 => lastReverted, "Sending ETH did not revert");
+    assert(lastReverted => revert1 || revert2 || revert3 || revert4 || revert5, "Revert rules are not covering all the cases");
 }
 
 // Verify that supply and balance behave correctly on burn
