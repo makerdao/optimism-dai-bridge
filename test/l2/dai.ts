@@ -131,6 +131,16 @@ describe('Dai', () => {
         expect(balanceAfter).to.be.eq(balanceBefore.sub(1))
       })
 
+      it('can burn other if approved', async () => {
+        const balanceBefore = await dai.balanceOf(signers.user1.address)
+        await dai.connect(signers.user1).approve(signers.user2.address, 1)
+
+        await dai.connect(signers.user2).burn(signers.user1.address, 1)
+
+        const balanceAfter = await dai.balanceOf(signers.user1.address)
+        expect(balanceAfter).to.be.eq(balanceBefore.sub(1))
+      })
+
       it('approves to increase allowance', async () => {
         const allowanceBefore = await dai.allowance(signers.user1.address, signers.user2.address)
         await dai.connect(signers.user1).approve(signers.user2.address, 1)
