@@ -63,11 +63,9 @@ rule rely_revert(address usr) {
 
     uint256 ward = wards(e.msg.sender);
 
-    require(ward == 0 || ward == 1);
-
     rely@withrevert(e, usr);
 
-    bool revert1 = ward == 0;
+    bool revert1 = ward != 1;
     bool revert2 = e.msg.value > 0;
 
     assert(revert1 => lastReverted, "Lack of auth did not revert");
@@ -92,11 +90,9 @@ rule deny_revert(address usr) {
 
     uint256 ward = wards(e.msg.sender);
 
-    require(ward == 0 || ward == 1);
-
     deny@withrevert(e, usr);
 
-    bool revert1 = ward == 0;
+    bool revert1 = ward != 1;
     bool revert2 = e.msg.value > 0;
 
     assert(revert1 => lastReverted, "Lack of auth did not revert");
@@ -286,18 +282,16 @@ rule mint_revert(address to, uint256 value) {
 
     mint@withrevert(e, to, value);
 
-    bool revert1 = ward == 0;
+    bool revert1 = ward != 1;
     bool revert2 = supply + value > max_uint;
-    bool revert3 = toBalance + value > max_uint;
-    bool revert4 = to == 0 || to == currentContract;
-    bool revert5 = e.msg.value > 0;
+    bool revert3 = to == 0 || to == currentContract;
+    bool revert4 = e.msg.value > 0;
 
     assert(revert1 => lastReverted, "Lack of auth did not revert");
     assert(revert2 => lastReverted, "Supply overflow did not revert");
-    assert(revert3 => lastReverted, "Balance overflow did not revert");
-    assert(revert4 => lastReverted, "Incorrect address did not revert");
-    assert(revert5 => lastReverted, "Sending ETH did not revert");
-    assert(lastReverted => revert1 || revert2 || revert3 || revert4 || revert5, "Revert rules are not covering all the cases");
+    assert(revert3 => lastReverted, "Incorrect address did not revert");
+    assert(revert4 => lastReverted, "Sending ETH did not revert");
+    assert(lastReverted => revert1 || revert2 || revert3 || revert4, "Revert rules are not covering all the cases");
 }
 
 // Verify that supply and balance behave correctly on burn
