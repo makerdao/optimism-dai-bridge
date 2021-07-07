@@ -8,8 +8,7 @@ import { JsonRpcProvider } from '@ethersproject/providers'
 import hre from 'hardhat'
 import { mapValues } from 'lodash'
 
-import { ZERO_GAS_OPTS } from '../test-e2e/helpers/utils'
-import { deploy, getRequiredEnv } from './common'
+import { finalizePermissions, getRequiredEnv } from './common'
 
 const L1_MAINNET_RPC_URL = getRequiredEnv('L1_MAINNET_RPC_URL')
 const L1_MAINNET_DEPLOYER_PRIV_KEY = getRequiredEnv('L1_MAINNET_DEPLOYER_PRIV_KEY')
@@ -30,7 +29,7 @@ async function main() {
   const l2Provider = new JsonRpcProvider(L2_MAINNET_RPC_URL)
   const l2Deployer = new hre.ethers.Wallet(L2_MAINNET_DEPLOYER_PRIV_KEY, l2Provider)
 
-  const deploymentInfo = await deploy({
+  const deploymentInfo = await finalizePermissions({
     desiredL2DaiAddress: '0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1',
     l1Deployer: l1Deployer,
     l2Deployer: l2Deployer,
@@ -40,7 +39,7 @@ async function main() {
     L1_XDOMAIN_MESSENGER: L1_MAINNET_XDOMAIN_MESSENGER,
     L2_XDOMAIN_MESSENGER: L2_MAINNET_XDOMAIN_MESSENGER,
     L1_TX_OPTS: {},
-    L2_TX_OPTS: ZERO_GAS_OPTS,
+    L2_TX_OPTS: {},
   })
 
   const allContractInfo = {

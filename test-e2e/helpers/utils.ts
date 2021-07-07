@@ -94,6 +94,15 @@ export async function deployUsingFactoryAndVerify<T extends ContractFactory>(
   return contractDeployed as any
 }
 
+export async function contractAtFromFactory<T extends ContractFactory>(
+  signer: Signer,
+  factory: T,
+  address: string,
+): Promise<ReturnType<T['deploy']>> {
+  const contractFactory = new ethers.ContractFactory(factory.interface, factory.bytecode, signer)
+  return contractFactory.attach(address)
+}
+
 export async function waitForTx(tx: Promise<any>): Promise<any> {
   const resolvedTx = await tx
   return await resolvedTx.wait()

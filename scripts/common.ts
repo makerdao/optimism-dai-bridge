@@ -5,7 +5,13 @@ import { assert } from 'ts-essentials'
 
 import { getAddressOfNextDeployedContract } from '../test-e2e/helpers/address'
 import { getActiveWards } from '../test-e2e/helpers/auth'
-import { deployUsingFactoryAndVerify, getL2Factory, MAX_UINT256, waitForTx } from '../test-e2e/helpers/utils'
+import {
+  contractAtFromFactory,
+  deployUsingFactoryAndVerify,
+  getL2Factory,
+  MAX_UINT256,
+  waitForTx,
+} from '../test-e2e/helpers/utils'
 
 interface Options {
   l1Deployer: Signer
@@ -130,6 +136,85 @@ export async function deploy(opts: Options) {
   expect(await getActiveWards(l1GovernanceRelay)).to.deep.eq([opts.L1_PAUSE_PROXY_ADDRESS, opts.L1_ESM_ADDRESS])
   expect(await getActiveWards(l2DAITokenBridge)).to.deep.eq([l2GovernanceRelay.address])
   expect(await getActiveWards(l2Dai)).to.deep.eq([l2DAITokenBridge.address, l2GovernanceRelay.address])
+
+  return {
+    l1Escrow,
+    l1DAITokenBridge,
+    l1GovernanceRelay,
+    l2Dai,
+    l2DAITokenBridge,
+    l2GovernanceRelay,
+  }
+}
+
+export async function finalizePermissions(opts: Options) {
+  const l2Dai = await contractAtFromFactory(
+    opts.l2Deployer,
+    await getL2Factory('Dai'),
+    '0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1',
+  )
+  const l1Escrow = await contractAtFromFactory(
+    opts.l1Deployer,
+    await l1.getContractFactory('L1Escrow'),
+    '0x467194771dAe2967Aef3ECbEDD3Bf9a310C76C65',
+  )
+  const l2DAITokenBridge = await contractAtFromFactory(
+    opts.l2Deployer,
+    await getL2Factory('L2DAITokenBridge'),
+    '0x467194771dAe2967Aef3ECbEDD3Bf9a310C76C65',
+  )
+  const l1DAITokenBridge = await contractAtFromFactory(
+    opts.l1Deployer,
+    await l1.getContractFactory('L1DAITokenBridge'),
+    '0x10E6593CDda8c58a1d0f14C5164B376352a55f2F',
+  )
+  const l2GovernanceRelay = await contractAtFromFactory(
+    opts.l2Deployer,
+    await getL2Factory('L2GovernanceRelay'),
+    '0x10E6593CDda8c58a1d0f14C5164B376352a55f2F',
+  )
+  const l1GovernanceRelay = await contractAtFromFactory(
+    opts.l1Deployer,
+    await l1.getContractFactory('L1GovernanceRelay'),
+    '0x09B354CDA89203BB7B3131CC728dFa06ab09Ae2F',
+  )
+
+  // Permissions
+  console.log('Finalizing permissions for L1Escrow...')
+  await waitForTx(
+    l1Escrow
+      .connect(opts.l1Deployer)
+      .approve(opts.L1_DAI_ADDRESS, l1DAITokenBridge.address, MAX_UINT256, opts.L1_TX_OPTS),
+  )
+  await waitForTx(l1Escrow.connect(opts.l1Deployer).rely(opts.L1_PAUSE_PROXY_ADDRESS, opts.L1_TX_OPTS))
+  await waitForTx(l1Escrow.connect(opts.l1Deployer).rely(opts.L1_ESM_ADDRESS, opts.L1_TX_OPTS))
+  await waitForTx(l1Escrow.connect(opts.l1Deployer).deny(await opts.l1Deployer.getAddress(), opts.L1_TX_OPTS))
+
+  console.log('Finalizing permissions for L2DAI...')
+  await waitForTx(l2Dai.rely(l2DAITokenBridge.address, opts.L2_TX_OPTS))
+  await waitForTx(l2Dai.rely(l2GovernanceRelay.address, opts.L2_TX_OPTS))
+  // await waitForTx(l2Dai.deny(await opts.l2Deployer.getAddress(), opts.L2_TX_OPTS))
+
+  console.log('Finalizing permissions for L1DAITokenBridge...')
+  await waitForTx(l1DAITokenBridge.rely(opts.L1_PAUSE_PROXY_ADDRESS, opts.L1_TX_OPTS))
+  await waitForTx(l1DAITokenBridge.rely(opts.L1_ESM_ADDRESS, opts.L1_TX_OPTS))
+  await waitForTx(l1DAITokenBridge.deny(await opts.l1Deployer.getAddress(), opts.L1_TX_OPTS))
+
+  console.log('Finalizing permissions for L2DAITokenBridge...')
+  await waitForTx(l2DAITokenBridge.rely(l2GovernanceRelay.address, opts.L2_TX_OPTS))
+  await waitForTx(l2DAITokenBridge.deny(await opts.l2Deployer.getAddress(), opts.L2_TX_OPTS))
+
+  console.log('Finalizing permissions for L1GovernanceRelay...')
+  await waitForTx(l1GovernanceRelay.rely(opts.L1_PAUSE_PROXY_ADDRESS, opts.L1_TX_OPTS))
+  await waitForTx(l1GovernanceRelay.rely(opts.L1_ESM_ADDRESS, opts.L1_TX_OPTS))
+  await waitForTx(l1GovernanceRelay.deny(await opts.l1Deployer.getAddress(), opts.L1_TX_OPTS))
+
+  console.log('Permission sanity checks...')
+  expect(await getActiveWards(l1Escrow)).to.deep.eq([opts.L1_PAUSE_PROXY_ADDRESS, opts.L1_ESM_ADDRESS])
+  expect(await getActiveWards(l1DAITokenBridge)).to.deep.eq([opts.L1_PAUSE_PROXY_ADDRESS, opts.L1_ESM_ADDRESS])
+  expect(await getActiveWards(l1GovernanceRelay)).to.deep.eq([opts.L1_PAUSE_PROXY_ADDRESS, opts.L1_ESM_ADDRESS])
+  expect(await getActiveWards(l2DAITokenBridge)).to.deep.eq([l2GovernanceRelay.address])
+  expect(await getActiveWards(l2Dai)).to.include.members([l2DAITokenBridge.address, l2GovernanceRelay.address])
 
   return {
     l1Escrow,
