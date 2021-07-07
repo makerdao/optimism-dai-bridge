@@ -63,7 +63,7 @@ rule rely_revert(address usr) {
 
     uint256 ward = wards(e.msg.sender);
 
-    require(ward == 0 || ward == 1);
+    require(ward == 0 || ward == 1);
 
     rely@withrevert(e, usr);
 
@@ -92,7 +92,7 @@ rule deny_revert(address usr) {
 
     uint256 ward = wards(e.msg.sender);
 
-    require(ward == 0 || ward == 1);
+    require(ward == 0 || ward == 1);
 
     deny@withrevert(e, usr);
 
