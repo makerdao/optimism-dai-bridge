@@ -191,13 +191,21 @@ rule transferFrom_revert(address from, address to, uint256 value) {
 rule approve(address spender, uint256 value) {
     env e;
 
+    approve(e, spender, value);
+
+    assert(allowance(e.msg.sender, spender) == value, "Approve did not set the allowance as expected");
+}
+
+// Verify revert rules on approve
+rule approve_revert(address spender, uint256 value) {
+    env e;
+
     approve@withrevert(e, spender, value);
 
-    if (!lastReverted) {
-        assert(allowance(e.msg.sender, spender) == value, "Approve did not set the allowance as expected");
-    }
+    bool revert1 = e.msg.value > 0;
 
-    assert(e.msg.value > 0 => lastReverted, "Sending ETH did not revert");
+    assert(revert1 => lastReverted, "Sending ETH did not revert");
+    assert(lastReverted => revert1, "Revert rules are not covering all the cases");
 }
 
 // Verify that allowance behaves correctly on increaseAllowance
