@@ -174,8 +174,8 @@ contract Dai {
       }
     }
 
-    balanceOf[from] = balance - value;
-    totalSupply     = _sub(totalSupply, value);
+    balanceOf[from] = balance - value; // note: we don't need overflow checks b/c require(balance >= value) and balance <= totalSupply
+    totalSupply     = totalSupply - value;
 
     emit Transfer(from, address(0), value);
   }
