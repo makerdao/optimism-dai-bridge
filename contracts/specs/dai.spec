@@ -284,8 +284,6 @@ rule mint_revert(address to, uint256 value) {
     uint256 toBalance = balanceOf(to);
     uint256 ward = wards(e.msg.sender);
 
-    require(supply >= toBalance);
-
     mint@withrevert(e, to, value);
 
     bool revert1 = ward == 0;
