@@ -340,13 +340,21 @@ rule burn_revert(address from, uint256 value) {
 rule permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s) {
     env e;
 
+    permit(e, owner, spender, value, deadline, v, r, s);
+
+    assert(allowance(owner, spender) == value, "Permit did not set the allowance as expected");
+}
+
+// Verify revert rules on permit
+rule permit_revert(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s) {
+    env e;
+
     permit@withrevert(e, owner, spender, value, deadline, v, r, s);
 
-    if (!lastReverted) {
-        assert(allowance(owner, spender) == value, "Permit did not set the allowance as expected");
-    }
+    bool revert1 = e.block.timestamp > deadline;
+    bool revert2 = e.msg.value > 0;
 
-    assert(e.block.timestamp > deadline => lastReverted, "Deadline exceed did not revert");
-    // TODO: Add the missing revert condition
-    assert(e.msg.value > 0 => lastReverted, "Sending ETH did not revert");
+    assert(revert1 => lastReverted, "Deadline exceed did not revert");
+    assert(revert2 => lastReverted, "Sending ETH did not revert");
+    // TODO: Add the missing revert condition and full coverage for revert cases
 }
