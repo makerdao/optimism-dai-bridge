@@ -84,18 +84,19 @@ rule transfer(address to, uint256 value) {
 
     uint256 senderBalance = balanceOf(e.msg.sender);
     uint256 toBalance = balanceOf(to);
+    bool senderSameAsReceiver = e.msg.sender == to;
 
     require(toBalance + value <= max_uint); // Avoid evaluating the overflow case
 
     transfer(e, to, value);
 
-    assert(e.msg.sender != to =>
+    assert(!senderSameAsReceiver =>
             balanceOf(e.msg.sender) == senderBalance - value &&
             balanceOf(to) == toBalance + value,
             "Transfer did not change balances as expected"
     );
 
-    assert(e.msg.sender == to =>
+    assert(senderSameAsReceiver =>
             balanceOf(e.msg.sender) == senderBalance &&
             senderBalance == toBalance,
             "Transfer did not keep the balance in edge case as expected"
