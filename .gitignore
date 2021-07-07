@@ -9,4 +9,5 @@ cache-ovm
 .env
 gasReporterOutput.json
 corpus/
-.*
+.*certora*
+.last_confs/
