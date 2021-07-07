@@ -21,33 +21,31 @@ import {OVM_CrossDomainEnabled} from "@eth-optimism/contracts/libraries/bridge/O
 
 contract L2GovernanceRelay is OVM_CrossDomainEnabled {
   
-  address public immutable l1GovernanceRelay;
+    address public immutable l1GovernanceRelay;
 
-  constructor(
-    address _l2CrossDomainMessenger,
-    address _l1GovernanceRelay
-  )
-    OVM_CrossDomainEnabled(_l2CrossDomainMessenger)
-  {
-    l1GovernanceRelay = _l1GovernanceRelay;
-  }
+    constructor(
+        address _l2CrossDomainMessenger,
+        address _l1GovernanceRelay
+    ) OVM_CrossDomainEnabled(_l2CrossDomainMessenger) {
+        l1GovernanceRelay = _l1GovernanceRelay;
+    }
 
-  /**
-   * @dev Execute the call from L1.
-   */
-  function relay(address target, bytes calldata targetData)
-    external
-    onlyFromCrossDomainAccount(l1GovernanceRelay)
-  {
-    // Ensure no storage changes in the delegate call
-    // Target address is trusted so this is mostly to avoid a human error
-    // Note: we don't check l1GovernanceRelay because it's immutable
-    address _messenger = messenger;
+    /**
+    * @dev Execute the call from L1.
+    */
+    function relay(
+        address target,
+        bytes calldata targetData
+    ) external onlyFromCrossDomainAccount(l1GovernanceRelay) {
+        // Ensure no storage changes in the delegate call
+        // Target address is trusted so this is mostly to avoid a human error
+        // Note: we don't check l1GovernanceRelay because it's immutable
+        address _messenger = messenger;
 
-    bool ok;
-    (ok,) = target.delegatecall(targetData);
-    require(ok, "L2GovernanceRelay/delegatecall-error");
+        bool ok;
+        (ok,) = target.delegatecall(targetData);
+        require(ok, "L2GovernanceRelay/delegatecall-error");
 
-    require(_messenger == messenger, "L2GovernanceRelay/illegal-storage-change");
-  }
+        require(_messenger == messenger, "L2GovernanceRelay/illegal-storage-change");
+    }
 }

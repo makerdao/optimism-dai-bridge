@@ -23,51 +23,49 @@ import "../l2/L2GovernanceRelay.sol";
 // Relay a message from L1 to L2GovernanceRelay
 
 contract L1GovernanceRelay is OVM_CrossDomainEnabled {
-    
-  // --- Auth ---
-  mapping (address => uint256) public wards;
-  function rely(address usr) external auth {
-    wards[usr] = 1;
-    emit Rely(usr);
-  }
-  function deny(address usr) external auth {
-    wards[usr] = 0;
-    emit Deny(usr);
-  }
-  modifier auth {
-    require(wards[msg.sender] == 1, "L1GovernanceRelay/not-authorized");
-    _;
-  }
 
-  address public immutable l2GovernanceRelay;
+    // --- Auth ---
+    mapping (address => uint256) public wards;
+    function rely(address usr) external auth {
+        wards[usr] = 1;
+        emit Rely(usr);
+    }
+    function deny(address usr) external auth {
+        wards[usr] = 0;
+        emit Deny(usr);
+    }
+    modifier auth {
+        require(wards[msg.sender] == 1, "L1GovernanceRelay/not-authorized");
+        _;
+    }
 
-  event Rely(address indexed usr);
-  event Deny(address indexed usr);
+    address public immutable l2GovernanceRelay;
 
-  constructor(
-    address _l2GovernanceRelay,
-    address _l1messenger 
-  )
-    OVM_CrossDomainEnabled(_l1messenger)
-  {
-    wards[msg.sender] = 1;
-    emit Rely(msg.sender);
+    event Rely(address indexed usr);
+    event Deny(address indexed usr);
 
-    l2GovernanceRelay = _l2GovernanceRelay;
-  }
+    constructor(
+        address _l2GovernanceRelay,
+        address _l1messenger
+    ) OVM_CrossDomainEnabled(_l1messenger) {
+        wards[msg.sender] = 1;
+        emit Rely(msg.sender);
 
-  // Forward a call to be repeated on L2
-  function relay(address target, bytes calldata targetData, uint32 l2gas) external auth {
-    bytes memory data = abi.encodeWithSelector(
-      L2GovernanceRelay.relay.selector,
-      target,
-      targetData
-    );
+        l2GovernanceRelay = _l2GovernanceRelay;
+    }
 
-    sendCrossDomainMessage(
-      l2GovernanceRelay,
-      l2gas,
-      data
-    );
-  }
+    // Forward a call to be repeated on L2
+    function relay(address target, bytes calldata targetData, uint32 l2gas) external auth {
+        bytes memory data = abi.encodeWithSelector(
+            L2GovernanceRelay.relay.selector,
+            target,
+            targetData
+        );
+
+        sendCrossDomainMessage(
+            l2GovernanceRelay,
+            l2gas,
+            data
+        );
+    }
 }
