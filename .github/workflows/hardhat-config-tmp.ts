@@ -13,27 +13,7 @@ const config: HardhatUserConfig = {
     timeout: 50000,
   },
   solidity: {
-    compilers: [
-      {
-        version: '0.7.6',
-        settings: {
-          optimizer: {
-            enabled: false,
-          },
-        },
-      },
-    ],
-    overrides: {
-      'contracts/l2/dai.sol': {
-        version: '0.7.6',
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 200,
-          },
-        },
-      },
-    },
+    version: '0.7.6',
   },
   ovm: {
     solcVersion: '0.7.6',
