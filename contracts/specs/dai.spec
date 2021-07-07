@@ -302,24 +302,39 @@ rule burn(address from, uint256 value) {
     uint256 fromBalance = balanceOf(from);
     uint256 allowed = allowance(from, e.msg.sender);
     uint256 ward = wards(e.msg.sender);
+    bool senderSameAsFrom = e.msg.sender == from;
+    bool wardsEqOne = wards(e.msg.sender) == 1;
+    bool allowedEqMaxUint = allowed == max_uint;
 
     require(supply >= fromBalance);
 
-    burn@withrevert(e, from, value);
+    burn(e, from, value);
 
-    if (!lastReverted) {
-        if from != e.msg.sender && wards(e.msg.sender) != 1 && allowed != max_uint {
-            assert(allowance(from, e.msg.sender) == allowed - value);
-        } else {
-            assert(allowance(from, e.msg.sender) == allowed);
-        }
-        assert(balanceOf(from) == fromBalance - value, "Burn did not decrease the balance as expected");
-        assert(totalSupply() == supply - value, "Burn did not decrease the supply as expected");
-    }
+    assert(!senderSameAsFrom && !wardsEqOne && !allowedEqMaxUint => allowance(from, e.msg.sender) == allowed - value, "Burn did not decrease the allowance as expected" );
+    assert(senderSameAsFrom && wardsEqOne && allowedEqMaxUint => allowance(from, e.msg.sender) == allowed, "Burn did not keep the allowance as expected");
+    assert(balanceOf(from) == fromBalance - value, "Burn did not decrease the balance as expected");
+    assert(totalSupply() == supply - value, "Burn did not decrease the supply as expected");
+}
 
-    assert(fromBalance < value => lastReverted, "Balance underflow did not revert");
-    assert(from != e.msg.sender && ward != 1 && allowed < value => lastReverted, "Allowance underflow did not revert");
-    assert(e.msg.value > 0 => lastReverted, "Sending ETH did not revert");
+// Verify revert rules on burn
+rule burn_revert(address from, uint256 value) {
+    env e;
+
+    uint256 supply = totalSupply();
+    uint256 fromBalance = balanceOf(from);
+    uint256 allowed = allowance(from, e.msg.sender);
+    uint256 ward = wards(e.msg.sender);
+
+    burn(e, from, value);
+
+    bool revert1 = fromBalance < value;
+    bool revert2 = from != e.msg.sender && ward !=1 && allowed < value;
+    bool revert3 = e.msg.value > 0;
+
+    assert(revert1 => lastReverted, "Balance underflow did not revert");
+    assert(revert2 => lastReverted, "Allowance underflow did not revert");
+    assert(revert3 => lastReverted, "Sending ETH did not revert");
+    assert(lastReverted => revert1 || revert2 || revert3, "Revert rules are not covering all the cases");
 }
 
 // Verify that allowance behaves correctly on permit
