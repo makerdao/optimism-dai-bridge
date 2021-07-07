@@ -40,6 +40,10 @@ invariant balanceSum_equals_totalSupply() balanceSum() == totalSupply() {
     preserved mint(address to, uint _) with (env e) {
         require(balanceSum() >= balanceOf(to));
     }
+
+    preserved burn(address from, uint _) with (env e) {
+        require(balanceSum() >= balanceOf(from));
+    }
 }
 
 // Verify that wards behaves correctly on rely
@@ -209,6 +213,8 @@ rule burn(address from, uint256 value) {
     uint256 fromBalance = balanceOf(from);
     uint256 allowed = allowance(from, e.msg.sender);
     uint256 ward = wards(e.msg.sender);
+
+    require(supply >= fromBalance);
 
     burn@withrevert(e, from, value);
 
