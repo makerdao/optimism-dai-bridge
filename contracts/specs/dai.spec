@@ -24,17 +24,21 @@ hook Sstore balanceOf[KEY address a] uint256 balance (uint256 old_balance) STORA
 }
 
 function strengthenFor2Addresses(address a1, address a2) {
-    require balanceSum() >= balanceOf(a1) + balanceOf(a2);
+    require(balanceSum() >= balanceOf(a1) + balanceOf(a2));
 }
 
 // invariants also check the desired property on the constructor
 invariant balanceSum_equals_totalSupply() balanceSum() == totalSupply() {
     preserved transfer(address to, uint _) with (env e) {
-        strengthenFor2Addresses(to, e.msg.sender);
+        strengthenFor2Addresses(e.msg.sender, to);
     }
 
     preserved transferFrom(address from, address to, uint _) with (env e) {
-        strengthenFor2Addresses(to, from);
+        strengthenFor2Addresses(from, to);
+    }
+
+    preserved mint(address to, uint _) with (env e) {
+        require(balanceSum() >= balanceOf(to));
     }
 }
 
@@ -77,7 +81,7 @@ rule transfer(address to, uint256 value) {
     uint256 senderBalance = balanceOf(e.msg.sender);
     uint256 toBalance = balanceOf(to);
 
-    require toBalance + value <= max_uint; // Avoid evaluating the overflow case
+    require(toBalance + value <= max_uint); // Avoid evaluating the overflow case
 
     transfer@withrevert(e, to, value);
 
@@ -103,7 +107,7 @@ rule transferFrom(address from, address to, uint256 value) {
     uint256 toBalance = balanceOf(to);
     uint256 allowed = allowance(from, e.msg.sender);
 
-    require toBalance + value <= max_uint; // Avoid evaluating the overflow case
+    require(toBalance + value <= max_uint); // Avoid evaluating the overflow case
 
     transferFrom@withrevert(e, from, to, value);
 
@@ -180,6 +184,8 @@ rule mint(address to, uint256 value) {
     uint256 supply = totalSupply();
     uint256 toBalance = balanceOf(to);
     uint256 ward = wards(e.msg.sender);
+
+    require(supply >= toBalance);
 
     mint@withrevert(e, to, value);
 
