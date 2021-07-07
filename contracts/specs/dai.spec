@@ -52,14 +52,27 @@ rule rely(address usr) {
 
     uint256 ward = wards(e.msg.sender);
 
+    rely(e, usr);
+
+    assert(wards(usr) == 1, "Rely did not set the wards as expected");
+}
+
+// Verify revert rules on rely
+rule rely_revert(address usr) {
+    env e;
+
+    uint256 ward = wards(e.msg.sender);
+
+    require(ward == 0 || ward == 1);
+
     rely@withrevert(e, usr);
 
-    if (!lastReverted) {
-        assert(wards(usr) == 1, "Rely did not set the wards as expected");
-    }
+    bool revert1 = ward == 0;
+    bool revert2 = e.msg.value > 0;
 
-    assert(ward == 0 => lastReverted, "Lack of auth did not revert");
-    assert(e.msg.value > 0 => lastReverted, "Sending ETH did not revert");
+    assert(revert1 => lastReverted, "Lack of auth did not revert");
+    assert(revert2 => lastReverted, "Sending ETH did not revert");
+    assert(lastReverted => revert1 || revert2, "Revert rules are not covering all the cases");
 }
 
 // Verify that wards behaves correctly on deny
@@ -68,14 +81,27 @@ rule deny(address usr) {
 
     uint256 ward = wards(e.msg.sender);
 
+    deny(e, usr);
+
+    assert(wards(usr) == 0, "Deny did not set the wards as expected");
+}
+
+// Verify revert rules on deny
+rule deny_revert(address usr) {
+    env e;
+
+    uint256 ward = wards(e.msg.sender);
+
+    require(ward == 0 || ward == 1);
+
     deny@withrevert(e, usr);
 
-    if (!lastReverted) {
-        assert(wards(usr) == 0, "Deny did not set the wards as expected");
-    }
+    bool revert1 = ward == 0;
+    bool revert2 = e.msg.value > 0;
 
-    assert(ward == 0 => lastReverted, "Lack of auth did not revert");
-    assert(e.msg.value > 0 => lastReverted, "Sending ETH did not revert");
+    assert(revert1 => lastReverted, "Lack of auth did not revert");
+    assert(revert2 => lastReverted, "Sending ETH did not revert");
+    assert(lastReverted => revert1 || revert2, "Revert rules are not covering all the cases");
 }
 
 // Verify that balance behaves correctly on transfer
