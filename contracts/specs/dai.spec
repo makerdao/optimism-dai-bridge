@@ -50,8 +50,6 @@ invariant balanceSum_equals_totalSupply() balanceSum() == totalSupply() {
 rule rely(address usr) {
     env e;
 
-    uint256 ward = wards(e.msg.sender);
-
     rely(e, usr);
 
     assert(wards(usr) == 1, "Rely did not set the wards as expected");
@@ -76,8 +74,6 @@ rule rely_revert(address usr) {
 // Verify that wards behaves correctly on deny
 rule deny(address usr) {
     env e;
-
-    uint256 ward = wards(e.msg.sender);
 
     deny(e, usr);
 
