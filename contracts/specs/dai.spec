@@ -95,9 +95,8 @@ rule transfer(address to, uint256 value) {
     );
 
     assert(senderSameAsTo =>
-            balanceOf(e.msg.sender) == senderBalance &&
-            senderBalance == toBalance,
-            "Transfer did not keep the balance in edge case as expected"
+            balanceOf(e.msg.sender) == senderBalance,
+            "Transfer changed the balance when sender and receiver are the same"
     );
 }
 
@@ -138,7 +137,7 @@ rule transferFrom(address from, address to, uint256 value) {
     assert(!deductAllowance => allowance(from, e.msg.sender) == allowed, "Allowance did not remain the same");
     assert(!fromSameAsTo => balanceOf(from) == fromBalance - value, "TransferFrom did not decrease the balance as expected");
     assert(!fromSameAsTo => balanceOf(to) == toBalance + value, "TransferFrom did not increase the balance as expected");
-    assert(fromSameAsTo => balanceOf(from) == fromBalance && fromBalance == toBalance, "TransferFrom did not kept the balance as expected");
+    assert(fromSameAsTo => balanceOf(from) == fromBalance, "TransferFrom did not keep the balance the same as expected");
 }
 
 // Verify revert rules on transferFrom
