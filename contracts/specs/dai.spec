@@ -23,28 +23,8 @@ hook Sstore balanceOf[KEY address a] uint256 balance (uint256 old_balance) STORA
     havoc balanceSum assuming balanceSum@new() == balanceSum@old() + (balance - old_balance);
 }
 
-function strengthenFor2Addresses(address a1, address a2) {
-    require(balanceSum() >= balanceOf(a1) + balanceOf(a2));
-}
-
 // invariants also check the desired property on the constructor
-invariant balanceSum_equals_totalSupply() balanceSum() == totalSupply() {
-    preserved transfer(address to, uint _) with (env e) {
-        strengthenFor2Addresses(e.msg.sender, to);
-    }
-
-    preserved transferFrom(address from, address to, uint _) with (env e) {
-        strengthenFor2Addresses(from, to);
-    }
-
-    preserved mint(address to, uint _) with (env e) {
-        require(balanceSum() >= balanceOf(to));
-    }
-
-    preserved burn(address from, uint _) with (env e) {
-        require(balanceSum() >= balanceOf(from));
-    }
-}
+invariant balanceSum_equals_totalSupply() balanceSum() == totalSupply()
 
 // Verify that wards behaves correctly on rely
 rule rely(address usr) {
@@ -127,6 +107,8 @@ rule transfer_revert(address to, uint256 value) {
 
     uint256 senderBalance = balanceOf(e.msg.sender);
     uint256 toBalance = balanceOf(to);
+
+
 
     transfer@withrevert(e, to, value);
 
@@ -267,7 +249,7 @@ rule mint(address to, uint256 value) {
     uint256 toBalance = balanceOf(to);
     uint256 ward = wards(e.msg.sender);
 
-    require(supply >= toBalance);
+    requireInvariant balanceSum_equals_totalSupply();
 
     mint(e, to, value);
 
@@ -309,7 +291,7 @@ rule burn(address from, uint256 value) {
     bool wardsEqOne = wards(e.msg.sender) == 1;
     bool allowedEqMaxUint = allowed == max_uint;
 
-    require(supply >= fromBalance);
+    requireInvariant balanceSum_equals_totalSupply();
 
     burn(e, from, value);
 
