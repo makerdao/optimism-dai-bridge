@@ -292,7 +292,7 @@ rule burn(address from, uint256 value) {
     burn(e, from, value);
 
     assert(!senderSameAsFrom && !wardsEqOne && !allowedEqMaxUint => allowance(from, e.msg.sender) == allowed - value, "Burn did not decrease the allowance as expected" );
-    assert(senderSameAsFrom && wardsEqOne && allowedEqMaxUint => allowance(from, e.msg.sender) == allowed, "Burn did not keep the allowance as expected");
+    assert(senderSameAsFrom || wardsEqOne || allowedEqMaxUint => allowance(from, e.msg.sender) == allowed, "Burn did not keep the allowance as expected");
     assert(balanceOf(from) == fromBalance - value, "Burn did not decrease the balance as expected");
     assert(totalSupply() == supply - value, "Burn did not decrease the supply as expected");
 }
