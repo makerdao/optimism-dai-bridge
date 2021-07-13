@@ -108,15 +108,13 @@ rule transfer_revert(address to, uint256 value) {
     uint256 senderBalance = balanceOf(e.msg.sender);
     uint256 toBalance = balanceOf(to);
 
-
-
     transfer@withrevert(e, to, value);
 
     bool revert1 = to == 0 || to == currentContract;
     bool revert2 = senderBalance < value;
     bool revert3 = e.msg.value > 0;
 
-    assert(revert1 => lastReverted, "Incorrect address didn't revert");
+    assert(revert1 => lastReverted, "Forbidden address didn't revert");
     assert(revert2 => lastReverted, "Insufficient balance didn't revert");
     assert(revert3 => lastReverted, "Sending ETH did not revert");
     assert(lastReverted => revert1 || revert2 || revert3, "Revert rules are not covering all the cases");
@@ -247,7 +245,6 @@ rule mint(address to, uint256 value) {
     // Save the totalSupply and sender balance before minting
     uint256 supply = totalSupply();
     uint256 toBalance = balanceOf(to);
-    uint256 ward = wards(e.msg.sender);
 
     requireInvariant balanceSum_equals_totalSupply();
 
