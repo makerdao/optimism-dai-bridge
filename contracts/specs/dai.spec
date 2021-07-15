@@ -1,6 +1,6 @@
 // dai.spec
 
-// certoraRun contracts/l2/dai.sol:Dai --verify Dai:contracts/specs/dai.spec
+// certoraRun contracts/l2/dai.sol:Dai --verify Dai:contracts/specs/dai.spec --rule_sanity --solc_args "['--optimize','--optimize-runs','200']"
 
 methods {
     wards(address) returns (uint256) envfree
