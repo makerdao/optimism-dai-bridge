@@ -1,5 +1,7 @@
 // dai.spec
 
+// certoraRun contracts/l2/dai.sol:Dai --verify Dai:contracts/specs/dai.spec
+
 methods {
     wards(address) returns (uint256) envfree
     name() returns (string) envfree
@@ -23,8 +25,9 @@ hook Sstore balanceOf[KEY address a] uint256 balance (uint256 old_balance) STORA
     havoc balanceSum assuming balanceSum@new() == balanceSum@old() + (balance - old_balance);
 }
 
-// invariants also check the desired property on the constructor
 invariant balanceSum_equals_totalSupply() balanceSum() == totalSupply()
+
+invariant balanceSum_cant_overflow(address a) balanceSum() <= max_uint256
 
 // Verify that wards behaves correctly on rely
 rule rely(address usr) {
@@ -80,13 +83,16 @@ rule deny_revert(address usr) {
 rule transfer(address to, uint256 value) {
     env e;
 
+    requireInvariant balanceSum_equals_totalSupply();
+    requireInvariant balanceSum_cant_overflow();
+
     uint256 senderBalance = balanceOf(e.msg.sender);
     uint256 toBalance = balanceOf(to);
     bool senderSameAsTo = e.msg.sender == to;
 
-    require(toBalance + value <= max_uint); // Avoid evaluating the overflow case
-
     transfer(e, to, value);
+
+    requireInvariant balanceSum_cant_overflow();
 
     assert(!senderSameAsTo =>
             balanceOf(e.msg.sender) == senderBalance - value &&
@@ -123,15 +129,18 @@ rule transfer_revert(address to, uint256 value) {
 rule transferFrom(address from, address to, uint256 value) {
     env e;
 
+    requireInvariant balanceSum_equals_totalSupply();
+    requireInvariant balanceSum_cant_overflow();
+
     uint256 fromBalance = balanceOf(from);
     uint256 toBalance = balanceOf(to);
     uint256 allowed = allowance(from, e.msg.sender);
-    bool deductAllowance = e.msg.sender != from && allowed != max_uint;
+    bool deductAllowance = e.msg.sender != from && allowed != max_uint256;
     bool fromSameAsTo = from == to;
 
-    require(toBalance + value <= max_uint); // Avoid evaluating the overflow case
-
     transferFrom(e, from, to, value);
+
+    requireInvariant balanceSum_cant_overflow();
 
     assert(deductAllowance => allowance(from, e.msg.sender) == allowed - value, "Allowance did not decrease in value");
     assert(!deductAllowance => allowance(from, e.msg.sender) == allowed, "Allowance did not remain the same");
@@ -202,7 +211,7 @@ rule increaseAllowance_revert(address spender, uint256 value) {
 
     increaseAllowance@withrevert(e, spender, value);
 
-    bool revert1 = spenderAllowance + value > max_uint;
+    bool revert1 = spenderAllowance + value > max_uint256;
     bool revert2 = e.msg.value > 0;
 
     assert(revert1 => lastReverted, "Overflow did not revert");
@@ -241,11 +250,11 @@ rule decreaseAllowance_revert(address spender, uint256 value) {
 rule mint(address to, uint256 value) {
     env e;
 
+    requireInvariant balanceSum_equals_totalSupply();
+
     // Save the totalSupply and sender balance before minting
     uint256 supply = totalSupply();
     uint256 toBalance = balanceOf(to);
-
-    requireInvariant balanceSum_equals_totalSupply();
 
     mint(e, to, value);
 
@@ -264,7 +273,7 @@ rule mint_revert(address to, uint256 value) {
     mint@withrevert(e, to, value);
 
     bool revert1 = ward != 1;
-    bool revert2 = supply + value > max_uint;
+    bool revert2 = supply + value > max_uint256;
     bool revert3 = to == 0 || to == currentContract;
     bool revert4 = e.msg.value > 0;
 
@@ -279,15 +288,15 @@ rule mint_revert(address to, uint256 value) {
 rule burn(address from, uint256 value) {
     env e;
 
+    requireInvariant balanceSum_equals_totalSupply();
+
     uint256 supply = totalSupply();
     uint256 fromBalance = balanceOf(from);
     uint256 allowed = allowance(from, e.msg.sender);
     uint256 ward = wards(e.msg.sender);
     bool senderSameAsFrom = e.msg.sender == from;
     bool wardsEqOne = wards(e.msg.sender) == 1;
-    bool allowedEqMaxUint = allowed == max_uint;
-
-    requireInvariant balanceSum_equals_totalSupply();
+    bool allowedEqMaxUint = allowed == max_uint256;
 
     burn(e, from, value);
 
