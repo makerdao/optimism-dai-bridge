@@ -17,12 +17,12 @@ methods {
     DOMAIN_SEPARATOR() returns (bytes32) envfree
 }
 
-ghost balanceSum() returns uint256 {
+ghost balanceSum() returns mathint {
     init_state axiom balanceSum() == 0;
 }
 
 hook Sstore balanceOf[KEY address a] uint256 balance (uint256 old_balance) STORAGE {
-    havoc balanceSum assuming balanceSum@new() == balanceSum@old() + (balance - old_balance);
+    havoc balanceSum assuming balanceSum@new() == balanceSum@old() + balance - old_balance && balanceSum@new() >= 0;
 }
 
 invariant balanceSum_equals_totalSupply() balanceSum() == totalSupply()
