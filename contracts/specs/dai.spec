@@ -27,7 +27,7 @@ hook Sstore balanceOf[KEY address a] uint256 balance (uint256 old_balance) STORA
 
 invariant balanceSum_equals_totalSupply() balanceSum() == totalSupply()
 
-invariant balanceSum_cant_overflow(address a) balanceSum() <= max_uint256
+invariant balanceSum_cant_overflow() balanceSum() <= max_uint256
 
 // Verify that wards behaves correctly on rely
 rule rely(address usr) {
