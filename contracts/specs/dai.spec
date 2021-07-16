@@ -83,20 +83,27 @@ rule transfer(address to, uint256 value) {
 
     requireInvariant balanceSum_equals_totalSupply();
 
-    uint256 senderBalance = balanceOf(e.msg.sender);
-    uint256 toBalance = balanceOf(to);
+    uint256 senderBalanceBefore = balanceOf(e.msg.sender);
+    uint256 toBalanceBefore = balanceOf(to);
+    uint256 supplyBefore = totalSupply();
     bool senderSameAsTo = e.msg.sender == to;
 
     transfer(e, to, value);
 
+    uint256 senderBalanceAfter = balanceOf(e.msg.sender);
+    uint256 toBalanceAfter = balanceOf(to);
+    uint256 supplyAfter = totalSupply();
+
+    assert(supplyAfter == supplyBefore, "Supply changed");
+
     assert(!senderSameAsTo =>
-            balanceOf(e.msg.sender) == senderBalance - value &&
-            balanceOf(to) == toBalance + value,
+            senderBalanceAfter == senderBalanceBefore - value &&
+            toBalanceAfter == toBalanceBefore + value,
             "Transfer did not change balances as expected"
     );
 
     assert(senderSameAsTo =>
-            balanceOf(e.msg.sender) == senderBalance,
+            senderBalanceAfter == senderBalanceBefore,
             "Transfer changed the balance when sender and receiver are the same"
     );
 }
@@ -126,19 +133,26 @@ rule transferFrom(address from, address to, uint256 value) {
 
     requireInvariant balanceSum_equals_totalSupply();
 
-    uint256 fromBalance = balanceOf(from);
-    uint256 toBalance = balanceOf(to);
-    uint256 allowed = allowance(from, e.msg.sender);
-    bool deductAllowance = e.msg.sender != from && allowed != max_uint256;
+    uint256 fromBalanceBefore = balanceOf(e.msg.sender);
+    uint256 toBalanceBefore = balanceOf(to);
+    uint256 supplyBefore = totalSupply();
+    uint256 allowanceBefore = allowance(from, e.msg.sender);
+    bool deductAllowance = e.msg.sender != from && allowanceBefore != max_uint256;
     bool fromSameAsTo = from == to;
 
     transferFrom(e, from, to, value);
 
-    assert(deductAllowance => allowance(from, e.msg.sender) == allowed - value, "Allowance did not decrease in value");
-    assert(!deductAllowance => allowance(from, e.msg.sender) == allowed, "Allowance did not remain the same");
-    assert(!fromSameAsTo => balanceOf(from) == fromBalance - value, "TransferFrom did not decrease the balance as expected");
-    assert(!fromSameAsTo => balanceOf(to) == toBalance + value, "TransferFrom did not increase the balance as expected");
-    assert(fromSameAsTo => balanceOf(from) == fromBalance, "TransferFrom did not keep the balance the same as expected");
+    uint256 fromBalanceAfter = balanceOf(e.msg.sender);
+    uint256 toBalanceAfter = balanceOf(to);
+    uint256 supplyAfter = totalSupply();
+    uint256 allowanceAfter = allowance(from, e.msg.sender);
+
+    assert(supplyAfter == supplyBefore, "Supply changed");
+    assert(deductAllowance => allowanceAfter == allowanceBefore - value, "Allowance did not decrease in value");
+    assert(!deductAllowance => allowanceAfter == allowanceBefore, "Allowance did not remain the same");
+    assert(!fromSameAsTo => fromBalanceAfter == fromBalanceBefore - value, "TransferFrom did not decrease the balance as expected");
+    assert(!fromSameAsTo => toBalanceAfter == toBalanceBefore + value, "TransferFrom did not increase the balance as expected");
+    assert(fromSameAsTo => fromBalanceAfter == fromBalanceBefore, "TransferFrom did not keep the balance the same as expected");
 }
 
 // Verify revert rules on transferFrom
