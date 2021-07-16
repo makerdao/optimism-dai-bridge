@@ -27,8 +27,6 @@ hook Sstore balanceOf[KEY address a] uint256 balance (uint256 old_balance) STORA
 
 invariant balanceSum_equals_totalSupply() balanceSum() == totalSupply()
 
-invariant balanceSum_cant_overflow() balanceSum() <= max_uint256
-
 // Verify that wards behaves correctly on rely
 rule rely(address usr) {
     env e;
@@ -84,7 +82,6 @@ rule transfer(address to, uint256 value) {
     env e;
 
     requireInvariant balanceSum_equals_totalSupply();
-    requireInvariant balanceSum_cant_overflow();
 
     uint256 senderBalance = balanceOf(e.msg.sender);
     uint256 toBalance = balanceOf(to);
@@ -92,7 +89,7 @@ rule transfer(address to, uint256 value) {
 
     transfer(e, to, value);
 
-    requireInvariant balanceSum_cant_overflow();
+    requireInvariant balanceSum_equals_totalSupply();
 
     assert(!senderSameAsTo =>
             balanceOf(e.msg.sender) == senderBalance - value &&
@@ -130,7 +127,6 @@ rule transferFrom(address from, address to, uint256 value) {
     env e;
 
     requireInvariant balanceSum_equals_totalSupply();
-    requireInvariant balanceSum_cant_overflow();
 
     uint256 fromBalance = balanceOf(from);
     uint256 toBalance = balanceOf(to);
@@ -140,7 +136,7 @@ rule transferFrom(address from, address to, uint256 value) {
 
     transferFrom(e, from, to, value);
 
-    requireInvariant balanceSum_cant_overflow();
+    requireInvariant balanceSum_equals_totalSupply();
 
     assert(deductAllowance => allowance(from, e.msg.sender) == allowed - value, "Allowance did not decrease in value");
     assert(!deductAllowance => allowance(from, e.msg.sender) == allowed, "Allowance did not remain the same");
