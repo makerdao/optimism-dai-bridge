@@ -89,8 +89,6 @@ rule transfer(address to, uint256 value) {
 
     transfer(e, to, value);
 
-    requireInvariant balanceSum_equals_totalSupply();
-
     assert(!senderSameAsTo =>
             balanceOf(e.msg.sender) == senderBalance - value &&
             balanceOf(to) == toBalance + value,
@@ -135,8 +133,6 @@ rule transferFrom(address from, address to, uint256 value) {
     bool fromSameAsTo = from == to;
 
     transferFrom(e, from, to, value);
-
-    requireInvariant balanceSum_equals_totalSupply();
 
     assert(deductAllowance => allowance(from, e.msg.sender) == allowed - value, "Allowance did not decrease in value");
     assert(!deductAllowance => allowance(from, e.msg.sender) == allowed, "Allowance did not remain the same");
