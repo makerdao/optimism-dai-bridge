@@ -133,7 +133,7 @@ rule transferFrom(address from, address to, uint256 value) {
 
     requireInvariant balanceSum_equals_totalSupply();
 
-    uint256 fromBalanceBefore = balanceOf(e.msg.sender);
+    uint256 fromBalanceBefore = balanceOf(from);
     uint256 toBalanceBefore = balanceOf(to);
     uint256 supplyBefore = totalSupply();
     uint256 allowanceBefore = allowance(from, e.msg.sender);
@@ -142,7 +142,7 @@ rule transferFrom(address from, address to, uint256 value) {
 
     transferFrom(e, from, to, value);
 
-    uint256 fromBalanceAfter = balanceOf(e.msg.sender);
+    uint256 fromBalanceAfter = balanceOf(from);
     uint256 toBalanceAfter = balanceOf(to);
     uint256 supplyAfter = totalSupply();
     uint256 allowanceAfter = allowance(from, e.msg.sender);
