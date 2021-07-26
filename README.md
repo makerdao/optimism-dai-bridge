@@ -143,42 +143,65 @@ Running `yarn test` makes sure that contracts are compiled. Running `yarn test-e
 
 - Precompiled Binaries (recommended)
 
-Before starting, make sure Slither is installed:  
-`$ pip3 install slither-analyzer`
+Before starting, make sure Slither is installed:
+```
+$ pip3 install slither-analyzer
+```
 
 To quickly test Echidna in Linux or MacOS: [release page](https://github.com/crytic/echidna/releases)
 
 ### Local Dependencies
 
-- Slither:  
-  `$ pip3 install slither-analyzer`
-
-- solc-select:  
-  `$ pip3 install solc-select`
+- Slither:
+  ```
+  $ pip3 install slither-analyzer
+  ```
+- solc-select:
+  ```
+  $ pip3 install solc-select
+  ```
 
 ### Run Echidna Tests
 
-- Install solc version:  
-  `$ solc-select install 0.7.6`
-
-- Select solc version:  
-  `$ solc-select use 0.7.6`
-
-- Run Echidna Tests:  
-  `$ echidna-test . --contract DaiEchidnaTest --config echidna.config.yml --check-asserts`
+- Install solc version:
+  ```
+  $ solc-select install 0.7.6
+  ```
+- Select solc version:
+  ```
+  $ solc-select use 0.7.6
+  ```
+- Run Echidna Tests:
+  ```
+  $ echidna-test . --contract DaiEchidnaTest --config echidna.config.yml
+  ```
 
 ## Deployments:
+
+### Mainnet:
+
+```json
+{
+  "l1Dai": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+  "l1Escrow": "0x467194771dAe2967Aef3ECbEDD3Bf9a310C76C65",
+  "l1DAITokenBridge": "0x10E6593CDda8c58a1d0f14C5164B376352a55f2F",
+  "l1GovernanceRelay": "0x09B354CDA89203BB7B3131CC728dFa06ab09Ae2F",
+  "l2Dai": "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
+  "l2DAITokenBridge": "0x467194771dAe2967Aef3ECbEDD3Bf9a310C76C65",
+  "l2GovernanceRelay": "0x10E6593CDda8c58a1d0f14C5164B376352a55f2F"
+}
+```
 
 ### Kovan:
 
 ```json
 {
   "l1Dai": "0x4F96Fe3b7A6Cf9725f59d353F723c1bDb64CA6Aa",
-  "l1Escrow": "0xca48F9B816a87DbA19Cc5d4eD8caF4a844D10c06",
-  "l1DAITokenBridge": "0x69499381595306A112859CbDf2cDD77fa3EC40FF",
-  "l1GovernanceRelay": "0x644a21CbC1ee5D5288f41899DFf8711fa95EB28D",
-  "l2DAITokenBridge": "0xbCe45C8386D286D9F6a3A2A63F18d23435AE7C78",
-  "l2Dai": "0x80B46E1d4Dc3a4cd750B2352C24cD017552a8E08",
-  "l2GovernanceRelay": "0xaA23F1C4FE8d610D307500Fc2D900373B29B5711"
+  "l1Escrow": "0x8FdA2c4323850F974C7Abf4B16eD129D45f9E2e2",
+  "l1DAITokenBridge": "0xb415e822C4983ecD6B1c1596e8a5f976cf6CD9e3",
+  "l1GovernanceRelay": "0xAeFc25750d8C2bd331293076E2DC5d5ad414b4a2",
+  "l2Dai": "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
+  "l2DAITokenBridge": "0x467194771dAe2967Aef3ECbEDD3Bf9a310C76C65",
+  "l2GovernanceRelay": "0x10E6593CDda8c58a1d0f14C5164B376352a55f2F"
 }
 ```

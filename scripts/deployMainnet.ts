@@ -8,7 +8,6 @@ import { JsonRpcProvider } from '@ethersproject/providers'
 import hre from 'hardhat'
 import { mapValues } from 'lodash'
 
-import { ZERO_GAS_OPTS } from '../test-e2e/helpers/utils'
 import { deploy, getRequiredEnv } from './common'
 
 const L1_MAINNET_RPC_URL = getRequiredEnv('L1_MAINNET_RPC_URL')
@@ -40,7 +39,7 @@ async function main() {
     L1_XDOMAIN_MESSENGER: L1_MAINNET_XDOMAIN_MESSENGER,
     L2_XDOMAIN_MESSENGER: L2_MAINNET_XDOMAIN_MESSENGER,
     L1_TX_OPTS: {},
-    L2_TX_OPTS: ZERO_GAS_OPTS,
+    L2_TX_OPTS: {},
   })
 
   const allContractInfo = {
