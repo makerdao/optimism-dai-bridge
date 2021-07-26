@@ -18,10 +18,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      # tmp fix for echidna not supporting override clause in compiler settings
-      - name: TMP replace hardhat config with simpler one.
-        run: |
-          mv .github/workflows/hardhat-config-tmp.ts ./hardhat.config.ts
 
       - name: Set up node
         uses: actions/setup-node@v2
