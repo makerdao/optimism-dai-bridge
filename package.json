@@ -17,7 +17,8 @@
     "test-e2e": "mocha --config .mocharc-e2e.js",
     "test:fix": "yarn lint:fix && yarn format:fix && yarn test && yarn typecheck",
     "deploy:mainnet": "TS_NODE_TRANSPILE_ONLY=1 ts-node ./scripts/deployMainnet.ts",
-    "deploy:kovan": "TS_NODE_TRANSPILE_ONLY=1 ts-node ./scripts/deployKovan.ts"
+    "deploy:kovan": "TS_NODE_TRANSPILE_ONLY=1 ts-node ./scripts/deployKovan.ts",
+    "deploy:test-spell-kovan": "TS_NODE_TRANSPILE_ONLY=1 ts-node ./scripts/deployTestSpellKovan.ts"
   },
   "dependencies": {
     "@codechecks/client": "0.1.10-beta",

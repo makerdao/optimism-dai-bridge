@@ -21,12 +21,13 @@ interface L2Spell {
 
 interface AuthLike {
   function rely(address usr) external;
+
   function deny(address usr) external;
 }
 
 // A test spell that ensures that DAI permissions are set correctly
 
-contract TestSpell is L2Spell {
+contract L2TestSpell is L2Spell {
   address public immutable l2Dai;
 
   constructor(address _l2Dai) {
@@ -35,8 +36,8 @@ contract TestSpell is L2Spell {
 
   function act() external override {
     address guy = 0x0000000000000000000000000000000000000000;
-    
+
     AuthLike(l2Dai).rely(guy);
     AuthLike(l2Dai).deny(guy);
-  } 
+  }
 }
