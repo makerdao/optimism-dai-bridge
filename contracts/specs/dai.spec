@@ -113,7 +113,6 @@ rule transfer_revert(address to, uint256 value) {
     env e;
 
     uint256 senderBalance = balanceOf(e.msg.sender);
-    uint256 toBalance = balanceOf(to);
 
     transfer@withrevert(e, to, value);
 
@@ -160,7 +159,6 @@ rule transferFrom_revert(address from, address to, uint256 value) {
     env e;
 
     uint256 fromBalance = balanceOf(from);
-    uint256 toBalance = balanceOf(to);
     uint256 allowed = allowance(from, e.msg.sender);
 
     transferFrom@withrevert(e, from, to, value);
