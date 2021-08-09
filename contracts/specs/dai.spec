@@ -1,6 +1,8 @@
 // dai.spec
 
-// certoraRun contracts/l2/dai.sol:Dai --verify Dai:contracts/specs/dai.spec --rule_sanity --solc_args "['--optimize','--optimize-runs','200']"
+// certoraRun contracts/l2/dai.sol:Dai contracts/specs/HashHelper.sol --verify Dai:contracts/specs/dai.spec --rule_sanity --solc_args "['--optimize','--optimize-runs','200']"
+
+using HashHelper as hashHelper
 
 methods {
     wards(address) returns (uint256) envfree
@@ -15,6 +17,8 @@ methods {
     deploymentChainId() returns (uint256) envfree
     PERMIT_TYPEHASH() returns (bytes32) envfree
     DOMAIN_SEPARATOR() returns (bytes32) envfree
+    hashHelper.call_ecrecover(bytes32, uint8, bytes32, bytes32) returns (address) envfree
+    hashHelper.computeDigestForDai(bytes32, bytes32, address, address, uint256, uint256, uint256) returns (bytes32) envfree
 }
 
 ghost balanceSum() returns mathint {
@@ -344,12 +348,21 @@ rule permit(address owner, address spender, uint256 value, uint256 deadline, uin
 rule permit_revert(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s) {
     env e;
 
+    uint256 ownerNonce = nonces(owner);
+    address ownerRecover = hashHelper.call_ecrecover(
+    hashHelper.computeDigestForDai(DOMAIN_SEPARATOR(), PERMIT_TYPEHASH(), owner, spender, value, ownerNonce, deadline),
+    v,
+    r,
+    s);
+
     permit@withrevert(e, owner, spender, value, deadline, v, r, s);
 
-    bool revert1 = e.block.timestamp > deadline;
-    bool revert2 = e.msg.value > 0;
+    bool revert1 = e.msg.value > 0;
+    bool revert2 = e.block.timestamp > deadline;
+    bool revert3 = owner == 0 || owner != ownerRecover;
 
-    assert(revert1 => lastReverted, "Deadline exceed did not revert");
-    assert(revert2 => lastReverted, "Sending ETH did not revert");
-    // TODO: Add the missing revert condition and full coverage for revert cases
+    assert(revert1 => lastReverted, "Sending ETH did not revert");
+    assert(revert2 => lastReverted, "Deadline exceed did not revert");
+    assert(revert3 => lastReverted, "Invalid permit did not revert");
+    assert(lastReverted => revert1 || revert2 || revert3, "Revert rules are not covering all the cases");
 }
