@@ -16,6 +16,8 @@
     "test": "hardhat test",
     "test-e2e": "mocha --config .mocharc-e2e.js",
     "test:fix": "yarn lint:fix && yarn format:fix && yarn test && yarn typecheck",
+    "solc": "pip3 install solc-select && solc-select install 0.7.6",
+    "certora": "certoraRun --solc ~/.solc-select/artifacts/solc-0.7.6 contracts/l2/dai.sol:Dai contracts/specs/HashHelper.sol --verify Dai:contracts/specs/dai.spec --rule_sanity --solc_args \"['--optimize','--optimize-runs','200']\"",
     "deploy:mainnet": "TS_NODE_TRANSPILE_ONLY=1 ts-node ./scripts/deployMainnet.ts",
     "deploy:kovan": "TS_NODE_TRANSPILE_ONLY=1 ts-node ./scripts/deployKovan.ts"
   },
