@@ -3,11 +3,16 @@ artifacts/
 cache/
 artifacts-l2
 typechain
-crytic-export/
 artifacts-ovm
 cache-ovm
 .env
 gasReporterOutput.json
+
+# echidna
+crytic-export/
 corpus/
+
+# certora
 .*certora*
 .last_confs/
+*.zip
