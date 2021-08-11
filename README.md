@@ -176,6 +176,41 @@ To quickly test Echidna in Linux or MacOS: [release page](https://github.com/cry
   $ echidna-test . --contract DaiEchidnaTest --config echidna.config.yml
   ```
 
+## Certora
+
+### Install Certora
+
+- Install Java
+  ```
+  sudo apt install openjdk-14-jdk
+  ```
+- Install Certora Prover
+  ```
+  pip3 install certora-cli
+  ```
+- Set Certora Key
+  ```
+  export CERTORAKEY=<key>
+  ```
+
+### Local Dependencies
+
+- solc-select:
+  ```
+  pip3 install solc-select
+  ```
+
+### Run Certora Specs
+
+- Install solc version:
+  ```
+  solc-select install 0.7.6
+  ```
+- Run Certora Specs:
+  ```
+  yarn certora
+  ```
+
 ## Deployments:
 
 ### Mainnet:
