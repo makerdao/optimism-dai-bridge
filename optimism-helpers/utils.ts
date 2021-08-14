@@ -1,25 +1,12 @@
-import { Watcher } from '@eth-optimism/watcher'
 import { assert } from 'console'
-import { ContractFactory, ethers, providers, Signer, Wallet } from 'ethers'
+import { ethers, providers } from 'ethers'
 import { readFileSync } from 'fs'
 import { artifacts as hhArtifacts } from 'hardhat'
 import hh from 'hardhat'
-import { isEmpty } from 'lodash'
 import { join } from 'path'
 
 import { artifacts } from './artifacts'
-import { getL1Provider } from './l1'
-import { getL2Provider } from './l2'
 import { optimismConfig } from './optimismConfig'
-import { connectWallets, getAdminWallet, getRandomWallets } from './wallets'
-
-export function q18(n: number) {
-  return ethers.BigNumber.from(10).pow(18).mul(n).toString()
-}
-
-export const MAX_UINT256 = ethers.BigNumber.from(2).pow(256).sub(1)
-
-export const DUMMY_ADDRESS = '0x' + '1234'.repeat(10)
 
 export const ZERO_GAS_OPTS = { gasPrice: 0 }
 
@@ -63,82 +50,6 @@ export async function printRollupStatus(l1Provider: providers.BaseProvider) {
   console.log('Canonical Tx Chain all elements: ', ctcAllElements.toString())
   console.log('Canonical Tx Chain queued elements: ', ctcQueuedElement.toString())
   console.log('State Commitment Chain all elements: ', stcAllElements.toString())
-}
-
-export async function deployUsingFactory<T extends ContractFactory>(
-  signer: Signer,
-  factory: T,
-  args: Parameters<T['deploy']>,
-): Promise<ReturnType<T['deploy']>> {
-  const contractFactory = new ethers.ContractFactory(factory.interface, factory.bytecode, signer)
-  const contractDeployed = await contractFactory.deploy(...(args as any))
-
-  await contractDeployed.deployed()
-
-  return contractDeployed as any
-}
-
-export async function deployUsingFactoryAndVerify<T extends ContractFactory>(
-  signer: Signer,
-  factory: T,
-  args: Parameters<T['deploy']>,
-): Promise<ReturnType<T['deploy']>> {
-  const contractDeployed = await deployUsingFactory(signer, factory, args)
-
-  console.log(
-    `npx hardhat verify ${contractDeployed.address} ${args
-      .filter((a: any) => a.gasPrice === undefined && !isEmpty(a))
-      .join(' ')}`,
-  )
-
-  return contractDeployed as any
-}
-
-export async function waitForTx(tx: Promise<any>): Promise<any> {
-  const resolvedTx = await tx
-  return await resolvedTx.wait()
-}
-
-export async function setupTest(): Promise<{
-  l1Provider: providers.BaseProvider
-  l2Provider: providers.BaseProvider
-  l1Signer: Wallet
-  l1User: Wallet
-  l2Signer: Wallet
-  watcher: any
-}> {
-  const randomWallets = getRandomWallets(3)
-
-  const l1Provider = getL1Provider()
-  const l1Admin = getAdminWallet().connect(l1Provider)
-  const [l1Deployer, l1User] = connectWallets(randomWallets, l1Provider)
-
-  const l2Provider = getL2Provider()
-  const [l2Deployer] = connectWallets(randomWallets, l2Provider)
-
-  console.log('Seeding L1 account')
-  await waitForTx(l1Admin.sendTransaction({ value: ethers.utils.parseEther('1'), to: l1Deployer.address }))
-  await waitForTx(l1Admin.sendTransaction({ value: ethers.utils.parseEther('1'), to: l1User.address }))
-
-  const watcher = new Watcher({
-    l1: {
-      provider: l1Provider,
-      messengerAddress: optimismConfig.Proxy__OVM_L1CrossDomainMessenger, // this sits behind a proxy right now
-    },
-    l2: {
-      provider: l2Provider,
-      messengerAddress: optimismConfig._L2_OVM_L2CrossDomainMessenger,
-    },
-  })
-
-  return {
-    l1Provider,
-    l2Provider,
-    l1Signer: l1Deployer,
-    l1User,
-    l2Signer: l2Deployer,
-    watcher,
-  }
 }
 
 export const getL2Factory: typeof hh.ethers.getContractFactory = async function getL2Factory(name: string) {

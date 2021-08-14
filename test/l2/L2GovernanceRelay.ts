@@ -1,10 +1,11 @@
+import { assertPublicMutableMethods, simpleDeploy } from '@makerdao/hardhat-utils'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address'
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
 
 import { Dai__factory, L2GovernanceRelay__factory, TestDaiMintSpell__factory } from '../../typechain'
 import { BadSpell__factory } from '../../typechain/factories/BadSpell__factory'
-import { assertPublicMethods, deploy, deployMock, deployOptimismContractMock } from '../helpers'
+import { deployMock, deployOptimismContractMock } from '../helpers'
 
 const errorMessages = {
   invalidMessenger: 'OVM_XCHAIN: messenger contract unauthenticated',
@@ -74,7 +75,7 @@ describe('OVM_L2GovernanceRelay', () => {
         l2MessengerImpersonator,
         user1,
       })
-      const badSpell = await deploy<BadSpell__factory>('BadSpell')
+      const badSpell = await simpleDeploy<BadSpell__factory>('BadSpell', [])
       l2CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l1GovernanceRelay.address)
 
       await expect(
@@ -90,7 +91,7 @@ describe('OVM_L2GovernanceRelay', () => {
         l2MessengerImpersonator,
         user1,
       })
-      const badSpell = await deploy<BadSpell__factory>('BadSpell')
+      const badSpell = await simpleDeploy<BadSpell__factory>('BadSpell', [])
       l2CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l1GovernanceRelay.address)
 
       await expect(
@@ -105,7 +106,7 @@ describe('OVM_L2GovernanceRelay', () => {
     it('assigns all variables properly', async () => {
       const [l2Messenger, l1GovRelay] = await ethers.getSigners()
 
-      const l2GovRelay = await deploy<L2GovernanceRelay__factory>('L2GovernanceRelay', [
+      const l2GovRelay = await simpleDeploy<L2GovernanceRelay__factory>('L2GovernanceRelay', [
         l2Messenger.address,
         l1GovRelay.address,
       ])
@@ -116,7 +117,7 @@ describe('OVM_L2GovernanceRelay', () => {
   })
 
   it('has correct public interface', async () => {
-    await assertPublicMethods('L2GovernanceRelay', ['relay(address,bytes)'])
+    await assertPublicMutableMethods('L2GovernanceRelay', ['relay(address,bytes)'])
   })
 })
 
@@ -125,16 +126,16 @@ async function setupTest(signers: { l2MessengerImpersonator: SignerWithAddress; 
     'OVM_L2CrossDomainMessenger',
     { address: await signers.l2MessengerImpersonator.getAddress() }, // This allows us to use an ethers override {from: Mock__OVM_L2CrossDomainMessenger.address} to mock calls
   )
-  const l2Dai = await deploy<Dai__factory>('Dai', [])
+  const l2Dai = await simpleDeploy<Dai__factory>('Dai', [])
 
   const l1GovernanceRelay = await deployMock('L1GovernanceRelay')
-  const l2GovernanceRelay = await deploy<L2GovernanceRelay__factory>('L2GovernanceRelay', [
+  const l2GovernanceRelay = await simpleDeploy<L2GovernanceRelay__factory>('L2GovernanceRelay', [
     l2CrossDomainMessengerMock.address,
     l1GovernanceRelay.address,
   ])
   await l2Dai.rely(l2GovernanceRelay.address)
 
-  const l2daiMintSpell = await deploy<TestDaiMintSpell__factory>('TestDaiMintSpell', [])
+  const l2daiMintSpell = await simpleDeploy<TestDaiMintSpell__factory>('TestDaiMintSpell', [])
 
   return { l2Dai, l1GovernanceRelay, l2CrossDomainMessengerMock, l2GovernanceRelay, l2daiMintSpell }
 }

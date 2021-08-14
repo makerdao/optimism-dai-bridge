@@ -1,10 +1,10 @@
+import { assertPublicMutableMethods, getRandomAddresses, simpleDeploy, testAuth } from '@makerdao/hardhat-utils'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address'
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
 
 import { L1GovernanceRelay__factory } from '../../typechain'
-import { testAuth } from '../auth'
-import { assertPublicMethods, deploy, deployMock, deployOptimismContractMock, getRandomAddresses } from '../helpers'
+import { deployMock, deployOptimismContractMock } from '../helpers'
 
 const errorMessages = {
   invalidMessenger: 'OVM_XCHAIN: messenger contract unauthenticated',
@@ -47,7 +47,7 @@ describe('L1GovernanceRelay', () => {
     it('assigns all variables properly', async () => {
       const [l2GovernanceRelay, l1CrossDomainMessenger] = await ethers.getSigners()
 
-      const l1GovRelay = await deploy<L1GovernanceRelay__factory>('L1GovernanceRelay', [
+      const l1GovRelay = await simpleDeploy<L1GovernanceRelay__factory>('L1GovernanceRelay', [
         l2GovernanceRelay.address,
         l1CrossDomainMessenger.address,
       ])
@@ -58,23 +58,27 @@ describe('L1GovernanceRelay', () => {
   })
 
   it('has correct public interface', async () => {
-    await assertPublicMethods('L1GovernanceRelay', ['rely(address)', 'deny(address)', 'relay(address,bytes,uint32)'])
+    await assertPublicMutableMethods('L1GovernanceRelay', [
+      'rely(address)',
+      'deny(address)',
+      'relay(address,bytes,uint32)',
+    ])
   })
 
-  testAuth(
-    'L1GovernanceRelay',
-    async () => {
+  testAuth({
+    name: 'L1GovernanceRelay',
+    getDeployArgs: async () => {
       const [l2GovernanceRelay, l1CrossDomainMessengerMock] = await getRandomAddresses()
 
       return [l2GovernanceRelay, l1CrossDomainMessengerMock]
     },
-    [
+    authedMethods: [
       async (c) => {
         const [a] = await getRandomAddresses()
         return c.relay(a, '0x', 0)
       },
     ],
-  )
+  })
 })
 
 async function setupTest(signers: { l1MessengerImpersonator: SignerWithAddress }) {
@@ -83,7 +87,7 @@ async function setupTest(signers: { l1MessengerImpersonator: SignerWithAddress }
     'OVM_L1CrossDomainMessenger',
     { address: await signers.l1MessengerImpersonator.getAddress() }, // This allows us to use an ethers override {from: Mock__OVM_L2CrossDomainMessenger.address} to mock calls
   )
-  const l1GovernanceRelay = await deploy<L1GovernanceRelay__factory>('L1GovernanceRelay', [
+  const l1GovernanceRelay = await simpleDeploy<L1GovernanceRelay__factory>('L1GovernanceRelay', [
     l2GovernanceRelay.address,
     l1CrossDomainMessengerMock.address,
   ])

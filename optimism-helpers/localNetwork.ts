@@ -6,3 +6,9 @@ export function getL1Provider(): providers.BaseProvider {
 
   return l1
 }
+
+export function getL2Provider(): providers.BaseProvider {
+  const l2 = new ethers.providers.JsonRpcProvider('http://localhost:8545')
+
+  return l2
+}

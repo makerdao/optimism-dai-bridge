@@ -5,10 +5,11 @@
  */
 require('dotenv').config()
 import { JsonRpcProvider } from '@ethersproject/providers'
+import { getRequiredEnv } from '@makerdao/hardhat-utils'
 import hre from 'hardhat'
 import { mapValues } from 'lodash'
 
-import { deploy, getRequiredEnv } from './common'
+import { deploy } from './common'
 
 const L1_MAINNET_RPC_URL = getRequiredEnv('L1_MAINNET_RPC_URL')
 const L1_MAINNET_DEPLOYER_PRIV_KEY = getRequiredEnv('L1_MAINNET_DEPLOYER_PRIV_KEY')
