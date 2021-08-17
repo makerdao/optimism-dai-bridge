@@ -1,10 +1,10 @@
+import { assertPublicMutableMethods, getRandomAddresses, simpleDeploy, testAuth } from '@makerdao/hardhat-utils'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address'
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
 
 import { Dai__factory, L1DAITokenBridge__factory, L1Escrow__factory } from '../../typechain'
-import { testAuth } from '../auth'
-import { assertPublicMethods, deploy, deployMock, deployOptimismContractMock, getRandomAddresses } from '../helpers'
+import { deployMock, deployOptimismContractMock } from '../helpers'
 
 const initialTotalL1Supply = 3000
 const depositAmount = 100
@@ -606,7 +606,7 @@ describe('L1DAITokenBridge', () => {
     it('assigns all variables properly', async () => {
       const [l1Dai, l2DAITokenBridgeMock, l2Dai, l1CrossDomainMessenger, l1Escrow] = await ethers.getSigners()
 
-      const l1DAITokenBridge = await deploy<L1DAITokenBridge__factory>('L1DAITokenBridge', [
+      const l1DAITokenBridge = await simpleDeploy<L1DAITokenBridge__factory>('L1DAITokenBridge', [
         l1Dai.address,
         l2DAITokenBridgeMock.address,
         l2Dai.address,
@@ -623,7 +623,7 @@ describe('L1DAITokenBridge', () => {
   })
 
   it('has correct public interface', async () => {
-    await assertPublicMethods('L1DAITokenBridge', [
+    await assertPublicMutableMethods('L1DAITokenBridge', [
       'rely(address)',
       'deny(address)',
       'close()',
@@ -633,15 +633,15 @@ describe('L1DAITokenBridge', () => {
     ])
   })
 
-  testAuth(
-    'L1DAITokenBridge',
-    async () => {
+  testAuth({
+    name: 'L1DAITokenBridge',
+    getDeployArgs: async () => {
       const [l1Dai, l2DAITokenBridge, l2Dai, l1CrossDomainMessengerMock, l1Escrow] = await getRandomAddresses()
 
       return [l1Dai, l2DAITokenBridge, l2Dai, l1CrossDomainMessengerMock, l1Escrow]
     },
-    [(c) => c.close()],
-  )
+    authedMethods: [(c) => c.close()],
+  })
 })
 
 async function setupTest(signers: { l1MessengerImpersonator: SignerWithAddress; user1: SignerWithAddress }) {
@@ -650,10 +650,10 @@ async function setupTest(signers: { l1MessengerImpersonator: SignerWithAddress; 
     'OVM_L1CrossDomainMessenger',
     { address: await signers.l1MessengerImpersonator.getAddress() }, // This allows us to use an ethers override {from: Mock__OVM_L2CrossDomainMessenger.address} to mock calls
   )
-  const l1Dai = await deploy<Dai__factory>('Dai')
-  const l2Dai = await deploy<Dai__factory>('Dai')
-  const l1Escrow = await deploy<L1Escrow__factory>('L1Escrow')
-  const l1DAITokenBridge = await deploy<L1DAITokenBridge__factory>('L1DAITokenBridge', [
+  const l1Dai = await simpleDeploy<Dai__factory>('Dai', [])
+  const l2Dai = await simpleDeploy<Dai__factory>('Dai', [])
+  const l1Escrow = await simpleDeploy<L1Escrow__factory>('L1Escrow', [])
+  const l1DAITokenBridge = await simpleDeploy<L1DAITokenBridge__factory>('L1DAITokenBridge', [
     l1Dai.address,
     l2DAITokenBridge.address,
     l2Dai.address,

@@ -3,10 +3,11 @@
  */
 require('dotenv').config()
 import { JsonRpcProvider } from '@ethersproject/providers'
+import { getRequiredEnv } from '@makerdao/hardhat-utils'
 import hre from 'hardhat'
 import { mapValues } from 'lodash'
 
-import { deploy, getRequiredEnv } from './common'
+import { deploy } from './common'
 
 // optimism's addresses: https://github.com/ethereum-optimism/optimism/tree/master/packages/contracts/deployments
 

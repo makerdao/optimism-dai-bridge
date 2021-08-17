@@ -973,6 +973,18 @@
     "@types/yargs" "^15.0.0"
     chalk "^4.0.0"
 
+"@makerdao/hardhat-utils@^0.1.1":
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/@makerdao/hardhat-utils/-/hardhat-utils-0.1.1.tgz#91eef003bd5f1c1a6ff4d0fae14ca65b1ae7b92c"
+  integrity sha512-3PI1swCodMsii9V6mYNVXdx5SV9nRSP1F8Cqy+/kCZ+EQ5Ugzt10vDcxKNr9+Nmv09TCqaZKjtcjaN59Q7WWwg==
+  dependencies:
+    "@types/chai" "^4.2.12"
+    "@types/lodash" "^4.14.172"
+    "@types/node" "^14.6.0"
+    chai "^4.2.0"
+    lodash "^4.17.21"
+    ts-essentials "^7.0.3"
+
 "@nodelib/fs.scandir@2.1.4":
   version "2.1.4"
   resolved "https://registry.yarnpkg.com/@nodelib/fs.scandir/-/fs.scandir-2.1.4.tgz#d4b3549a5db5de2683e0c1071ab4f140904bbf69"
@@ -1405,6 +1417,11 @@
   version "4.14.170"
   resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.14.170.tgz#0d67711d4bf7f4ca5147e9091b847479b87925d6"
   integrity sha512-bpcvu/MKHHeYX+qeEN8GE7DIravODWdACVA1ctevD8CN24RhPZIKMn9ntfAsrvLfSX3cR5RrBKAbYm9bGs0A+Q==
+
+"@types/lodash@^4.14.172":
+  version "4.14.172"
+  resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.14.172.tgz#aad774c28e7bfd7a67de25408e03ee5a8c3d028a"
+  integrity sha512-/BHF5HAx3em7/KkzVKm3LrsD6HZAXuXO1AJZQ3cRRBZj4oHZDviWPYu0aEplAqDFNHZPW6d3G7KN+ONcCCC7pw==
 
 "@types/lru-cache@^5.1.0":
   version "5.1.0"
@@ -9400,6 +9417,11 @@ ts-essentials@^7.0.1:
   version "7.0.1"
   resolved "https://registry.yarnpkg.com/ts-essentials/-/ts-essentials-7.0.1.tgz#d205508cae0cdadfb73c89503140cf2228389e2d"
   integrity sha512-8lwh3QJtIc1UWhkQtr9XuksXu3O0YQdEE5g79guDfhCaU1FWTDIEDZ1ZSx4HTHUmlJZ8L812j3BZQ4a0aOUkSA==
+
+ts-essentials@^7.0.3:
+  version "7.0.3"
+  resolved "https://registry.yarnpkg.com/ts-essentials/-/ts-essentials-7.0.3.tgz#686fd155a02133eedcc5362dc8b5056cde3e5a38"
+  integrity sha512-8+gr5+lqO3G84KdiTSMRLtuyJ+nTBVRKuCrK4lidMPdVeEp0uqC875uE5NMcaA7YYMN7XsNiFQuMvasF8HT/xQ==
 
 ts-generator@^0.1.1:
   version "0.1.1"

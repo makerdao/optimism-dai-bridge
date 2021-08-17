@@ -1,9 +1,8 @@
+import { assertPublicMutableMethods, getRandomAddresses, testAuth } from '@makerdao/hardhat-utils'
 import { expect } from 'chai'
 import { ethers, web3 } from 'hardhat'
 
 import { Dai, Dai__factory } from '../../typechain'
-import { testAuth } from '../auth'
-import { assertPublicMethods, getRandomAddresses } from '../helpers'
 
 const { signERC2612Permit } = require('./eth-permit/eth-permit')
 
@@ -377,7 +376,7 @@ describe('Dai', () => {
   })
 
   it('has correct public interface', async () => {
-    await assertPublicMethods('Dai', [
+    await assertPublicMutableMethods('Dai', [
       'rely(address)',
       'deny(address)',
       'approve(address,uint256)',
@@ -391,10 +390,14 @@ describe('Dai', () => {
     ])
   })
 
-  testAuth('Dai', async () => [], [
-    async (c) => {
-      const [to] = await getRandomAddresses()
-      return c.mint(to, 1)
-    },
-  ])
+  testAuth({
+    name: 'Dai',
+    getDeployArgs: async () => [],
+    authedMethods: [
+      async (c) => {
+        const [to] = await getRandomAddresses()
+        return c.mint(to, 1)
+      },
+    ],
+  })
 })

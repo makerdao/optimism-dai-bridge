@@ -1,11 +1,15 @@
 import { Signer } from '@ethersproject/abstract-signer'
+import {
+  deployUsingFactoryAndVerify,
+  getActiveWards,
+  getAddressOfNextDeployedContract,
+  waitForTx,
+} from '@makerdao/hardhat-utils'
 import { expect } from 'chai'
+import { ethers } from 'ethers'
 import { ethers as l1 } from 'hardhat'
-import { assert } from 'ts-essentials'
 
-import { getAddressOfNextDeployedContract } from '../test-e2e/helpers/address'
-import { getActiveWards } from '../test-e2e/helpers/auth'
-import { deployUsingFactoryAndVerify, getL2Factory, MAX_UINT256, waitForTx } from '../test-e2e/helpers/utils'
+import { getL2Factory } from '../optimism-helpers'
 
 interface Options {
   l1Deployer: Signer
@@ -99,7 +103,7 @@ export async function deploy(opts: Options) {
   await waitForTx(
     l1Escrow
       .connect(opts.l1Deployer)
-      .approve(opts.L1_DAI_ADDRESS, l1DAITokenBridge.address, MAX_UINT256, opts.L1_TX_OPTS),
+      .approve(opts.L1_DAI_ADDRESS, l1DAITokenBridge.address, ethers.constants.MaxUint256, opts.L1_TX_OPTS),
   )
   await waitForTx(l1Escrow.rely(opts.L1_PAUSE_PROXY_ADDRESS, opts.L1_TX_OPTS))
   await waitForTx(l1Escrow.rely(opts.L1_ESM_ADDRESS, opts.L1_TX_OPTS))
@@ -139,11 +143,4 @@ export async function deploy(opts: Options) {
     l2DAITokenBridge,
     l2GovernanceRelay,
   }
-}
-
-export function getRequiredEnv(key: string): string {
-  const value = process.env[key]
-  assert(value, `Please provide ${key} in .env file`)
-
-  return value
 }

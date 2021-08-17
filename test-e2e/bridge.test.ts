@@ -1,7 +1,21 @@
 import { Wallet } from '@ethersproject/wallet'
+import {
+  deployUsingFactory,
+  getActiveWards,
+  getAddressOfNextDeployedContract,
+  waitForTx,
+} from '@makerdao/hardhat-utils'
 import { expect } from 'chai'
-import { ethers as l1 } from 'hardhat'
+import { parseUnits } from 'ethers/lib/utils'
+import { ethers, ethers as l1 } from 'hardhat'
 
+import {
+  getL2Factory,
+  optimismConfig,
+  waitToRelayMessageToL1,
+  waitToRelayTxsToL2,
+  ZERO_GAS_OPTS,
+} from '../optimism-helpers'
 import {
   Dai,
   L1DAITokenBridge,
@@ -11,22 +25,12 @@ import {
   L2GovernanceRelay,
   TestBridgeUpgradeSpell,
 } from '../typechain'
-import { getAddressOfNextDeployedContract } from './helpers/address'
-import { getActiveWards } from './helpers/auth'
-import { optimismConfig } from './helpers/optimismConfig'
-import {
-  deployUsingFactory,
-  getL2Factory,
-  MAX_UINT256,
-  q18,
-  setupTest,
-  waitForTx,
-  waitToRelayMessageToL1,
-  waitToRelayTxsToL2,
-  ZERO_GAS_OPTS,
-} from './helpers/utils'
+import { setupTest } from './helpers'
 
 const defaultGasLimit = 1000000
+const spellGasLimit = 5000000
+const depositAmount = parseUnits('500', 'ether')
+const initialL1DaiNumber = parseUnits('10000', 'ether')
 
 describe('bridge', () => {
   let l1Signer: Wallet
@@ -43,8 +47,6 @@ describe('bridge', () => {
   let l2DAITokenBridgeV2: L2DAITokenBridge
   let l2GovernanceRelay: L2GovernanceRelay
   let l2UpgradeSpell: TestBridgeUpgradeSpell
-  const initialL1DaiNumber = q18(10000)
-  const spellGasLimit = 5000000
 
   beforeEach(async () => {
     ;({ l1Signer, l2Signer, watcher } = await setupTest())
@@ -76,7 +78,7 @@ describe('bridge', () => {
       l1Escrow.address,
       ZERO_GAS_OPTS,
     ])
-    await waitForTx(l1Escrow.approve(l1Dai.address, l1DAITokenBridge.address, MAX_UINT256))
+    await waitForTx(l1Escrow.approve(l1Dai.address, l1DAITokenBridge.address, ethers.constants.MaxUint256))
     expect(l1DAITokenBridge.address).to.be.eq(
       futureL1DAITokenBridgeAddress,
       'Predicted address of l1DAITokenBridge doesnt match actual address',
@@ -114,7 +116,6 @@ describe('bridge', () => {
   })
 
   it('moves l1 tokens to l2', async () => {
-    const depositAmount = q18(500)
     await waitForTx(l1Dai.approve(l1DAITokenBridge.address, depositAmount))
     await waitToRelayTxsToL2(
       l1DAITokenBridge.depositERC20(l1Dai.address, l2Dai.address, depositAmount, defaultGasLimit, '0x'),
@@ -126,7 +127,6 @@ describe('bridge', () => {
   })
 
   it('moves l2 tokens to l1', async () => {
-    const depositAmount = q18(500)
     await waitForTx(l1Dai.approve(l1DAITokenBridge.address, depositAmount))
     await waitToRelayTxsToL2(
       l1DAITokenBridge.depositERC20(l1Dai.address, l2Dai.address, depositAmount, defaultGasLimit, '0x'),
@@ -170,7 +170,9 @@ describe('bridge', () => {
       futureL2DAITokenBridgeV2Address,
       'Predicted address of l1DAITokenBridgeV2 doesnt match actual address',
     )
-    await waitForTx(l1Escrow.approve(l1Dai.address, l1DAITokenBridgeV2.address, MAX_UINT256, ZERO_GAS_OPTS))
+    await waitForTx(
+      l1Escrow.approve(l1Dai.address, l1DAITokenBridgeV2.address, ethers.constants.MaxUint256, ZERO_GAS_OPTS),
+    )
     console.log('L1 DAI Deposit V2: ', l1DAITokenBridgeV2.address)
 
     l2UpgradeSpell = await deployUsingFactory(l2Signer, await getL2Factory('TestBridgeUpgradeSpell'), [ZERO_GAS_OPTS])
@@ -199,7 +201,6 @@ describe('bridge', () => {
     console.log('L2 Bridge Closed')
 
     console.log('Testing V2 bridge deposit/withdrawal...')
-    const depositAmount = q18(500)
     await waitForTx(l1Dai.approve(l1DAITokenBridgeV2.address, depositAmount, ZERO_GAS_OPTS))
     await waitToRelayTxsToL2(
       l1DAITokenBridgeV2.depositERC20(
