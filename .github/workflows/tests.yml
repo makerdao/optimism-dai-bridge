@@ -72,7 +72,7 @@ jobs:
       - run: |
           git clone https://github.com/ethereum-optimism/optimism.git
           cd optimism
-          git checkout 52d9e6b73362a203bdae3fa0182bd6e7c9693b13
+          git checkout 29778eeb45944d72c5724b8dd32c6b75940259e6
           cd ops
           export COMPOSE_DOCKER_CLI_BUILD=1
           export DOCKER_BUILDKIT=1
