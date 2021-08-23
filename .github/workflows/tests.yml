@@ -72,14 +72,24 @@ jobs:
       - run: |
           git clone https://github.com/ethereum-optimism/optimism.git
           cd optimism
-          git checkout 52d9e6b73362a203bdae3fa0182bd6e7c9693b13
-          cd ops
-          export COMPOSE_DOCKER_CLI_BUILD=1
-          export DOCKER_BUILDKIT=1
-          docker-compose build
+          git checkout 3aa1cad0daa823b3fd20100a3f657d4639ea8975
+
+      - name: Build the services
+        working-directory: ./optimism/ops
+        run: ./scripts/build-ci.sh
+
+      - name: Bring the stack up
+        working-directory: ./optimism/ops
+        run: |
+          ./scripts/stats.sh &
           docker-compose up -d
 
-          cd ../../
+      - name: Wait for the Sequencer node
+        working-directory: ./optimism/ops
+        run: ./scripts/wait-for-sequencer.sh
+
+      - name: Run e2e Tests
+        run: |
           ./.github/workflows/wait-for-it.sh -h localhost -p 8080 -t 120
           sleep 60 # we still need to wait for contracts to be deployed really
           yarn test-e2e
