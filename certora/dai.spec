@@ -15,8 +15,8 @@ methods {
     allowance(address, address) returns (uint256) envfree
     nonces(address) returns (uint256) envfree
     deploymentChainId() returns (uint256) envfree
-    PERMIT_TYPEHASH() returns (bytes32) envfree
     DOMAIN_SEPARATOR() returns (bytes32) envfree
+    PERMIT_TYPEHASH() returns (bytes32) envfree
     hashHelper.call_ecrecover(bytes32, uint8, bytes32, bytes32) returns (address) envfree
     hashHelper.computeDigestForDai(bytes32, bytes32, address, address, uint256, uint256, uint256) returns (bytes32) envfree
 }
