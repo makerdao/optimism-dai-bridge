@@ -1,6 +1,6 @@
 // dai.spec
 
-// certoraRun contracts/l2/dai.sol:Dai contracts/specs/HashHelper.sol --verify Dai:contracts/specs/dai.spec --rule_sanity --solc_args "['--optimize','--optimize-runs','200']"
+// certoraRun contracts/l2/dai.sol:Dai certora/HashHelper.sol --verify Dai:certora/dai.spec --rule_sanity --solc_args "['--optimize','--optimize-runs','200']"
 
 using HashHelper as hashHelper
 
