@@ -37,7 +37,7 @@ rule rely(address usr) {
 
     rely(e, usr);
 
-    assert(wards(usr) == 1, "Rely did not set the wards as expected");
+    assert(wards(usr) == 1, "rely did not set the wards as expected");
 }
 
 // Verify revert rules on rely
@@ -62,7 +62,7 @@ rule deny(address usr) {
 
     deny(e, usr);
 
-    assert(wards(usr) == 0, "Deny did not set the wards as expected");
+    assert(wards(usr) == 0, "deny did not set the wards as expected");
 }
 
 // Verify revert rules on deny
@@ -98,17 +98,17 @@ rule transfer(address to, uint256 value) {
     uint256 toBalanceAfter = balanceOf(to);
     uint256 supplyAfter = totalSupply();
 
-    assert(supplyAfter == supplyBefore, "Supply changed");
+    assert(supplyAfter == supplyBefore, "supply changed");
 
     assert(!senderSameAsTo =>
             senderBalanceAfter == senderBalanceBefore - value &&
             toBalanceAfter == toBalanceBefore + value,
-            "Transfer did not change balances as expected"
+            "transfer did not change balances as expected"
     );
 
     assert(senderSameAsTo =>
             senderBalanceAfter == senderBalanceBefore,
-            "Transfer changed the balance when sender and receiver are the same"
+            "transfer changed the balance when sender and receiver are the same"
     );
 }
 
@@ -150,12 +150,12 @@ rule transferFrom(address from, address to, uint256 value) {
     uint256 supplyAfter = totalSupply();
     uint256 allowanceAfter = allowance(from, e.msg.sender);
 
-    assert(supplyAfter == supplyBefore, "Supply changed");
-    assert(deductAllowance => allowanceAfter == allowanceBefore - value, "Allowance did not decrease in value");
-    assert(!deductAllowance => allowanceAfter == allowanceBefore, "Allowance did not remain the same");
-    assert(!fromSameAsTo => fromBalanceAfter == fromBalanceBefore - value, "TransferFrom did not decrease the balance as expected");
-    assert(!fromSameAsTo => toBalanceAfter == toBalanceBefore + value, "TransferFrom did not increase the balance as expected");
-    assert(fromSameAsTo => fromBalanceAfter == fromBalanceBefore, "TransferFrom did not keep the balance the same as expected");
+    assert(supplyAfter == supplyBefore, "supply changed");
+    assert(deductAllowance => allowanceAfter == allowanceBefore - value, "allowance did not decrease in value");
+    assert(!deductAllowance => allowanceAfter == allowanceBefore, "allowance did not remain the same");
+    assert(!fromSameAsTo => fromBalanceAfter == fromBalanceBefore - value, "transferFrom did not decrease the balance as expected");
+    assert(!fromSameAsTo => toBalanceAfter == toBalanceBefore + value, "transferFrom did not increase the balance as expected");
+    assert(fromSameAsTo => fromBalanceAfter == fromBalanceBefore, "transferFrom did not keep the balance the same as expected");
 }
 
 // Verify revert rules on transferFrom
@@ -185,7 +185,7 @@ rule approve(address spender, uint256 value) {
 
     approve(e, spender, value);
 
-    assert(allowance(e.msg.sender, spender) == value, "Approve did not set the allowance as expected");
+    assert(allowance(e.msg.sender, spender) == value, "approve did not set the allowance as expected");
 }
 
 // Verify revert rules on approve
@@ -223,7 +223,7 @@ rule increaseAllowance_revert(address spender, uint256 value) {
     bool revert2 = spenderAllowance + value > max_uint256;
 
     assert(revert1 => lastReverted, "Sending ETH did not revert");
-    assert(revert2 => lastReverted, "Overflow did not revert");
+    assert(revert2 => lastReverted, "Overflow allowance did not revert");
     assert(lastReverted => revert1 || revert2, "Revert rules are not covering all the cases");
 }
 
@@ -250,7 +250,7 @@ rule decreaseAllowance_revert(address spender, uint256 value) {
     bool revert2 = spenderAllowance - value < 0;
 
     assert(revert1 => lastReverted, "Sending ETH did not revert");
-    assert(revert2 => lastReverted, "Underflow did not revert");
+    assert(revert2 => lastReverted, "Underflow allowance did not revert");
     assert(lastReverted => revert1 || revert2, "Revert rules are not covering all the cases");
 }
 
@@ -266,8 +266,8 @@ rule mint(address to, uint256 value) {
 
     mint(e, to, value);
 
-    assert(balanceOf(to) == toBalance + value, "Mint did not increase the balance as expected");
-    assert(totalSupply() == supply + value, "Mint did not increase the supply as expected");
+    assert(balanceOf(to) == toBalance + value, "mint did not increase the balance as expected");
+    assert(totalSupply() == supply + value, "mint did not increase the supply as expected");
 }
 
 // Verify revert rules on mint
@@ -287,7 +287,7 @@ rule mint_revert(address to, uint256 value) {
 
     assert(revert1 => lastReverted, "Sending ETH did not revert");
     assert(revert2 => lastReverted, "Lack of auth did not revert");
-    assert(revert3 => lastReverted, "Supply overflow did not revert");
+    assert(revert3 => lastReverted, "Overflow supply did not revert");
     assert(revert4 => lastReverted, "Incorrect address did not revert");
     assert(lastReverted => revert1 || revert2 || revert3 || revert4, "Revert rules are not covering all the cases");
 }
@@ -308,10 +308,10 @@ rule burn(address from, uint256 value) {
 
     burn(e, from, value);
 
-    assert(!senderSameAsFrom && !wardsEqOne && !allowedEqMaxUint => allowance(from, e.msg.sender) == allowed - value, "Burn did not decrease the allowance as expected" );
-    assert(senderSameAsFrom || wardsEqOne || allowedEqMaxUint => allowance(from, e.msg.sender) == allowed, "Burn did not keep the allowance as expected");
-    assert(balanceOf(from) == fromBalance - value, "Burn did not decrease the balance as expected");
-    assert(totalSupply() == supply - value, "Burn did not decrease the supply as expected");
+    assert(!senderSameAsFrom && !wardsEqOne && !allowedEqMaxUint => allowance(from, e.msg.sender) == allowed - value, "burn did not decrease the allowance as expected" );
+    assert(senderSameAsFrom || wardsEqOne || allowedEqMaxUint => allowance(from, e.msg.sender) == allowed, "burn did not keep the allowance as expected");
+    assert(balanceOf(from) == fromBalance - value, "burn did not decrease the balance as expected");
+    assert(totalSupply() == supply - value, "burn did not decrease the supply as expected");
 }
 
 // Verify revert rules on burn
@@ -330,8 +330,8 @@ rule burn_revert(address from, uint256 value) {
     bool revert3 = from != e.msg.sender && ward !=1 && allowed < value;
 
     assert(revert1 => lastReverted, "Sending ETH did not revert");
-    assert(revert2 => lastReverted, "Balance underflow did not revert");
-    assert(revert3 => lastReverted, "Allowance underflow did not revert");
+    assert(revert2 => lastReverted, "Underflow balance did not revert");
+    assert(revert3 => lastReverted, "Underflow allowance did not revert");
     assert(lastReverted => revert1 || revert2 || revert3, "Revert rules are not covering all the cases");
 }
 
@@ -341,7 +341,7 @@ rule permit(address owner, address spender, uint256 value, uint256 deadline, uin
 
     permit(e, owner, spender, value, deadline, v, r, s);
 
-    assert(allowance(owner, spender) == value, "Permit did not set the allowance as expected");
+    assert(allowance(owner, spender) == value, "permit did not set the allowance as expected");
 }
 
 // Verify revert rules on permit
