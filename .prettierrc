@@ -4,5 +4,17 @@
   "semi": false,
   "singleQuote": true,
   "trailingComma": "all",
-  "proseWrap": "always"
+  "proseWrap": "always",
+  "overrides": [
+    {
+      "files": "*.sol",
+      "options": {
+        "printWidth": 100,
+        "tabWidth": 2,
+        "useTabs": false,
+        "singleQuote": false,
+        "explicitTypes": "always"
+      }
+    }
+  ]
 }
