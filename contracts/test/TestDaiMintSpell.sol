@@ -10,9 +10,11 @@ interface MintLike {
  * An example spell to mint some dai.
  */
 contract TestDaiMintSpell {
-
-  function mintDai(address _dai, address _user, uint256 _amount) external {
+  function mintDai(
+    address _dai,
+    address _user,
+    uint256 _amount
+  ) external {
     MintLike(_dai).mint(_user, _amount);
   }
-
 }

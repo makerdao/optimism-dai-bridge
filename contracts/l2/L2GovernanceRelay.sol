@@ -20,13 +20,9 @@ import {OVM_CrossDomainEnabled} from "@eth-optimism/contracts/libraries/bridge/O
 // Receive xchain message from L1 counterpart and execute given spell
 
 contract L2GovernanceRelay is OVM_CrossDomainEnabled {
-  
   address public immutable l1GovernanceRelay;
 
-  constructor(
-    address _l2CrossDomainMessenger,
-    address _l1GovernanceRelay
-  )
+  constructor(address _l2CrossDomainMessenger, address _l1GovernanceRelay)
     OVM_CrossDomainEnabled(_l2CrossDomainMessenger)
   {
     l1GovernanceRelay = _l1GovernanceRelay;
@@ -45,7 +41,7 @@ contract L2GovernanceRelay is OVM_CrossDomainEnabled {
     address _messenger = messenger;
 
     bool ok;
-    (ok,) = target.delegatecall(targetData);
+    (ok, ) = target.delegatecall(targetData);
     require(ok, "L2GovernanceRelay/delegatecall-error");
 
     require(_messenger == messenger, "L2GovernanceRelay/illegal-storage-change");

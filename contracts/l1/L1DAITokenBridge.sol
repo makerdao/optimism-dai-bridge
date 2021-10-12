@@ -19,10 +19,14 @@ pragma solidity >=0.7.6;
 import {iOVM_L1ERC20Bridge} from "@eth-optimism/contracts/iOVM/bridge/tokens/iOVM_L1ERC20Bridge.sol";
 import {iOVM_L2ERC20Bridge} from "@eth-optimism/contracts/iOVM/bridge/tokens/iOVM_L2ERC20Bridge.sol";
 import {OVM_CrossDomainEnabled} from "@eth-optimism/contracts/libraries/bridge/OVM_CrossDomainEnabled.sol";
-import { Address } from "@openzeppelin/contracts/utils/Address.sol";
+import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 
 interface TokenLike {
-  function transferFrom(address _from, address _to, uint256 _value) external returns (bool success);
+  function transferFrom(
+    address _from,
+    address _to,
+    uint256 _value
+  ) external returns (bool success);
 }
 
 // Managed locked funds in L1Escrow and send / receive messages to L2DAITokenBridge counterpart
@@ -30,16 +34,19 @@ interface TokenLike {
 
 contract L1DAITokenBridge is iOVM_L1ERC20Bridge, OVM_CrossDomainEnabled {
   // --- Auth ---
-  mapping (address => uint256) public wards;
+  mapping(address => uint256) public wards;
+
   function rely(address usr) external auth {
     wards[usr] = 1;
     emit Rely(usr);
   }
+
   function deny(address usr) external auth {
     wards[usr] = 0;
     emit Deny(usr);
   }
-  modifier auth {
+
+  modifier auth() {
     require(wards[msg.sender] == 1, "L1DAITokenBridge/not-authorized");
     _;
   }
@@ -117,8 +124,15 @@ contract L1DAITokenBridge is iOVM_L1ERC20Bridge, OVM_CrossDomainEnabled {
 
     TokenLike(l1Token).transferFrom(_from, escrow, _amount);
 
-    bytes memory message =
-      abi.encodeWithSelector(iOVM_L2ERC20Bridge.finalizeDeposit.selector, l1Token, l2Token, _from, _to, _amount, _data);
+    bytes memory message = abi.encodeWithSelector(
+      iOVM_L2ERC20Bridge.finalizeDeposit.selector,
+      l1Token,
+      l2Token,
+      _from,
+      _to,
+      _amount,
+      _data
+    );
 
     sendCrossDomainMessage(l2DAITokenBridge, _l2Gas, message);
 
@@ -134,7 +148,7 @@ contract L1DAITokenBridge is iOVM_L1ERC20Bridge, OVM_CrossDomainEnabled {
     bytes calldata _data
   ) external override onlyFromCrossDomainAccount(l2DAITokenBridge) {
     require(_l1Token == l1Token && _l2Token == l2Token, "L1DAITokenBridge/token-not-dai");
-    
+
     TokenLike(l1Token).transferFrom(escrow, _to, _amount);
 
     emit ERC20WithdrawalFinalized(l1Token, l2Token, _from, _to, _amount, _data);

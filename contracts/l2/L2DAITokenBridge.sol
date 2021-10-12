@@ -21,6 +21,7 @@ import {OVM_CrossDomainEnabled} from "@eth-optimism/contracts/libraries/bridge/O
 
 interface Mintable {
   function mint(address usr, uint256 wad) external;
+
   function burn(address usr, uint256 wad) external;
 }
 
@@ -31,15 +32,18 @@ interface Mintable {
 contract L2DAITokenBridge is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
   // --- Auth ---
   mapping(address => uint256) public wards;
+
   function rely(address usr) external auth {
     wards[usr] = 1;
     emit Rely(usr);
   }
+
   function deny(address usr) external auth {
     wards[usr] = 0;
     emit Deny(usr);
   }
-  modifier auth {
+
+  modifier auth() {
     require(wards[msg.sender] == 1, "L2DAITokenBridge/not-authorized");
     _;
   }
@@ -110,16 +114,15 @@ contract L2DAITokenBridge is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
 
     Mintable(l2Token).burn(msg.sender, _amount);
 
-    bytes memory message =
-      abi.encodeWithSelector(
-        iOVM_L1ERC20Bridge.finalizeERC20Withdrawal.selector,
-        l1Token,
-        l2Token,
-        _from,
-        _to,
-        _amount,
-        _data
-      );
+    bytes memory message = abi.encodeWithSelector(
+      iOVM_L1ERC20Bridge.finalizeERC20Withdrawal.selector,
+      l1Token,
+      l2Token,
+      _from,
+      _to,
+      _amount,
+      _data
+    );
 
     sendCrossDomainMessage(l1DAITokenBridge, _l1Gas, message);
 
@@ -134,11 +137,7 @@ contract L2DAITokenBridge is iOVM_L2ERC20Bridge, OVM_CrossDomainEnabled {
     address _to,
     uint256 _amount,
     bytes calldata _data
-  ) external 
-    virtual 
-    override 
-    onlyFromCrossDomainAccount(l1DAITokenBridge) 
-  {
+  ) external virtual override onlyFromCrossDomainAccount(l1DAITokenBridge) {
     require(_l1Token == l1Token && _l2Token == l2Token, "L2DAITokenBridge/token-not-dai");
 
     Mintable(l2Token).mint(_to, _amount);

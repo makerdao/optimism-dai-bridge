@@ -9,7 +9,7 @@ contract BadSpell {
     someVar = 5;
   }
 
-  function abort() pure external {
+  function abort() external pure {
     require(false, "ABORT!");
   }
 }

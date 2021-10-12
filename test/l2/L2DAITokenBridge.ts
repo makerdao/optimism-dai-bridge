@@ -171,16 +171,11 @@ describe('OVM_L2DAITokenBridge', () => {
 
     it('sends xchain message and burns tokens', async () => {
       const [_, l2MessengerImpersonator, user1] = await ethers.getSigners()
-      const {
-        l1DAITokenBridgeMock,
-        l2CrossDomainMessengerMock,
-        l2Dai,
-        l2DAITokenBridge,
-        l1Dai,
-      } = await setupWithdrawTest({
-        l2MessengerImpersonator,
-        user1,
-      })
+      const { l1DAITokenBridgeMock, l2CrossDomainMessengerMock, l2Dai, l2DAITokenBridge, l1Dai } =
+        await setupWithdrawTest({
+          l2MessengerImpersonator,
+          user1,
+        })
 
       const withdrawTx = await l2DAITokenBridge
         .connect(user1)
@@ -211,16 +206,11 @@ describe('OVM_L2DAITokenBridge', () => {
       const customData = '0x01'
 
       const [_, l2MessengerImpersonator, user1] = await ethers.getSigners()
-      const {
-        l1DAITokenBridgeMock,
-        l2CrossDomainMessengerMock,
-        l2Dai,
-        l2DAITokenBridge,
-        l1Dai,
-      } = await setupWithdrawTest({
-        l2MessengerImpersonator,
-        user1,
-      })
+      const { l1DAITokenBridgeMock, l2CrossDomainMessengerMock, l2Dai, l2DAITokenBridge, l1Dai } =
+        await setupWithdrawTest({
+          l2MessengerImpersonator,
+          user1,
+        })
 
       const withdrawTx = await l2DAITokenBridge
         .connect(user1)
@@ -290,16 +280,11 @@ describe('OVM_L2DAITokenBridge', () => {
 
     it('sends xchain message and burns tokens', async () => {
       const [_, l2MessengerImpersonator, receiver, user1] = await ethers.getSigners()
-      const {
-        l1DAITokenBridgeMock,
-        l2CrossDomainMessengerMock,
-        l2Dai,
-        l2DAITokenBridge,
-        l1Dai,
-      } = await setupWithdrawTest({
-        l2MessengerImpersonator,
-        user1,
-      })
+      const { l1DAITokenBridgeMock, l2CrossDomainMessengerMock, l2Dai, l2DAITokenBridge, l1Dai } =
+        await setupWithdrawTest({
+          l2MessengerImpersonator,
+          user1,
+        })
 
       const withdrawTx = await l2DAITokenBridge
         .connect(user1)
@@ -331,16 +316,11 @@ describe('OVM_L2DAITokenBridge', () => {
       const customData = '0x01'
 
       const [_, l2MessengerImpersonator, receiver, user1] = await ethers.getSigners()
-      const {
-        l1DAITokenBridgeMock,
-        l2CrossDomainMessengerMock,
-        l2Dai,
-        l2DAITokenBridge,
-        l1Dai,
-      } = await setupWithdrawTest({
-        l2MessengerImpersonator,
-        user1,
-      })
+      const { l1DAITokenBridgeMock, l2CrossDomainMessengerMock, l2Dai, l2DAITokenBridge, l1Dai } =
+        await setupWithdrawTest({
+          l2MessengerImpersonator,
+          user1,
+        })
 
       const withdrawTx = await l2DAITokenBridge
         .connect(user1)

@@ -4,11 +4,13 @@ pragma solidity >=0.7.6;
 
 interface BridgeLike {
   function close() external;
+
   function l2Token() external view returns (address);
 }
 
 interface AuthLike {
   function rely(address usr) external;
+
   function deny(address usr) external;
 }
 
@@ -16,7 +18,6 @@ interface AuthLike {
  * An example spell to transfer from the old bridge to the new one.
  */
 contract TestBridgeUpgradeSpell {
-
   function upgradeBridge(address _oldBridge, address _newBridge) external {
     BridgeLike oldBridge = BridgeLike(_oldBridge);
     AuthLike dai = AuthLike(oldBridge.l2Token());
@@ -26,5 +27,4 @@ contract TestBridgeUpgradeSpell {
     dai.deny(_oldBridge);
     dai.rely(_newBridge);
   }
-
 }
