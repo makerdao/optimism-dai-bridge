@@ -20,16 +20,11 @@ describe('OVM_L2GovernanceRelay', () => {
 
     it('mints new tokens', async () => {
       const [_, l2MessengerImpersonator, user1] = await ethers.getSigners()
-      const {
-        l1GovernanceRelay,
-        l2GovernanceRelay,
-        l2CrossDomainMessengerMock,
-        l2Dai,
-        l2daiMintSpell,
-      } = await setupTest({
-        l2MessengerImpersonator,
-        user1,
-      })
+      const { l1GovernanceRelay, l2GovernanceRelay, l2CrossDomainMessengerMock, l2Dai, l2daiMintSpell } =
+        await setupTest({
+          l2MessengerImpersonator,
+          user1,
+        })
       l2CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l1GovernanceRelay.address)
 
       await l2GovernanceRelay

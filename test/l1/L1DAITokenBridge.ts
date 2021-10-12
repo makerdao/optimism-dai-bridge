@@ -26,17 +26,11 @@ describe('L1DAITokenBridge', () => {
   describe('depositERC20()', () => {
     it('escrows funds and sends xchain message on deposit', async () => {
       const [l1MessengerImpersonator, user1] = await ethers.getSigners()
-      const {
-        l1Dai,
-        l2Dai,
-        l1DAITokenBridge,
-        l1CrossDomainMessengerMock,
-        l2DAITokenBridge,
-        l1Escrow,
-      } = await setupTest({
-        l1MessengerImpersonator,
-        user1,
-      })
+      const { l1Dai, l2Dai, l1DAITokenBridge, l1CrossDomainMessengerMock, l2DAITokenBridge, l1Escrow } =
+        await setupTest({
+          l1MessengerImpersonator,
+          user1,
+        })
 
       await l1Dai.connect(user1).approve(l1DAITokenBridge.address, depositAmount)
       const depositTx = await l1DAITokenBridge
@@ -69,17 +63,11 @@ describe('L1DAITokenBridge', () => {
       const customGas = 10
       const customData = '0x01'
       const [l1MessengerImpersonator, user1] = await ethers.getSigners()
-      const {
-        l1Dai,
-        l2Dai,
-        l1DAITokenBridge,
-        l1CrossDomainMessengerMock,
-        l2DAITokenBridge,
-        l1Escrow,
-      } = await setupTest({
-        l1MessengerImpersonator,
-        user1,
-      })
+      const { l1Dai, l2Dai, l1DAITokenBridge, l1CrossDomainMessengerMock, l2DAITokenBridge, l1Escrow } =
+        await setupTest({
+          l1MessengerImpersonator,
+          user1,
+        })
 
       await l1Dai.connect(user1).approve(l1DAITokenBridge.address, depositAmount)
       const depositTx = await l1DAITokenBridge
@@ -193,17 +181,11 @@ describe('L1DAITokenBridge', () => {
   describe('depositERC20To()', () => {
     it('escrows funds and sends xchain message on deposit', async () => {
       const [l1MessengerImpersonator, user1, user2] = await ethers.getSigners()
-      const {
-        l1Dai,
-        l1DAITokenBridge,
-        l1CrossDomainMessengerMock,
-        l2DAITokenBridge,
-        l1Escrow,
-        l2Dai,
-      } = await setupTest({
-        l1MessengerImpersonator,
-        user1,
-      })
+      const { l1Dai, l1DAITokenBridge, l1CrossDomainMessengerMock, l2DAITokenBridge, l1Escrow, l2Dai } =
+        await setupTest({
+          l1MessengerImpersonator,
+          user1,
+        })
 
       await l1Dai.connect(user1).approve(l1DAITokenBridge.address, depositAmount)
       const depositTx = await l1DAITokenBridge
@@ -236,17 +218,11 @@ describe('L1DAITokenBridge', () => {
       const customGas = 10
       const customData = '0x01'
       const [l1MessengerImpersonator, user1, user2] = await ethers.getSigners()
-      const {
-        l1Dai,
-        l1DAITokenBridge,
-        l1CrossDomainMessengerMock,
-        l2DAITokenBridge,
-        l1Escrow,
-        l2Dai,
-      } = await setupTest({
-        l1MessengerImpersonator,
-        user1,
-      })
+      const { l1Dai, l1DAITokenBridge, l1CrossDomainMessengerMock, l2DAITokenBridge, l1Escrow, l2Dai } =
+        await setupTest({
+          l1MessengerImpersonator,
+          user1,
+        })
 
       await l1Dai.connect(user1).approve(l1DAITokenBridge.address, depositAmount)
       const depositTx = await l1DAITokenBridge
@@ -348,17 +324,11 @@ describe('L1DAITokenBridge', () => {
 
     it('sends funds from the escrow', async () => {
       const [l1MessengerImpersonator, user1, user2] = await ethers.getSigners()
-      const {
-        l1Dai,
-        l1DAITokenBridge,
-        l2Dai,
-        l1CrossDomainMessengerMock,
-        l2DAITokenBridge,
-        l1Escrow,
-      } = await setupWithdrawTest({
-        l1MessengerImpersonator,
-        user1,
-      })
+      const { l1Dai, l1DAITokenBridge, l2Dai, l1CrossDomainMessengerMock, l2DAITokenBridge, l1Escrow } =
+        await setupWithdrawTest({
+          l1MessengerImpersonator,
+          user1,
+        })
       l1CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l2DAITokenBridge.address)
 
       const finalizeWithdrawalTx = await l1DAITokenBridge
@@ -381,17 +351,11 @@ describe('L1DAITokenBridge', () => {
 
     it('sends funds from the escrow to the 3rd party', async () => {
       const [l1MessengerImpersonator, user1, sender, receiver] = await ethers.getSigners()
-      const {
-        l1Dai,
-        l1DAITokenBridge,
-        l2Dai,
-        l1CrossDomainMessengerMock,
-        l2DAITokenBridge,
-        l1Escrow,
-      } = await setupWithdrawTest({
-        l1MessengerImpersonator,
-        user1,
-      })
+      const { l1Dai, l1DAITokenBridge, l2Dai, l1CrossDomainMessengerMock, l2DAITokenBridge, l1Escrow } =
+        await setupWithdrawTest({
+          l1MessengerImpersonator,
+          user1,
+        })
       l1CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l2DAITokenBridge.address)
 
       const finalizeWithdrawalTx = await l1DAITokenBridge
@@ -416,17 +380,11 @@ describe('L1DAITokenBridge', () => {
     // pending withdrawals MUST success even if bridge is closed
     it('completes withdrawals even when closed', async () => {
       const [l1MessengerImpersonator, user1, user2] = await ethers.getSigners()
-      const {
-        l1Dai,
-        l2Dai,
-        l1DAITokenBridge,
-        l1CrossDomainMessengerMock,
-        l2DAITokenBridge,
-        l1Escrow,
-      } = await setupWithdrawTest({
-        l1MessengerImpersonator,
-        user1,
-      })
+      const { l1Dai, l2Dai, l1DAITokenBridge, l1CrossDomainMessengerMock, l2DAITokenBridge, l1Escrow } =
+        await setupWithdrawTest({
+          l1MessengerImpersonator,
+          user1,
+        })
       l1CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l2DAITokenBridge.address)
 
       await l1DAITokenBridge.close()
@@ -485,17 +443,11 @@ describe('L1DAITokenBridge', () => {
     // if bridge is closed properly this shouldn't happen
     it('reverts when escrow access was revoked', async () => {
       const [l1MessengerImpersonator, user1, user2] = await ethers.getSigners()
-      const {
-        l1Dai,
-        l2Dai,
-        l1DAITokenBridge,
-        l1CrossDomainMessengerMock,
-        l2DAITokenBridge,
-        l1Escrow,
-      } = await setupWithdrawTest({
-        l1MessengerImpersonator,
-        user1,
-      })
+      const { l1Dai, l2Dai, l1DAITokenBridge, l1CrossDomainMessengerMock, l2DAITokenBridge, l1Escrow } =
+        await setupWithdrawTest({
+          l1MessengerImpersonator,
+          user1,
+        })
       l1CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l2DAITokenBridge.address)
 
       await l1Escrow.approve(l1Dai.address, l1DAITokenBridge.address, 0)

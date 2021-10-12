@@ -4,3 +4,4 @@ package.json
 dist
 typechain
 certora
+dai.sol
