@@ -1,4 +1,4 @@
-import { Watcher } from '@eth-optimism/watcher'
+import { Watcher } from '@eth-optimism/core-utils'
 import { connectWallets, getRandomWallets, waitForTx } from '@makerdao/hardhat-utils'
 import { ethers, providers, Wallet } from 'ethers'
 
@@ -12,8 +12,9 @@ export async function setupTest(): Promise<{
   l1Provider: providers.BaseProvider
   l2Provider: providers.BaseProvider
   l1Signer: Wallet
-  l1User: Wallet
   l2Signer: Wallet
+  l1User: Wallet
+  l2User: Wallet
   watcher: any
 }> {
   const randomWallets = getRandomWallets(3)
@@ -23,7 +24,7 @@ export async function setupTest(): Promise<{
   const [l1Deployer, l1User] = connectWallets(randomWallets, l1Provider)
 
   const l2Provider = getL2Provider()
-  const [l2Deployer] = connectWallets(randomWallets, l2Provider)
+  const [l2Deployer, l2User] = connectWallets(randomWallets, l2Provider)
 
   console.log('Seeding L1 account')
   await waitForTx(l1Admin.sendTransaction({ value: ethers.utils.parseEther('1'), to: l1Deployer.address }))
@@ -45,6 +46,7 @@ export async function setupTest(): Promise<{
     l2Provider,
     l1Signer: l1Deployer,
     l1User,
+    l2User,
     l2Signer: l2Deployer,
     watcher,
   }
