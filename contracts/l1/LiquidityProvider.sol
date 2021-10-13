@@ -38,49 +38,67 @@ interface L1ERC20BridgeLike {
 
 contract LiquidityProvider {
 
+    event Rely(address indexed usr);
+    event Deny(address indexed usr);
+
     enum WithdrawalStatus { PENDING, SENT_TO_USER, CLAIMED }
 
-    address public immutable owner = msg.sender; // TODO: add wards
     MessengerLike public immutable l1Messenger;
+    address public inventory = msg.sender;
+
+    mapping (address => uint256) public wards;
     mapping (bytes32 => WithdrawalStatus) withdrawals;
     mapping (address => address) l1Bridges; // l1Token => l1Bridge
     mapping (address => address) l2Bridges; // l2Token => l2Bridge
 
     constructor(MessengerLike _l1messenger) {
         l1Messenger = _l1messenger;
+        wards[msg.sender] = 1;
+        emit Rely(msg.sender);
     }
 
-    modifier onlyOwner {
-        require(msg.sender == owner, "not owner");
+    modifier auth {
+        require(wards[msg.sender] == 1, "LiquidityProvider/not-authorized");
         _;
     }
 
-    function registerL1Token(address _l1Token, address _l1Bridge) external onlyOwner {
+    function rely(address usr) external auth {
+        wards[usr] = 1;
+        emit Rely(usr);
+    }
+
+    function deny(address usr) external auth {
+        wards[usr] = 0;
+        emit Deny(usr);
+    }
+
+    function registerL1Token(address _l1Token, address _l1Bridge) external auth {
         // l1Token => l1Bridge mapping should be immutable, otherwise LP could deny claim() by user
-        require(l1Bridges[_l1Token] == address(0), "l1Token already registered");
+        require(l1Bridges[_l1Token] == address(0), "LiquidityProvider/already-registered");
         l1Bridges[_l1Token] = _l1Bridge;
     }
 
-    function registerL2Token(address _l2Token, address _l2Bridge) external onlyOwner {
+    function registerL2Token(address _l2Token, address _l2Bridge) external auth {
         // l2Token => l2Bridge mapping should be immutable, otherwise LP could deny claim() by user
-        require(l2Bridges[_l2Token] == address(0), "l2Token already registered");
+        require(l2Bridges[_l2Token] == address(0), "LiquidityProvider/already-registered");
         l2Bridges[_l2Token] = _l2Bridge;
+    }
+
+    function setInventory(address _inventory) external auth {
+        inventory = _inventory;
     }
 
     function processFastWithdrawal(
         address _l1Token,
-        address _inventory,
         address _recipient,
         uint256 _amount,
         uint256 _fee,
         uint256 _messageNonce
-    ) external onlyOwner {
+    ) external auth {
         bytes32 withdrawalId = getWithdrawalId(_l1Token, _recipient, _amount, _fee, _messageNonce);
-        require(withdrawals[withdrawalId] == WithdrawalStatus.PENDING, "already sent");
+        require(withdrawals[withdrawalId] == WithdrawalStatus.PENDING, "LiquidityProvider/already-sent");
         withdrawals[withdrawalId] = WithdrawalStatus.SENT_TO_USER;
-
-        // TODO: use SafeERC20.safeTransferFrom
-        TokenLike(_l1Token).transferFrom(_inventory, _recipient, _sub(_amount, _fee));
+        require(TokenLike(_l1Token).transferFrom(inventory, _recipient, _sub(_amount, _fee)), "LiquidityProvider/transfer-failed");
     }
 
     function claim(
@@ -92,18 +110,13 @@ contract LiquidityProvider {
         uint256 _fee,
         uint256 _messageNonce
     ) external {
-        require(wasWithdrawn(_l1Token, _l2Token, _sender, _recipient, _amount, _fee, _messageNonce), "not withdrawn");
+        require(wasWithdrawn(_l1Token, _l2Token, _sender, _recipient, _amount, _fee, _messageNonce), "LiquidityProvider/not-withdrawn");
         bytes32 withdrawalId = getWithdrawalId(_l1Token, _recipient, _amount, _fee, _messageNonce);
         WithdrawalStatus status = withdrawals[withdrawalId];
-        require(status != WithdrawalStatus.CLAIMED, "already claimed");
-        address to;
-        if(status == WithdrawalStatus.PENDING) {
-            to = _recipient;
-        } else {
-            to = owner;
-        }
+        require(status != WithdrawalStatus.CLAIMED, "LiquidityProvider/already-claimed");
+        address to = (status == WithdrawalStatus.PENDING) ? _recipient : inventory;
         withdrawals[withdrawalId] = WithdrawalStatus.CLAIMED;
-        TokenLike(_l1Token).transfer(to, _amount); // TODO: use SafeERC20.safeTransferFrom
+        require(TokenLike(_l1Token).transfer(to, _amount), "LiquidityProvider/transfer-failed");
     }
 
     function wasWithdrawn(
@@ -122,7 +135,8 @@ contract LiquidityProvider {
             _sender,
             address(this),
             _amount,
-            data);
+            data
+        );
         bytes memory message = abi.encodeWithSignature(
             "relayMessage(address,address,bytes,uint256)",
             l1Bridges[_l1Token], // target
@@ -144,6 +158,6 @@ contract LiquidityProvider {
     }
 
     function _sub(uint x, uint y) internal pure returns (uint z) {
-        require((z = x - y) <= x, "ds-math-sub-underflow");
+        require((z = x - y) <= x, "LiquidityProvider/ds-math-sub-underflow");
     }
 }
