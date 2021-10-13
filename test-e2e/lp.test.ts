@@ -15,7 +15,7 @@ const depositAmount = parseUnits('500', 'ether')
 const fee = parseUnits('1', 'ether')
 const initialL1DaiAmount = parseUnits('10000', 'ether')
 
-describe('bridge', () => {
+describe('lp', () => {
   let l1Signer: Wallet
   let l2Signer: Wallet
   let l1User: Wallet
