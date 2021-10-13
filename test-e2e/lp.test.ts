@@ -122,7 +122,7 @@ describe('bridge', () => {
 
     await waitForTx(l1Dai.approve(lp.address, depositAmount.sub(fee)))
     console.log('Processing Fast Withdrawal...')
-    await waitForTx(lp.processFastWithdrawal(l1Dai.address, l1Signer.address, l1User.address, depositAmount, fee, messageNonce))
+    await waitForTx(lp.processFastWithdrawal(l1Dai.address, l1User.address, depositAmount, fee, messageNonce))
 
     // check post-fast-withdrawal state
     let userL1Balance = await l1Dai.balanceOf(l1User.address)

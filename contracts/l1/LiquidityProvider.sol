@@ -95,6 +95,8 @@ contract LiquidityProvider {
         uint256 _fee,
         uint256 _messageNonce
     ) external auth {
+        // The messageNonce is used in the withdrawalId to allow handling multiple withdrawals having the same (token, recipient, amount, fee)
+        // Note that if the wrong _messageNonce is passed here, the LP will NOT be able to claim the tokens after the challenge period
         bytes32 withdrawalId = getWithdrawalId(_l1Token, _recipient, _amount, _fee, _messageNonce);
         require(withdrawals[withdrawalId] == WithdrawalStatus.PENDING, "LiquidityProvider/already-sent");
         withdrawals[withdrawalId] = WithdrawalStatus.SENT_TO_USER;
