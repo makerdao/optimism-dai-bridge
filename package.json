@@ -34,6 +34,7 @@
     "@nomiclabs/hardhat-waffle": "=2.0.1",
     "@nomiclabs/hardhat-web3": "^2.0.0",
     "@openzeppelin/contracts": "^3.4.0",
+    "@openzeppelin/contracts-upgradeable": "^3.3.0",
     "@openzeppelin/test-helpers": "^0.5.10",
     "@typechain/ethers-v5": "^7.0.0",
     "@typechain/hardhat": "^2.0.0",
@@ -73,6 +74,7 @@
     "source-map-support": "0.5.19"
   },
   "devDependencies": {
+    "@eth-optimism/message-relayer": "^0.1.13",
     "prettier-plugin-solidity": "^1.0.0-beta.18"
   }
 }

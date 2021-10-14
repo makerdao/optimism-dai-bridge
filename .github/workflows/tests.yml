@@ -82,7 +82,8 @@ jobs:
         working-directory: ./optimism/ops
         run: |
           ./scripts/stats.sh &
-          docker-compose up -d
+          # run everything besides "relayer" service
+          docker-compose up 0d builder l1_chain deployer dtl l2geth batch_submitter integration_tests
 
       - name: Wait for the Sequencer node
         working-directory: ./optimism/ops

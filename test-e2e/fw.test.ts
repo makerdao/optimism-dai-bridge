@@ -1,24 +1,10 @@
-import { TransactionRequest } from '@ethersproject/abstract-provider'
-import { Signer } from '@ethersproject/abstract-signer'
-import { Contract, ContractTransaction } from '@ethersproject/contracts'
 import { Wallet } from '@ethersproject/wallet'
-import {
-  deployUsingFactory,
-  getActiveWards,
-  getAddressOfNextDeployedContract,
-  waitForTx,
-} from '@makerdao/hardhat-utils'
+import { deployUsingFactory, getAddressOfNextDeployedContract, waitForTx } from '@makerdao/hardhat-utils'
 import { expect } from 'chai'
 import { parseUnits } from 'ethers/lib/utils'
 import { ethers, ethers as l1 } from 'hardhat'
 
-import {
-  getL2Factory,
-  optimismConfig,
-  waitToRelayMessageToL1,
-  waitToRelayTxsToL2,
-  ZERO_GAS_OPTS,
-} from '../optimism-helpers'
+import { getL2Factory, optimismConfig, ZERO_GAS_OPTS } from '../optimism-helpers'
 import {
   Dai,
   L1DAITokenBridge,
@@ -27,13 +13,11 @@ import {
   L1GovernanceRelay,
   L2DAITokenBridge,
   L2GovernanceRelay,
-  TestBridgeUpgradeSpell,
 } from '../typechain'
 import { setupTest } from './helpers'
 import { relayMessageToL1 } from './optimism'
 
 const defaultGasLimit = 1000000
-const spellGasLimit = 5000000
 const depositAmount = parseUnits('500', 'ether')
 const initialL1DaiNumber = parseUnits('10000', 'ether')
 
@@ -41,7 +25,6 @@ describe.only('fw', () => {
   let l1Signer: Wallet
   let l1Escrow: L1Escrow
   let l2Signer: Wallet
-  let watcher: any
 
   let l1Dai: Dai
   let l1DAITokenBridge: L1DAITokenBridge
@@ -52,7 +35,7 @@ describe.only('fw', () => {
   let l1FwOptimismDai: L1FwOptimismDai
 
   beforeEach(async () => {
-    ;({ l1Signer, l2Signer, watcher } = await setupTest())
+    ;({ l1Signer, l2Signer } = await setupTest())
     l1Dai = await deployUsingFactory(l1Signer, await l1.getContractFactory('Dai'), [ZERO_GAS_OPTS])
     console.log('L1 DAI: ', l1Dai.address)
     await waitForTx(l1Dai.mint(l1Signer.address, initialL1DaiNumber))
@@ -131,7 +114,7 @@ describe.only('fw', () => {
 
     await relayMessageToL1(
       l2DAITokenBridge.withdraw(l2Dai.address, depositAmount, defaultGasLimit, '0x', ZERO_GAS_OPTS),
-      l2Signer,
+      l1Signer,
     )
 
     const l2BalanceAfterWithdrawal = await l2Dai.balanceOf(l1Signer.address)
