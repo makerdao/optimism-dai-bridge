@@ -17,7 +17,9 @@ pragma solidity >=0.7.6;
 
 import "hardhat/console.sol";
 import "@eth-optimism/contracts/OVM/bridge/messaging/OVM_L1CrossDomainMessenger.sol";
+import {iOVM_L1ERC20Bridge} from "@eth-optimism/contracts/iOVM/bridge/tokens/iOVM_L1ERC20Bridge.sol";
 import {Lib_CrossDomainUtils} from "@eth-optimism/contracts/libraries/bridge/Lib_CrossDomainUtils.sol";
+import {Lib_BytesUtils} from "@eth-optimism/contracts/libraries/utils/Lib_BytesUtils.sol";
 
 interface DaiLike {
   function mint(address to, uint256 value) external;
@@ -54,6 +56,18 @@ contract L1FwOptimismDai {
     // validate withdrawal
     require(target == daiBridgeL1, "Not a valid withdrawal");
     require(sender == daiBridgeL2, "Not a valid withdrawal");
+    (
+      address _msgL1Token,
+      address _msgL2Token,
+      address msgFrom,
+      address msgTo,
+      uint256 msgAmt,
+      bytes memory msgData
+    ) = abi.decode(
+        Lib_BytesUtils.slice(message, 4, message.length - 4),
+        (address, address, address, address, uint256, bytes)
+      );
+    // todo: verify signature
     // todo: validate message that is finalizeWithdrawal with data of user
     // todo: validate oracle attestation
 
@@ -62,7 +76,7 @@ contract L1FwOptimismDai {
     require(xDomainMessager.successfulMessages(messageHash) == false, "Message already relied");
     require(fastWithdrew[messageHash] == false, "Witdrawal already fast withdrew");
 
-    dai.mint(msg.sender, 100);
+    dai.mint(msgTo, msgAmt);
     fastWithdrew[messageHash] = true;
   }
 
