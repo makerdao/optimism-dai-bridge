@@ -54,8 +54,18 @@ contract L1FwOptimismDai {
     uint256 oracleAttestation // @todo type
   ) public {
     // validate withdrawal
-    require(target == daiBridgeL1, "Not a valid withdrawal");
-    require(sender == daiBridgeL2, "Not a valid withdrawal");
+    require(target == daiBridgeL1, "Not a valid withdrawal (target)");
+    require(sender == daiBridgeL2, "Not a valid withdrawal (sender)");
+    bytes4 msgSelector = bytes4(
+      (uint32(uint8(message[0])) << 24) |
+        (uint32(uint8(message[1])) << 16) |
+        (uint32(uint8(message[2])) << 8) |
+        (uint32(uint8(message[3])))
+    );
+    require(
+      msgSelector == iOVM_L1ERC20Bridge.finalizeERC20Withdrawal.selector,
+      "Not a valid withdrawal (message.signature)"
+    );
     (
       address _msgL1Token,
       address _msgL2Token,
@@ -67,8 +77,8 @@ contract L1FwOptimismDai {
         Lib_BytesUtils.slice(message, 4, message.length - 4),
         (address, address, address, address, uint256, bytes)
       );
-    // todo: verify signature
-    // todo: validate message that is finalizeWithdrawal with data of user
+    // we don't need to verify msgL1Token and msgL2Token as they should be always correct
+    require(msgTo == address(this), "Not a valid withdrawal (msgTo)");
     // todo: validate oracle attestation
 
     bytes32 messageHash = getMessageHash(target, sender, message, messageNonce);
@@ -76,7 +86,7 @@ contract L1FwOptimismDai {
     require(xDomainMessager.successfulMessages(messageHash) == false, "Message already relied");
     require(fastWithdrew[messageHash] == false, "Witdrawal already fast withdrew");
 
-    dai.mint(msgTo, msgAmt);
+    dai.mint(msgFrom, msgAmt);
     fastWithdrew[messageHash] = true;
   }
 

@@ -114,7 +114,14 @@ describe.only('fw', () => {
     expect(balance.toString()).to.be.eq(depositAmount)
 
     const messages = await getL2ToL1Messages(
-      l2DAITokenBridge.withdraw(l2Dai.address, depositAmount, defaultGasLimit, '0x', ZERO_GAS_OPTS),
+      l2DAITokenBridge.withdrawTo(
+        l2Dai.address,
+        l1FwOptimismDai.address,
+        depositAmount,
+        defaultGasLimit,
+        '0x',
+        ZERO_GAS_OPTS,
+      ),
     )
 
     const mp = messages[0]
@@ -134,6 +141,7 @@ describe.only('fw', () => {
   })
 
   it('allows anyone to fw a message')
+  it('reverts when trying fast withdraw a withdrawal not configured correctly (not to the fw contract for example)')
   it('reverts when trying withdraw message for wrong bridge/token')
   it('reverts if it was already withdrew')
 
