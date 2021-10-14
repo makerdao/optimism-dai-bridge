@@ -25,6 +25,8 @@ interface DaiLike {
   function mint(address to, uint256 value) external;
 
   function burn(address from, uint256 value) external;
+
+  function transfer(address to, uint256 value) external returns (bool);
 }
 
 contract L1FwOptimismDai {
@@ -32,7 +34,13 @@ contract L1FwOptimismDai {
   DaiLike public immutable dai;
   address public daiBridgeL1;
   address public daiBridgeL2;
-  mapping(bytes32 => bool) fastWithdrew;
+
+  enum WithdrawalStatus {
+    UNKNOWN,
+    FAST_WITHDREW,
+    CLAIMED
+  }
+  mapping(bytes32 => WithdrawalStatus) withdrawals;
 
   constructor(
     address _xDomainMessenger,
@@ -49,11 +57,85 @@ contract L1FwOptimismDai {
   function fastWithdraw(
     address target,
     address sender,
+    bytes memory message, // @todo calldata?
+    uint256 messageNonce,
+    uint256 oracleAttestation // @todo type
+  ) public {
+    (address msgFrom, address msgTo, uint256 msgAmt) = validateAndParseWithdrawal(
+      target,
+      sender,
+      message,
+      messageNonce
+    );
+    // todo: validate oracle attestation
+
+    bytes32 messageHash = getMessageHash(target, sender, message, messageNonce);
+
+    require(xDomainMessager.successfulMessages(messageHash) == false, "Message already relied");
+    require(withdrawals[messageHash] == WithdrawalStatus.UNKNOWN, "Witdrawal status incorrect");
+
+    dai.mint(msgFrom, msgAmt);
+
+    withdrawals[messageHash] = WithdrawalStatus.FAST_WITHDREW;
+  }
+
+  // used to recover "slow withdrawals"
+  function claimWithdraw(
+    address target,
+    address sender,
     bytes memory message,
     uint256 messageNonce,
     uint256 oracleAttestation // @todo type
   ) public {
-    // validate withdrawal
+    (address msgFrom, address msgTo, uint256 msgAmt) = validateAndParseWithdrawal(
+      target,
+      sender,
+      message,
+      messageNonce
+    );
+    // todo: validate oracle attestation
+
+    bytes32 messageHash = getMessageHash(target, sender, message, messageNonce);
+
+    require(xDomainMessager.successfulMessages(messageHash) == true, "Message not relied");
+    require(withdrawals[messageHash] == WithdrawalStatus.UNKNOWN, "Witdrawal status incorrect");
+
+    dai.transfer(msgFrom, msgAmt);
+
+    withdrawals[messageHash] = WithdrawalStatus.CLAIMED;
+  }
+
+  // @note: this has to be comptaible with hashing of optimism's xDomainMessenger
+  function getMessageHash(
+    address target,
+    address sender,
+    bytes memory message,
+    uint256 messageNonce
+  ) internal returns (bytes32) {
+    bytes memory xDomainCalldata = Lib_CrossDomainUtils.encodeXDomainCalldata(
+      target,
+      sender,
+      message,
+      messageNonce
+    );
+    bytes32 xDomainCalldataHash = keccak256(xDomainCalldata);
+
+    return xDomainCalldataHash;
+  }
+
+  function validateAndParseWithdrawal(
+    address target,
+    address sender,
+    bytes memory message,
+    uint256 messageNonce
+  )
+    internal
+    returns (
+      address,
+      address,
+      uint256
+    )
+  {
     require(target == daiBridgeL1, "Not a valid withdrawal (target)");
     require(sender == daiBridgeL2, "Not a valid withdrawal (sender)");
     bytes4 msgSelector = bytes4(
@@ -79,32 +161,7 @@ contract L1FwOptimismDai {
       );
     // we don't need to verify msgL1Token and msgL2Token as they should be always correct
     require(msgTo == address(this), "Not a valid withdrawal (msgTo)");
-    // todo: validate oracle attestation
 
-    bytes32 messageHash = getMessageHash(target, sender, message, messageNonce);
-    // ensure that it wasn't withdrew already
-    require(xDomainMessager.successfulMessages(messageHash) == false, "Message already relied");
-    require(fastWithdrew[messageHash] == false, "Witdrawal already fast withdrew");
-
-    dai.mint(msgFrom, msgAmt);
-    fastWithdrew[messageHash] = true;
-  }
-
-  // @note: this has to be comptaible with hashing of optimism's xDomainMessenger
-  function getMessageHash(
-    address target,
-    address sender,
-    bytes memory message,
-    uint256 messageNonce
-  ) internal returns (bytes32) {
-    bytes memory xDomainCalldata = Lib_CrossDomainUtils.encodeXDomainCalldata(
-      target,
-      sender,
-      message,
-      messageNonce
-    );
-    bytes32 xDomainCalldataHash = keccak256(xDomainCalldata);
-
-    return xDomainCalldataHash;
+    return (msgFrom, msgTo, msgAmt);
   }
 }
