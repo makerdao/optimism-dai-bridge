@@ -25,7 +25,7 @@ interface DaiLike {
   function burn(address from, uint256 value) external;
 }
 
-contract FwOptimismDai {
+contract L1FwOptimismDai {
   OVM_L1CrossDomainMessenger public immutable xDomainMessager;
   DaiLike public immutable dai;
   address public daiBridgeL1;
@@ -60,10 +60,10 @@ contract FwOptimismDai {
     bytes32 messageHash = getMessageHash(target, sender, message, messageNonce);
     // ensure that it wasn't withdrew already
     require(xDomainMessager.successfulMessages(messageHash) == false, "Message already relied");
-    require(fastWithdrawn[messageHash] == false, "Witdrawal already fast withdrew");
+    require(fastWithdrew[messageHash] == false, "Witdrawal already fast withdrew");
 
     dai.mint(msg.sender, 100);
-    fastWithdrawn[messageHash] = true;
+    fastWithdrew[messageHash] = true;
   }
 
   // @note: this has to be comptaible with hashing of optimism's xDomainMessenger
