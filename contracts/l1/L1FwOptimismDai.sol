@@ -37,8 +37,9 @@ contract L1FwOptimismDai {
 
   enum WithdrawalStatus {
     UNKNOWN,
-    FAST_WITHDREW,
-    CLAIMED
+    FAST_WITHDRAWN,
+    CLAIMED,
+    SETTLED
   }
   mapping(bytes32 => WithdrawalStatus) withdrawals;
 
@@ -67,6 +68,7 @@ contract L1FwOptimismDai {
       message,
       messageNonce
     );
+    // todo:ensure msg.sender == msgFrom
     // todo: validate oracle attestation
 
     bytes32 messageHash = getMessageHash(target, sender, message, messageNonce);
@@ -76,7 +78,34 @@ contract L1FwOptimismDai {
 
     dai.mint(msgFrom, msgAmt);
 
-    withdrawals[messageHash] = WithdrawalStatus.FAST_WITHDREW;
+    withdrawals[messageHash] = WithdrawalStatus.FAST_WITHDRAWN;
+  }
+
+  function settle(
+    address target,
+    address sender,
+    bytes memory message, // @todo calldata?
+    uint256 messageNonce
+  ) public {
+    (address msgFrom, address msgTo, uint256 msgAmt) = validateAndParseWithdrawal(
+      target,
+      sender,
+      message,
+      messageNonce
+    );
+    // todo: validate oracle attestation
+
+    bytes32 messageHash = getMessageHash(target, sender, message, messageNonce);
+
+    require(xDomainMessager.successfulMessages(messageHash) == true, "Message not relied");
+    require(
+      withdrawals[messageHash] == WithdrawalStatus.FAST_WITHDRAWN,
+      "Witdrawal status incorrect"
+    );
+
+    dai.burn(address(this), msgAmt);
+
+    withdrawals[messageHash] = WithdrawalStatus.SETTLED;
   }
 
   // used to recover "slow withdrawals"
@@ -84,8 +113,7 @@ contract L1FwOptimismDai {
     address target,
     address sender,
     bytes memory message,
-    uint256 messageNonce,
-    uint256 oracleAttestation // @todo type
+    uint256 messageNonce
   ) public {
     (address msgFrom, address msgTo, uint256 msgAmt) = validateAndParseWithdrawal(
       target,

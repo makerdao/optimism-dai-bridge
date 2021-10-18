@@ -15,12 +15,11 @@ import {
   L2GovernanceRelay,
 } from '../typechain'
 import { setupTest } from './helpers'
-import { getL2ToL1Messages, relayMessageToL1 } from './optimism'
+import { getL2ToL1Messages, relayMessageFromTxToL1, relayMessagesToL1 } from './optimism'
 import { getOracleAttestation } from './oracles'
 
 const defaultGasLimit = 1000000
 const depositAmount = parseUnits('500', 'ether')
-const initialL1DaiNumber = parseUnits('10000', 'ether')
 
 describe.only('fw', () => {
   let l1Signer: Wallet
@@ -39,7 +38,6 @@ describe.only('fw', () => {
     ;({ l1Signer, l2Signer } = await setupTest())
     l1Dai = await deployUsingFactory(l1Signer, await l1.getContractFactory('Dai'), [ZERO_GAS_OPTS])
     console.log('L1 DAI: ', l1Dai.address)
-    await waitForTx(l1Dai.mint(l1Signer.address, initialL1DaiNumber))
 
     l2Dai = await deployUsingFactory(l2Signer, await getL2Factory('Dai'), [ZERO_GAS_OPTS])
     console.log('L2 DAI: ', l2Dai.address)
@@ -109,11 +107,11 @@ describe.only('fw', () => {
     await waitForTx(l2Dai.mint(l1Signer.address, depositAmount, ZERO_GAS_OPTS))
   })
 
-  it.only('fast withdraws DAI', async () => {
+  it('fast withdraws DAI', async () => {
     const balance = await l2Dai.balanceOf(l1Signer.address)
     expect(balance.toString()).to.be.eq(depositAmount)
 
-    const messages = await getL2ToL1Messages(
+    const l2ToL1Messages = await getL2ToL1Messages(
       l2DAITokenBridge.withdrawTo(
         l2Dai.address,
         l1FwOptimismDai.address,
@@ -124,7 +122,7 @@ describe.only('fw', () => {
       ),
     )
 
-    const mp = messages[0]
+    const mp = l2ToL1Messages[0]
 
     await l1FwOptimismDai.fastWithdraw(
       mp.message.target,
@@ -137,7 +135,11 @@ describe.only('fw', () => {
     const l2BalanceAfterWithdrawal = await l2Dai.balanceOf(l1Signer.address)
     expect(l2BalanceAfterWithdrawal.toString()).to.be.eq('0')
     const l1Balance = await l1Dai.balanceOf(l1Signer.address)
-    expect(l1Balance.toString()).to.be.eq(initialL1DaiNumber.add(depositAmount))
+    expect(l1Balance.toString()).to.be.eq(depositAmount)
+
+    await relayMessagesToL1(l2ToL1Messages, l1Signer)
+
+    await l1FwOptimismDai.settle(mp.message.target, mp.message.sender, mp.message.message, mp.message.messageNonce)
   })
 
   it('allows anyone to fw a message')
@@ -145,18 +147,34 @@ describe.only('fw', () => {
   it('reverts when trying withdraw message for wrong bridge/token')
   it('reverts if it was already withdrew')
 
-  it('slow withdraws DAI', async () => {
+  it.only('slow withdraws DAI', async () => {
     const balance = await l2Dai.balanceOf(l1Signer.address)
     expect(balance.toString()).to.be.eq(depositAmount)
 
-    await relayMessageToL1(
-      l2DAITokenBridge.withdraw(l2Dai.address, depositAmount, defaultGasLimit, '0x', ZERO_GAS_OPTS),
-      l1Signer,
+    const l2ToL1Messages = await getL2ToL1Messages(
+      l2DAITokenBridge.withdrawTo(
+        l2Dai.address,
+        l1FwOptimismDai.address,
+        depositAmount,
+        defaultGasLimit,
+        '0x',
+        ZERO_GAS_OPTS,
+      ),
+    )
+    await relayMessagesToL1(l2ToL1Messages, l1Signer)
+
+    const mp = l2ToL1Messages[0]
+
+    await l1FwOptimismDai.claimWithdraw(
+      mp.message.target,
+      mp.message.sender,
+      mp.message.message,
+      mp.message.messageNonce,
     )
 
     const l2BalanceAfterWithdrawal = await l2Dai.balanceOf(l1Signer.address)
     expect(l2BalanceAfterWithdrawal.toString()).to.be.eq('0')
     const l1Balance = await l1Dai.balanceOf(l1Signer.address)
-    expect(l1Balance.toString()).to.be.eq(initialL1DaiNumber.add(depositAmount))
+    expect(l1Balance.toString()).to.be.eq(depositAmount)
   })
 })
