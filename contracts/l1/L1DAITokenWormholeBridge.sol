@@ -85,8 +85,33 @@ contract L1DAIWormholeBridge is OVM_CrossDomainEnabled {
   }
 
   function finalizeFlush(bytes32 targetDomain, uint256 daiToFlush) external {
+    // can be called only by l2 counterpart
     // settle on join
     // update state root
     // emit event
+  }
+
+  function prove(
+    WormholeGUID calldata guid,
+    uint256 maxFee,
+    L2MessageInclusionProof calldata proof
+  ) external {
+    // Optimism State Inclusion Proof
+    require(
+      ovmStateCommitmentChain.insideFraudProofWindow(proof.stateRootBatchHeader) == false &&
+        ovmStateCommitmentChain.verifyStateCommitment(
+          proof.stateRoot,
+          proof.stateRootBatchHeader,
+          proof.stateRootProof
+        ),
+      "WormholeOptimismStorageAuth/state-inclusion"
+    );
+    bytes32 hash = // Validate storage was set on L2 bridge
+    require(
+      verifyStorageProof(guid.getHash(), proof),
+      "WormholeOptimismStorageAuth/storage-inclusion"
+    );
+
+    join.mint(guid, msg.sender, maxFee);
   }
 }

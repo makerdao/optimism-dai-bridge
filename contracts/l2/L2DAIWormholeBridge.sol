@@ -30,16 +30,6 @@ interface IL1WormholeBridge {
   function finalizeFlush(bytes32 targetDomain, uint256 daiToFlush) external;
 }
 
-struct WormholeGUID {
-  bytes32 sourceDomain;
-  bytes32 targetDomain;
-  address receiver;
-  address operator;
-  uint128 amount;
-  uint64 nonce;
-  uint64 timestamp;
-}
-
 // Mint tokens on L2 after locking funds on L1.
 // Burn tokens on L1 and send a message to unlock tokens on L1 to L1 counterpart
 // Note: when bridge is closed it will still process in progress messages
