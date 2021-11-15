@@ -1,4 +1,4 @@
-import { Watcher } from '@eth-optimism/watcher'
+import { Watcher } from '@eth-optimism/core-utils'
 import { connectWallets, getRandomWallets, waitForTx } from '@makerdao/hardhat-utils'
 import { ethers, providers, Wallet } from 'ethers'
 
@@ -14,7 +14,7 @@ export async function setupTest(): Promise<{
   l1Signer: Wallet
   l1User: Wallet
   l2Signer: Wallet
-  watcher: any
+  watcher: Watcher
 }> {
   const randomWallets = getRandomWallets(3)
 
@@ -31,11 +31,11 @@ export async function setupTest(): Promise<{
 
   const watcher = new Watcher({
     l1: {
-      provider: l1Provider,
+      provider: l1Provider as any,
       messengerAddress: optimismConfig.Proxy__OVM_L1CrossDomainMessenger, // this sits behind a proxy right now
     },
     l2: {
-      provider: l2Provider,
+      provider: l2Provider as any,
       messengerAddress: optimismConfig._L2_OVM_L2CrossDomainMessenger,
     },
   })

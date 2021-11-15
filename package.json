@@ -4,10 +4,8 @@
   "version": "1.0.0",
   "license": "MIT",
   "scripts": {
-    "build": "yarn build:l1 && yarn build:l2",
-    "build:l1": "hardhat compile",
-    "build:l2": "hardhat compile --network ovm --no-typechain",
-    "clean": "hardhat clean && rm -rf artifacts artifacts-ovm cache cache-ovm crytic-export corpus",
+    "build": "hardhat compile",
+    "clean": "hardhat clean && rm -rf artifacts cache crytic-export corpus",
     "format": "prettier --check \"./**/*.{ts,sol}\"",
     "format:fix": "prettier --write \"./**/*.{ts,sol}\"",
     "lint": "eslint --ext .ts test test-e2e scripts optimism-helpers hardhat.config.ts",
@@ -23,10 +21,7 @@
   "dependencies": {
     "@codechecks/client": "0.1.10-beta",
     "@eth-optimism/contracts": "0.0.0-2021515174945",
-    "@eth-optimism/hardhat-ovm": "^0.2.2",
     "@eth-optimism/smock": "^1.1.4",
-    "@eth-optimism/solc": "0.5.16-alpha.7",
-    "@eth-optimism/watcher": "^0.0.1-alpha.9",
     "@makerdao/hardhat-utils": "^0.1.1",
     "@nomiclabs/ethereumjs-vm": "^4.2.2",
     "@nomiclabs/hardhat-ethers": "^2.0.2",
@@ -73,6 +68,7 @@
     "source-map-support": "0.5.19"
   },
   "devDependencies": {
+    "@eth-optimism/core-utils": "^0.7.0",
     "prettier-plugin-solidity": "^1.0.0-beta.18"
   }
 }
