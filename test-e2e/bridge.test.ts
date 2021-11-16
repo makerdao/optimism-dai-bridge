@@ -1,3 +1,4 @@
+import { Watcher } from '@eth-optimism/core-utils'
 import { Wallet } from '@ethersproject/wallet'
 import {
   deployUsingFactory,
@@ -9,13 +10,7 @@ import { expect } from 'chai'
 import { parseUnits } from 'ethers/lib/utils'
 import { ethers, ethers as l1 } from 'hardhat'
 
-import {
-  getL2Factory,
-  optimismConfig,
-  waitToRelayMessageToL1,
-  waitToRelayTxsToL2,
-  ZERO_GAS_OPTS,
-} from '../optimism-helpers'
+import { optimismConfig, relayMessagesToL1, waitToRelayTxsToL2, ZERO_GAS_OPTS } from '../optimism-helpers'
 import {
   Dai,
   L1DAITokenBridge,
@@ -36,7 +31,7 @@ describe('bridge', () => {
   let l1Signer: Wallet
   let l1Escrow: L1Escrow
   let l2Signer: Wallet
-  let watcher: any
+  let watcher: Watcher
 
   let l1Dai: Dai
   let l1DAITokenBridge: L1DAITokenBridge
@@ -54,14 +49,14 @@ describe('bridge', () => {
     console.log('L1 DAI: ', l1Dai.address)
     await waitForTx(l1Dai.mint(l1Signer.address, initialL1DaiNumber))
 
-    l2Dai = await deployUsingFactory(l2Signer, await getL2Factory('Dai'), [ZERO_GAS_OPTS])
+    l2Dai = await deployUsingFactory(l2Signer, await l1.getContractFactory('Dai'), [ZERO_GAS_OPTS])
     console.log('L2 DAI: ', l2Dai.address)
 
     l1Escrow = await deployUsingFactory(l1Signer, await l1.getContractFactory('L1Escrow'), [ZERO_GAS_OPTS])
     console.log('L1 Escrow: ', l1Escrow.address)
 
     const futureL1DAITokenBridgeAddress = await getAddressOfNextDeployedContract(l1Signer)
-    l2DAITokenBridge = await deployUsingFactory(l2Signer, await getL2Factory('L2DAITokenBridge'), [
+    l2DAITokenBridge = await deployUsingFactory(l2Signer, await l1.getContractFactory('L2DAITokenBridge'), [
       optimismConfig._L2_OVM_L2CrossDomainMessenger,
       l2Dai.address,
       l1Dai.address,
@@ -86,7 +81,7 @@ describe('bridge', () => {
     console.log('L1 DAI Deposit: ', l1DAITokenBridge.address)
 
     const futureL1GovRelayAddress = await getAddressOfNextDeployedContract(l1Signer)
-    l2GovernanceRelay = await deployUsingFactory(l2Signer, await getL2Factory('L2GovernanceRelay'), [
+    l2GovernanceRelay = await deployUsingFactory(l2Signer, await l1.getContractFactory('L2GovernanceRelay'), [
       optimismConfig._L2_OVM_L2CrossDomainMessenger,
       futureL1GovRelayAddress,
       ZERO_GAS_OPTS,
@@ -136,9 +131,10 @@ describe('bridge', () => {
     const balance = await l2Dai.balanceOf(l1Signer.address)
     expect(balance.toString()).to.be.eq(depositAmount)
 
-    await waitToRelayMessageToL1(
+    await relayMessagesToL1(
       l2DAITokenBridge.withdraw(l2Dai.address, depositAmount, defaultGasLimit, '0x', ZERO_GAS_OPTS),
       watcher,
+      l1Signer,
     )
 
     const l2BalanceAfterWithdrawal = await l2Dai.balanceOf(l1Signer.address)
@@ -149,7 +145,7 @@ describe('bridge', () => {
 
   it('upgrades the bridge through governance relay', async () => {
     const futureL2DAITokenBridgeV2Address = await getAddressOfNextDeployedContract(l1Signer)
-    l2DAITokenBridgeV2 = await deployUsingFactory(l2Signer, await getL2Factory('L2DAITokenBridge'), [
+    l2DAITokenBridgeV2 = await deployUsingFactory(l2Signer, await l1.getContractFactory('L2DAITokenBridge'), [
       optimismConfig._L2_OVM_L2CrossDomainMessenger,
       l2Dai.address,
       l1Dai.address,
@@ -175,7 +171,9 @@ describe('bridge', () => {
     )
     console.log('L1 DAI Deposit V2: ', l1DAITokenBridgeV2.address)
 
-    l2UpgradeSpell = await deployUsingFactory(l2Signer, await getL2Factory('TestBridgeUpgradeSpell'), [ZERO_GAS_OPTS])
+    l2UpgradeSpell = await deployUsingFactory(l2Signer, await l1.getContractFactory('TestBridgeUpgradeSpell'), [
+      ZERO_GAS_OPTS,
+    ])
     console.log('L2 Bridge Upgrade Spell: ', l2UpgradeSpell.address)
 
     // Close L1 bridge V1
@@ -217,9 +215,10 @@ describe('bridge', () => {
     const balance = await l2Dai.balanceOf(l1Signer.address)
     expect(balance.toString()).to.be.eq(depositAmount)
 
-    await waitToRelayMessageToL1(
+    await relayMessagesToL1(
       l2DAITokenBridgeV2.withdraw(l2Dai.address, depositAmount, defaultGasLimit, '0x', ZERO_GAS_OPTS),
       watcher,
+      l1Signer,
     )
 
     const l2BalanceAfterWithdrawal = await l2Dai.balanceOf(l1Signer.address)

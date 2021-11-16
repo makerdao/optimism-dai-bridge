@@ -9,8 +9,6 @@ import { expect } from 'chai'
 import { ethers } from 'ethers'
 import { ethers as l1 } from 'hardhat'
 
-import { getL2Factory } from '../optimism-helpers'
-
 interface Options {
   l1Deployer: Signer
   l2Deployer: Signer
@@ -38,7 +36,9 @@ export async function deploy(opts: Options) {
       'Expected L2DAI address doesnt match with address that will be deployed',
     )
   }
-  const l2Dai = await deployUsingFactoryAndVerify(opts.l2Deployer, await getL2Factory('Dai'), [opts.L2_TX_OPTS])
+  const l2Dai = await deployUsingFactoryAndVerify(opts.l2Deployer, await l1.getContractFactory('Dai'), [
+    opts.L2_TX_OPTS,
+  ])
   console.log('L2DAI: ', l2Dai.address)
   if (opts.desiredL2DaiAddress) {
     expect(l2Dai.address.toLowerCase()).to.be.eq(
@@ -53,13 +53,11 @@ export async function deploy(opts: Options) {
   console.log('L1Escrow: ', l1Escrow.address)
 
   const futureL1DAITokenBridgeAddress = await getAddressOfNextDeployedContract(opts.l1Deployer)
-  const l2DAITokenBridge = await deployUsingFactoryAndVerify(opts.l2Deployer, await getL2Factory('L2DAITokenBridge'), [
-    opts.L2_XDOMAIN_MESSENGER,
-    l2Dai.address,
-    opts.L1_DAI_ADDRESS,
-    futureL1DAITokenBridgeAddress,
-    opts.L2_TX_OPTS,
-  ])
+  const l2DAITokenBridge = await deployUsingFactoryAndVerify(
+    opts.l2Deployer,
+    await l1.getContractFactory('L2DAITokenBridge'),
+    [opts.L2_XDOMAIN_MESSENGER, l2Dai.address, opts.L1_DAI_ADDRESS, futureL1DAITokenBridgeAddress, opts.L2_TX_OPTS],
+  )
   console.log('L2DAITokenBridge: ', l2DAITokenBridge.address)
   const l1DAITokenBridge = await deployUsingFactoryAndVerify(
     opts.l1Deployer,
@@ -83,7 +81,7 @@ export async function deploy(opts: Options) {
   const futureL1GovRelayAddress = await getAddressOfNextDeployedContract(opts.l1Deployer)
   const l2GovernanceRelay = await deployUsingFactoryAndVerify(
     opts.l2Deployer,
-    await getL2Factory('L2GovernanceRelay'),
+    await l1.getContractFactory('L2GovernanceRelay'),
     [opts.L2_XDOMAIN_MESSENGER, futureL1GovRelayAddress, opts.L2_TX_OPTS],
   )
   console.log('L2Governance Relay: ', l2GovernanceRelay.address)
