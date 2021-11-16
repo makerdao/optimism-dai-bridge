@@ -10,7 +10,7 @@ import { expect } from 'chai'
 import { parseUnits } from 'ethers/lib/utils'
 import { ethers, ethers as l1 } from 'hardhat'
 
-import { optimismConfig, waitToRelayMessageToL1, waitToRelayTxsToL2, ZERO_GAS_OPTS } from '../optimism-helpers'
+import { optimismConfig, relayMessagesToL1, waitToRelayTxsToL2, ZERO_GAS_OPTS } from '../optimism-helpers'
 import {
   Dai,
   L1DAITokenBridge,
@@ -131,9 +131,10 @@ describe('bridge', () => {
     const balance = await l2Dai.balanceOf(l1Signer.address)
     expect(balance.toString()).to.be.eq(depositAmount)
 
-    await waitToRelayMessageToL1(
+    await relayMessagesToL1(
       l2DAITokenBridge.withdraw(l2Dai.address, depositAmount, defaultGasLimit, '0x', ZERO_GAS_OPTS),
       watcher,
+      l1Signer,
     )
 
     const l2BalanceAfterWithdrawal = await l2Dai.balanceOf(l1Signer.address)
@@ -214,9 +215,10 @@ describe('bridge', () => {
     const balance = await l2Dai.balanceOf(l1Signer.address)
     expect(balance.toString()).to.be.eq(depositAmount)
 
-    await waitToRelayMessageToL1(
+    await relayMessagesToL1(
       l2DAITokenBridgeV2.withdraw(l2Dai.address, depositAmount, defaultGasLimit, '0x', ZERO_GAS_OPTS),
       watcher,
+      l1Signer,
     )
 
     const l2BalanceAfterWithdrawal = await l2Dai.balanceOf(l1Signer.address)

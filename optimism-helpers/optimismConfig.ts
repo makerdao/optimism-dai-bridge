@@ -1,4 +1,4 @@
-// NOTE: the easieast way to update this config is to run dockerized optimism locally and head to: http://localhost:8080/addresses.json
+// NOTE: the easiest way to update this config is to run dockerized optimism locally and head to: http://localhost:8080/addresses.json
 export const optimismConfig = {
   AddressDictator: '0x610178dA211FEF7D417bC0e6FeD39F05609AD788',
   BondManager: '0x5FC8d32690cc91D4c39d9d3abcBD16989F875707',
