@@ -57,10 +57,7 @@ contract L1DAIWormholeBridge is OVM_CrossDomainEnabled {
   address public immutable l2DAITokenBridge;
   address public immutable l2Token;
   address public immutable escrow;
-  uint256 public isOpen = 1;
   address public immutable wormholeJoin;
-
-  event Closed();
 
   constructor(
     address _l1Token,
@@ -78,12 +75,6 @@ contract L1DAIWormholeBridge is OVM_CrossDomainEnabled {
     l2Token = _l2Token;
     escrow = _escrow;
     wormholeJoin = _wormholeJoin;
-  }
-
-  function close() external auth {
-    isOpen = 0;
-
-    emit Closed();
   }
 
   function finalizeFlush(bytes32 targetDomain, uint256 daiToFlush) external {

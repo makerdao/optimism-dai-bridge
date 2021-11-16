@@ -31,10 +31,6 @@ interface IL1WormholeBridge {
   function finalizeFlush(bytes32 targetDomain, uint256 daiToFlush) external;
 }
 
-// Mint tokens on L2 after locking funds on L1.
-// Burn tokens on L1 and send a message to unlock tokens on L1 to L1 counterpart
-// Note: when bridge is closed it will still process in progress messages
-
 contract L2DAITokenBridge is OVM_CrossDomainEnabled {
   using WormholeLib for WormholeGUID;
 
@@ -63,12 +59,9 @@ contract L2DAITokenBridge is OVM_CrossDomainEnabled {
   address public immutable l2Token;
   address public immutable l1DAITokenBridge;
   bytes32 public immutable sourceDomain;
-  uint256 public isOpen = 1;
-  uint64 public wormholeId = 0;
+  uint64 public nonce = 0;
   mapping(bytes32 => bool) public wormholes;
   mapping(bytes32 => uint256) public batchedDaiToFlush;
-
-  event Closed();
 
   event WormholeInitialized(WormholeGUID wormhole);
   event Flushed(bytes32 targetDomain, uint256 dai);
@@ -89,12 +82,6 @@ contract L2DAITokenBridge is OVM_CrossDomainEnabled {
     sourceDomain = _sourceDomain;
   }
 
-  function close() external auth {
-    isOpen = 0;
-
-    emit Closed();
-  }
-
   function initiateWormhole(
     bytes32 targetDomain,
     address receiver,
@@ -107,7 +94,7 @@ contract L2DAITokenBridge is OVM_CrossDomainEnabled {
       receiver: receiver,
       operator: operator,
       amount: amount,
-      nonce: wormholeId++,
+      nonce: nonce++,
       timestamp: uint64(block.timestamp)
     });
     bytes32 wormholeHash = wormhole.getHash();
