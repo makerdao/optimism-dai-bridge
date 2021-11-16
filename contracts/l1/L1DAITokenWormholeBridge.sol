@@ -20,6 +20,7 @@ import {iOVM_L1ERC20Bridge} from "@eth-optimism/contracts/iOVM/bridge/tokens/iOV
 import {iOVM_L2ERC20Bridge} from "@eth-optimism/contracts/iOVM/bridge/tokens/iOVM_L2ERC20Bridge.sol";
 import {OVM_CrossDomainEnabled} from "@eth-optimism/contracts/libraries/bridge/OVM_CrossDomainEnabled.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
+import {WormholeGUID, WormholeLib} from "../common/LibWormholeGUID.sol";
 
 interface TokenLike {
   function transferFrom(
@@ -30,6 +31,7 @@ interface TokenLike {
 }
 
 contract L1DAIWormholeBridge is OVM_CrossDomainEnabled {
+  using WormholeLib for WormholeGUID;
   // --- Auth ---
   mapping(address => uint256) public wards;
 
@@ -89,29 +91,5 @@ contract L1DAIWormholeBridge is OVM_CrossDomainEnabled {
     // settle on join
     // update state root
     // emit event
-  }
-
-  function prove(
-    WormholeGUID calldata guid,
-    uint256 maxFee,
-    L2MessageInclusionProof calldata proof
-  ) external {
-    // Optimism State Inclusion Proof
-    require(
-      ovmStateCommitmentChain.insideFraudProofWindow(proof.stateRootBatchHeader) == false &&
-        ovmStateCommitmentChain.verifyStateCommitment(
-          proof.stateRoot,
-          proof.stateRootBatchHeader,
-          proof.stateRootProof
-        ),
-      "WormholeOptimismStorageAuth/state-inclusion"
-    );
-    bytes32 hash = // Validate storage was set on L2 bridge
-    require(
-      verifyStorageProof(guid.getHash(), proof),
-      "WormholeOptimismStorageAuth/storage-inclusion"
-    );
-
-    join.mint(guid, msg.sender, maxFee);
   }
 }

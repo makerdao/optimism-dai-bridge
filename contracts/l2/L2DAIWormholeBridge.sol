@@ -19,6 +19,7 @@ pragma abicoder v2;
 import {iOVM_L1ERC20Bridge} from "@eth-optimism/contracts/iOVM/bridge/tokens/iOVM_L1ERC20Bridge.sol";
 import {iOVM_L2ERC20Bridge} from "@eth-optimism/contracts/iOVM/bridge/tokens/iOVM_L2ERC20Bridge.sol";
 import {OVM_CrossDomainEnabled} from "@eth-optimism/contracts/libraries/bridge/OVM_CrossDomainEnabled.sol";
+import {WormholeGUID, WormholeLib} from "../common/LibWormholeGUID.sol";
 
 interface Mintable {
   function mint(address usr, uint256 wad) external;
@@ -35,6 +36,8 @@ interface IL1WormholeBridge {
 // Note: when bridge is closed it will still process in progress messages
 
 contract L2DAITokenBridge is OVM_CrossDomainEnabled {
+  using WormholeLib for WormholeGUID;
+
   // --- Auth ---
   mapping(address => uint256) public wards;
 
@@ -107,7 +110,7 @@ contract L2DAITokenBridge is OVM_CrossDomainEnabled {
       nonce: wormholeId++,
       timestamp: uint64(block.timestamp)
     });
-    bytes32 wormholeHash = getWormholeHash(wormhole);
+    bytes32 wormholeHash = wormhole.getHash();
 
     wormholes[wormholeHash] = true;
     batchedDaiToFlush[targetDomain] += amount;
@@ -129,20 +132,5 @@ contract L2DAITokenBridge is OVM_CrossDomainEnabled {
 
     batchedDaiToFlush[targetDomain] = 0;
     emit Flushed(targetDomain, daiToFlush);
-  }
-
-  function getWormholeHash(WormholeGUID memory wormhole) public pure returns (bytes32) {
-    return
-      keccak256(
-        abi.encode(
-          wormhole.sourceDomain,
-          wormhole.targetDomain,
-          wormhole.receiver,
-          wormhole.operator,
-          wormhole.amount,
-          wormhole.nonce,
-          wormhole.timestamp
-        )
-      );
   }
 }
