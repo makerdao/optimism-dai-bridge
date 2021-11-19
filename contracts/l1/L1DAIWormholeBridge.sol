@@ -15,6 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 pragma solidity >=0.7.6;
+pragma abicoder v2;
 
 import {iOVM_L1ERC20Bridge} from "@eth-optimism/contracts/iOVM/bridge/tokens/iOVM_L1ERC20Bridge.sol";
 import {iOVM_L2ERC20Bridge} from "@eth-optimism/contracts/iOVM/bridge/tokens/iOVM_L2ERC20Bridge.sol";
@@ -28,6 +29,12 @@ interface TokenLike {
     address _to,
     uint256 _value
   ) external returns (bool success);
+}
+
+interface WormholeRouter {
+  function registerWormhole(WormholeGUID memory wormholeGUID) external; // @todo what's the memory location?
+
+  function settle(bytes32 targetDomain, uint256 daiToFlush) external;
 }
 
 contract L1DAIWormholeBridge is OVM_CrossDomainEnabled {
@@ -57,7 +64,7 @@ contract L1DAIWormholeBridge is OVM_CrossDomainEnabled {
   address public immutable l2DAITokenBridge;
   address public immutable l2Token;
   address public immutable escrow;
-  address public immutable wormholeJoin;
+  WormholeRouter public immutable wormholeRouter;
 
   constructor(
     address _l1Token,
@@ -65,7 +72,7 @@ contract L1DAIWormholeBridge is OVM_CrossDomainEnabled {
     address _l2Token,
     address _l1messenger,
     address _escrow,
-    address _wormholeJoin
+    address _wormholeRouter
   ) OVM_CrossDomainEnabled(_l1messenger) {
     wards[msg.sender] = 1;
     emit Rely(msg.sender);
@@ -74,13 +81,20 @@ contract L1DAIWormholeBridge is OVM_CrossDomainEnabled {
     l2DAITokenBridge = _l2DAITokenBridge;
     l2Token = _l2Token;
     escrow = _escrow;
-    wormholeJoin = _wormholeJoin;
+    wormholeRouter = WormholeRouter(_wormholeRouter);
   }
 
-  function finalizeFlush(bytes32 targetDomain, uint256 daiToFlush) external {
-    // can be called only by l2 counterpart
-    // settle on join
-    // update state root
-    // emit event
+  function finalizeFlush(bytes32 targetDomain, uint256 daiToFlush)
+    external
+    onlyFromCrossDomainAccount(l2DAITokenBridge)
+  {
+    wormholeRouter.settle(targetDomain, daiToFlush);
+  }
+
+  function finalizeRegisterInboundWormhole(WormholeGUID calldata wormhole)
+    external
+    onlyFromCrossDomainAccount(l2DAITokenBridge)
+  {
+    wormholeRouter.registerWormhole(wormhole);
   }
 }

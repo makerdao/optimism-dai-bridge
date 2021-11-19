@@ -20,15 +20,12 @@ import {iOVM_L1ERC20Bridge} from "@eth-optimism/contracts/iOVM/bridge/tokens/iOV
 import {iOVM_L2ERC20Bridge} from "@eth-optimism/contracts/iOVM/bridge/tokens/iOVM_L2ERC20Bridge.sol";
 import {OVM_CrossDomainEnabled} from "@eth-optimism/contracts/libraries/bridge/OVM_CrossDomainEnabled.sol";
 import {WormholeGUID, WormholeLib} from "../common/LibWormholeGUID.sol";
+import {L1DAIWormholeBridge} from "../l1/L1DAIWormholeBridge.sol";
 
 interface Mintable {
   function mint(address usr, uint256 wad) external;
 
   function burn(address usr, uint256 wad) external;
-}
-
-interface IL1WormholeBridge {
-  function finalizeFlush(bytes32 targetDomain, uint256 daiToFlush) external;
 }
 
 contract L2DAITokenBridge is OVM_CrossDomainEnabled {
@@ -60,7 +57,6 @@ contract L2DAITokenBridge is OVM_CrossDomainEnabled {
   address public immutable l1DAITokenBridge;
   bytes32 public immutable sourceDomain;
   uint64 public nonce = 0;
-  mapping(bytes32 => bool) public wormholes;
   mapping(bytes32 => uint256) public batchedDaiToFlush;
 
   event WormholeInitialized(WormholeGUID wormhole);
@@ -97,21 +93,26 @@ contract L2DAITokenBridge is OVM_CrossDomainEnabled {
       nonce: nonce++,
       timestamp: uint64(block.timestamp)
     });
-    bytes32 wormholeHash = wormhole.getHash();
 
-    wormholes[wormholeHash] = true;
     batchedDaiToFlush[targetDomain] += amount;
     Mintable(l2Token).burn(msg.sender, amount);
+
+    uint32 l1Gas = 20000; // @todo: does it matter? messages need to be relied manually anyway
+    bytes memory message = abi.encodeWithSelector(
+      L1DAIWormholeBridge.finalizeRegisterInboundWormhole.selector,
+      wormhole
+    );
+    sendCrossDomainMessage(l1DAITokenBridge, l1Gas, message);
 
     emit WormholeInitialized(wormhole);
   }
 
   function flush(bytes32 targetDomain) external {
-    uint32 l1Gas = 20000; // @todo: i think this should be hardcoded to avoid griefing
     uint256 daiToFlush = batchedDaiToFlush[targetDomain];
 
+    uint32 l1Gas = 20000; // @todo: does it matter? messages need to be relied manually anyway
     bytes memory message = abi.encodeWithSelector(
-      IL1WormholeBridge.finalizeFlush.selector,
+      L1DAIWormholeBridge.finalizeFlush.selector,
       targetDomain,
       daiToFlush
     );
