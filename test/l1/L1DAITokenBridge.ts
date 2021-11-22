@@ -3,7 +3,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
 
-import { Dai__factory, L1DAITokenBridge__factory, L1Escrow__factory } from '../../typechain'
+import { Dai__factory, L1DAITokenBridge__factory, L1Escrow__factory } from '../../typechain-types'
 import { deployMock, deployOptimismContractMock } from '../helpers'
 
 const initialTotalL1Supply = 3000

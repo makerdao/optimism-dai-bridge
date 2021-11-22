@@ -2,7 +2,7 @@ import { assertPublicMutableMethods, getRandomAddresses, simpleDeploy, testAuth 
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
 
-import { Dai__factory, L1Escrow__factory } from '../../typechain'
+import { Dai__factory, L1Escrow__factory } from '../../typechain-types'
 
 const allowanceLimit = 100
 

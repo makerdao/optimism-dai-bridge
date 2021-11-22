@@ -2,7 +2,7 @@ node_modules/
 artifacts/
 cache/
 artifacts-l2
-typechain
+typechain-types
 artifacts-ovm
 cache-ovm
 .env

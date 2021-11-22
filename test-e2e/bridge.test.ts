@@ -19,7 +19,7 @@ import {
   L2DAITokenBridge,
   L2GovernanceRelay,
   TestBridgeUpgradeSpell,
-} from '../typechain'
+} from '../typechain-types'
 import { setupTest } from './helpers'
 
 const defaultGasLimit = 1000000
