@@ -28,7 +28,7 @@ interface Mintable {
   function burn(address usr, uint256 wad) external;
 }
 
-contract L2DAITokenBridge is OVM_CrossDomainEnabled {
+contract L2DAIWormholeTokenBridge is OVM_CrossDomainEnabled {
   using WormholeLib for WormholeGUID;
 
   // --- Auth ---
