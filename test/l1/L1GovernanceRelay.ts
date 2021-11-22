@@ -3,7 +3,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
 
-import { L1GovernanceRelay__factory } from '../../typechain'
+import { L1GovernanceRelay__factory } from '../../typechain-types'
 import { deployMock, deployOptimismContractMock } from '../helpers'
 
 const errorMessages = {

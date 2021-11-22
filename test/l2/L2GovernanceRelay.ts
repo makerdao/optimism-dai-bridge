@@ -3,8 +3,12 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
 
-import { Dai__factory, L2GovernanceRelay__factory, TestDaiMintSpell__factory } from '../../typechain'
-import { BadSpell__factory } from '../../typechain/factories/BadSpell__factory'
+import {
+  BadSpell__factory,
+  Dai__factory,
+  L2GovernanceRelay__factory,
+  TestDaiMintSpell__factory,
+} from '../../typechain-types'
 import { deployMock, deployOptimismContractMock } from '../helpers'
 
 const errorMessages = {
