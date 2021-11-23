@@ -8,12 +8,13 @@ import { deployMock, deployOptimismContractMock } from '../helpers'
 
 const INITIAL_TOTAL_L2_SUPPLY = 3000
 const WORMHOLE_AMOUNT = 100
+const DEFAULT_XDOMAIN_GAS = 20000
 const SOURCE_DOMAIN_NAME = ethers.utils.formatBytes32String('optimism-a')
 const TARGET_DOMAIN_NAME = ethers.utils.formatBytes32String('arbitrum-a')
 
 describe('L2DAIWormholeBridge', () => {
   describe('initiateWormhole()', () => {
-    it('should burn DAI immediately and mark it for future flush', async () => {
+    it('burns DAI immediately and marks it for future flush', async () => {
       const [_, l2MessengerImpersonator, user1] = await ethers.getSigners()
       const { l2Dai, l2DAIWormholeBridge } = await setupTest({ l2MessengerImpersonator, user1 })
 
@@ -23,6 +24,38 @@ describe('L2DAIWormholeBridge', () => {
 
       expect(await l2Dai.balanceOf(user1.address)).to.eq(INITIAL_TOTAL_L2_SUPPLY - WORMHOLE_AMOUNT)
       expect(await l2DAIWormholeBridge.batchedDaiToFlush(TARGET_DOMAIN_NAME)).to.eq(WORMHOLE_AMOUNT)
+    })
+  })
+
+  describe('flush()', () => {
+    it('flushes batched debt', async () => {
+      const [_, l2MessengerImpersonator, user1] = await ethers.getSigners()
+      const { l2DAIWormholeBridge, l2CrossDomainMessengerMock, l1DAIWormholeBridgeMock } = await setupTest({
+        l2MessengerImpersonator,
+        user1,
+      })
+
+      // init two wormholes
+      await l2DAIWormholeBridge
+        .connect(user1)
+        .initiateWormhole(TARGET_DOMAIN_NAME, user1.address, WORMHOLE_AMOUNT, user1.address)
+      await l2DAIWormholeBridge
+        .connect(user1)
+        .initiateWormhole(TARGET_DOMAIN_NAME, user1.address, WORMHOLE_AMOUNT, user1.address)
+      expect(await l2DAIWormholeBridge.batchedDaiToFlush(TARGET_DOMAIN_NAME)).to.eq(WORMHOLE_AMOUNT * 2)
+
+      await l2DAIWormholeBridge.flush(TARGET_DOMAIN_NAME)
+      const xDomainMessengerCall = l2CrossDomainMessengerMock.smocked.sendMessage.calls[0]
+      expect(await l2DAIWormholeBridge.batchedDaiToFlush(TARGET_DOMAIN_NAME)).to.eq(0)
+
+      expect(xDomainMessengerCall._target).to.equal(l1DAIWormholeBridgeMock.address)
+      expect(xDomainMessengerCall._message).to.equal(
+        l1DAIWormholeBridgeMock.interface.encodeFunctionData('finalizeFlush', [
+          TARGET_DOMAIN_NAME,
+          WORMHOLE_AMOUNT * 2,
+        ]),
+      )
+      expect(xDomainMessengerCall._gasLimit).to.equal(DEFAULT_XDOMAIN_GAS)
     })
   })
 })
