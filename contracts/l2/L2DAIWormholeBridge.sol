@@ -19,6 +19,7 @@ pragma abicoder v2;
 import {iOVM_L1ERC20Bridge} from "@eth-optimism/contracts/iOVM/bridge/tokens/iOVM_L1ERC20Bridge.sol";
 import {iOVM_L2ERC20Bridge} from "@eth-optimism/contracts/iOVM/bridge/tokens/iOVM_L2ERC20Bridge.sol";
 import {OVM_CrossDomainEnabled} from "@eth-optimism/contracts/libraries/bridge/OVM_CrossDomainEnabled.sol";
+import {OVM_L2CrossDomainMessenger} from "@eth-optimism/contracts/OVM/bridge/messaging/OVM_L2CrossDomainMessenger.sol";
 import {WormholeGUID, WormholeLib} from "../common/LibWormholeGUID.sol";
 import {L1DAIWormholeBridge} from "../l1/L1DAIWormholeBridge.sol";
 
@@ -56,7 +57,6 @@ contract L2DAIWormholeBridge is OVM_CrossDomainEnabled {
   address public immutable l2Token;
   address public immutable l1DAITokenBridge;
   bytes32 public immutable sourceDomain;
-  uint64 public nonce = 0;
   mapping(bytes32 => uint256) public batchedDaiToFlush;
 
   event WormholeInitialized(WormholeGUID wormhole);
@@ -90,7 +90,7 @@ contract L2DAIWormholeBridge is OVM_CrossDomainEnabled {
       receiver: receiver,
       operator: operator,
       amount: amount,
-      nonce: nonce++,
+      nonce: uint64(OVM_L2CrossDomainMessenger(address(getCrossDomainMessenger())).messageNonce()), // gas optimization, we don't need to maintain our own nonce
       timestamp: uint64(block.timestamp)
     });
 

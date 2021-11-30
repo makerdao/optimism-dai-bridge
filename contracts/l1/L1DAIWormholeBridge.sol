@@ -23,16 +23,8 @@ import {OVM_CrossDomainEnabled} from "@eth-optimism/contracts/libraries/bridge/O
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {WormholeGUID, WormholeLib} from "../common/LibWormholeGUID.sol";
 
-interface TokenLike {
-  function transferFrom(
-    address _from,
-    address _to,
-    uint256 _value
-  ) external returns (bool success);
-}
-
 interface WormholeRouter {
-  function registerWormhole(WormholeGUID memory wormholeGUID) external; // @todo what's the memory location?
+  function mint(WormholeGUID memory wormholeGUID, uint256 maxFees) external; // @todo is it "memory"?
 
   function settle(bytes32 targetDomain, uint256 daiToFlush) external;
 }
@@ -95,6 +87,6 @@ contract L1DAIWormholeBridge is OVM_CrossDomainEnabled {
     external
     onlyFromCrossDomainAccount(l2DAITokenBridge)
   {
-    wormholeRouter.registerWormhole(wormhole);
+    wormholeRouter.mint(wormhole, 0);
   }
 }
