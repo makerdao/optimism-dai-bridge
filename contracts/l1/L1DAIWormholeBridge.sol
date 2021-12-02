@@ -24,7 +24,7 @@ import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {WormholeGUID, WormholeLib} from "../common/LibWormholeGUID.sol";
 
 interface WormholeRouter {
-  function mint(WormholeGUID memory wormholeGUID, uint256 maxFees) external; // @todo is it "memory"?
+  function requestMint(WormholeGUID memory wormholeGUID, uint256 maxFees) external; // @todo is it "memory"?
 
   function settle(bytes32 targetDomain, uint256 daiToFlush) external;
 }
@@ -83,10 +83,10 @@ contract L1DAIWormholeBridge is OVM_CrossDomainEnabled {
     wormholeRouter.settle(targetDomain, daiToFlush);
   }
 
-  function finalizeRegisterInboundWormhole(WormholeGUID calldata wormhole)
+  function finalizeRegisterWormhole(WormholeGUID calldata wormhole)
     external
     onlyFromCrossDomainAccount(l2DAITokenBridge)
   {
-    wormholeRouter.mint(wormhole, 0);
+    wormholeRouter.requestMint(wormhole, 0);
   }
 }

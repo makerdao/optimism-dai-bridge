@@ -99,7 +99,7 @@ contract L2DAIWormholeBridge is OVM_CrossDomainEnabled {
 
     uint32 l1Gas = 20000; // @todo: does it matter? messages need to be relied manually anyway
     bytes memory message = abi.encodeWithSelector(
-      L1DAIWormholeBridge.finalizeRegisterInboundWormhole.selector,
+      L1DAIWormholeBridge.finalizeRegisterWormhole.selector,
       wormhole
     );
     sendCrossDomainMessage(l1DAITokenBridge, l1Gas, message);
