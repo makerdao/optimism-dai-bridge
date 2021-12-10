@@ -46,17 +46,16 @@ contract L2DAIWormholeBridge is OVM_CrossDomainEnabled {
   }
 
   modifier auth() {
-    require(wards[msg.sender] == 1, "L2DAITokenBridge/not-authorized");
+    require(wards[msg.sender] == 1, "L2DAIWormholeBridge/not-authorized");
     _;
   }
 
   event Rely(address indexed usr);
   event Deny(address indexed usr);
 
-  address public immutable l1Token;
   address public immutable l2Token;
-  address public immutable l1DAITokenBridge;
-  bytes32 public immutable sourceDomain;
+  address public immutable l1DAIWormholeBridge;
+  bytes32 public immutable domain;
   mapping(bytes32 => uint256) public batchedDaiToFlush;
 
   event WormholeInitialized(WormholeGUID wormhole);
@@ -65,17 +64,15 @@ contract L2DAIWormholeBridge is OVM_CrossDomainEnabled {
   constructor(
     address _l2CrossDomainMessenger,
     address _l2Token,
-    address _l1Token,
-    address _l1DAITokenBridge,
-    bytes32 _sourceDomain
+    address _l1DAIWormholeBridge,
+    bytes32 _domain
   ) public OVM_CrossDomainEnabled(_l2CrossDomainMessenger) {
     wards[msg.sender] = 1;
     emit Rely(msg.sender);
 
     l2Token = _l2Token;
-    l1Token = _l1Token;
-    l1DAITokenBridge = _l1DAITokenBridge;
-    sourceDomain = _sourceDomain;
+    l1DAIWormholeBridge = _l1DAIWormholeBridge;
+    domain = _domain;
   }
 
   function initiateWormhole(
@@ -85,40 +82,40 @@ contract L2DAIWormholeBridge is OVM_CrossDomainEnabled {
     address operator
   ) external {
     WormholeGUID memory wormhole = WormholeGUID({
-      sourceDomain: sourceDomain,
+      sourceDomain: domain,
       targetDomain: targetDomain,
       receiver: receiver,
       operator: operator,
       amount: amount,
-      nonce: uint64(OVM_L2CrossDomainMessenger(address(getCrossDomainMessenger())).messageNonce()), // gas optimization, we don't need to maintain our own nonce
-      timestamp: uint64(block.timestamp)
+      nonce: uint80(OVM_L2CrossDomainMessenger(address(getCrossDomainMessenger())).messageNonce()), // gas optimization, we don't need to maintain our own nonce
+      timestamp: uint48(block.timestamp)
     });
 
     batchedDaiToFlush[targetDomain] += amount;
     Mintable(l2Token).burn(msg.sender, amount);
 
-    uint32 l1Gas = 20000; // @todo: does it matter? messages need to be relied manually anyway
     bytes memory message = abi.encodeWithSelector(
       L1DAIWormholeBridge.finalizeRegisterWormhole.selector,
       wormhole
     );
-    sendCrossDomainMessage(l1DAITokenBridge, l1Gas, message);
+    sendCrossDomainMessage(l1DAIWormholeBridge, 0, message);
 
     emit WormholeInitialized(wormhole);
   }
 
   function flush(bytes32 targetDomain) external {
     uint256 daiToFlush = batchedDaiToFlush[targetDomain];
+    require(daiToFlush > 0, "L2DAIWormholeBridge/no-dai-to-flush");
 
-    uint32 l1Gas = 20000; // @todo: does it matter? messages need to be relied manually anyway
+    batchedDaiToFlush[targetDomain] = 0;
+
     bytes memory message = abi.encodeWithSelector(
       L1DAIWormholeBridge.finalizeFlush.selector,
       targetDomain,
       daiToFlush
     );
-    sendCrossDomainMessage(l1DAITokenBridge, l1Gas, message);
+    sendCrossDomainMessage(l1DAIWormholeBridge, 0, message);
 
-    batchedDaiToFlush[targetDomain] = 0;
     emit Flushed(targetDomain, daiToFlush);
   }
 }
