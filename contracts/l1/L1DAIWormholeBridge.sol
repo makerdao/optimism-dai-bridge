@@ -20,7 +20,6 @@ pragma abicoder v2;
 import {iOVM_L1ERC20Bridge} from "@eth-optimism/contracts/iOVM/bridge/tokens/iOVM_L1ERC20Bridge.sol";
 import {iOVM_L2ERC20Bridge} from "@eth-optimism/contracts/iOVM/bridge/tokens/iOVM_L2ERC20Bridge.sol";
 import {OVM_CrossDomainEnabled} from "@eth-optimism/contracts/libraries/bridge/OVM_CrossDomainEnabled.sol";
-import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {WormholeGUID} from "../common/WormholeGUID.sol";
 
 interface WormholeRouter {
