@@ -20,7 +20,7 @@ import {iOVM_L1ERC20Bridge} from "@eth-optimism/contracts/iOVM/bridge/tokens/iOV
 import {iOVM_L2ERC20Bridge} from "@eth-optimism/contracts/iOVM/bridge/tokens/iOVM_L2ERC20Bridge.sol";
 import {OVM_CrossDomainEnabled} from "@eth-optimism/contracts/libraries/bridge/OVM_CrossDomainEnabled.sol";
 import {OVM_L2CrossDomainMessenger} from "@eth-optimism/contracts/OVM/bridge/messaging/OVM_L2CrossDomainMessenger.sol";
-import {WormholeGUID, WormholeLib} from "../common/LibWormholeGUID.sol";
+import {WormholeGUID} from "../common/WormholeGUID.sol";
 import {L1DAIWormholeBridge} from "../l1/L1DAIWormholeBridge.sol";
 
 interface Mintable {
@@ -30,8 +30,6 @@ interface Mintable {
 }
 
 contract L2DAIWormholeBridge is OVM_CrossDomainEnabled {
-  using WormholeLib for WormholeGUID;
-
   // --- Auth ---
   mapping(address => uint256) public wards;
 
