@@ -1,4 +1,4 @@
-import { simpleDeploy } from '@makerdao/hardhat-utils'
+import { assertPublicMutableMethods, simpleDeploy } from '@makerdao/hardhat-utils'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address'
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
@@ -16,7 +16,31 @@ const errorMessages = {
   daiInsufficientBalance: 'Dai/insufficient-balance',
 }
 
-describe('L2DAIWormholeBridge', () => {
+describe.only('L2DAIWormholeBridge', () => {
+  it('has correct public interface', async () => {
+    await assertPublicMutableMethods('L2DAIWormholeBridge', [
+      'initiateWormhole(bytes32,address,uint128,address)',
+      'flush(bytes32)',
+    ])
+  })
+
+  describe('constructor', () => {
+    it('assigns all variables properly', async () => {
+      const [l2Messenger, l2Dai, l1DAIWormholeBridge] = await ethers.getSigners()
+
+      const l2DAIWormholeBridge = await simpleDeploy<L2DAIWormholeBridge__factory>('L2DAIWormholeBridge', [
+        l2Messenger.address,
+        l2Dai.address,
+        l1DAIWormholeBridge.address,
+        SOURCE_DOMAIN_NAME,
+      ])
+
+      expect(await l2DAIWormholeBridge.messenger()).to.eq(l2Messenger.address)
+      expect(await l2DAIWormholeBridge.l2Token()).to.eq(l2Dai.address)
+      expect(await l2DAIWormholeBridge.l1DAIWormholeBridge()).to.eq(l1DAIWormholeBridge.address)
+    })
+  })
+
   describe('initiateWormhole()', () => {
     it('sends xchain message, burns DAI and marks it for future flush', async () => {
       const [_, l2MessengerImpersonator, user1] = await ethers.getSigners()
@@ -82,10 +106,10 @@ describe('L2DAIWormholeBridge', () => {
         .initiateWormhole(TARGET_DOMAIN_NAME, user1.address, WORMHOLE_AMOUNT, user1.address)
       expect(await l2DAIWormholeBridge.batchedDaiToFlush(TARGET_DOMAIN_NAME)).to.eq(WORMHOLE_AMOUNT * 2)
 
-      await l2DAIWormholeBridge.flush(TARGET_DOMAIN_NAME)
+      const flushTx = await l2DAIWormholeBridge.flush(TARGET_DOMAIN_NAME)
       const xDomainMessengerCall = l2CrossDomainMessengerMock.smocked.sendMessage.calls[0]
-      expect(await l2DAIWormholeBridge.batchedDaiToFlush(TARGET_DOMAIN_NAME)).to.eq(0)
 
+      expect(await l2DAIWormholeBridge.batchedDaiToFlush(TARGET_DOMAIN_NAME)).to.eq(0)
       expect(xDomainMessengerCall._target).to.equal(l1DAIWormholeBridgeMock.address)
       expect(xDomainMessengerCall._message).to.equal(
         l1DAIWormholeBridgeMock.interface.encodeFunctionData('finalizeFlush', [
@@ -94,6 +118,9 @@ describe('L2DAIWormholeBridge', () => {
         ]),
       )
       expect(xDomainMessengerCall._gasLimit).to.equal(DEFAULT_XDOMAIN_GAS)
+      await expect(flushTx)
+        .to.emit(l2DAIWormholeBridge, 'Flushed')
+        .withArgs(TARGET_DOMAIN_NAME, WORMHOLE_AMOUNT * 2)
     })
   })
 })
