@@ -8,7 +8,7 @@ import { deployMock, deployOptimismContractMock } from '../helpers'
 
 const INITIAL_TOTAL_L2_SUPPLY = 3000
 const WORMHOLE_AMOUNT = 100
-const DEFAULT_XDOMAIN_GAS = 20000
+const DEFAULT_XDOMAIN_GAS = 0
 const SOURCE_DOMAIN_NAME = ethers.utils.formatBytes32String('optimism-a')
 const TARGET_DOMAIN_NAME = ethers.utils.formatBytes32String('arbitrum-a')
 
@@ -65,13 +65,11 @@ async function setupTest(signers: { l2MessengerImpersonator: SignerWithAddress; 
     'OVM_L2CrossDomainMessenger',
     { address: await signers.l2MessengerImpersonator.getAddress() }, // This allows us to use an ethers override {from: Mock__OVM_L2CrossDomainMessenger.address} to mock calls
   )
-  const l1Dai = await simpleDeploy<Dai__factory>('Dai', [])
   const l2Dai = await simpleDeploy<Dai__factory>('Dai', [])
   const l1DAIWormholeBridgeMock = await deployMock('L1DAIWormholeBridge')
   const l2DAIWormholeBridge = await simpleDeploy<L2DAIWormholeBridge__factory>('L2DAIWormholeBridge', [
     l2CrossDomainMessengerMock.address,
     l2Dai.address,
-    l1Dai.address,
     l1DAIWormholeBridgeMock.address,
     SOURCE_DOMAIN_NAME,
   ])
@@ -79,5 +77,5 @@ async function setupTest(signers: { l2MessengerImpersonator: SignerWithAddress; 
   await l2Dai.rely(l2DAIWormholeBridge.address)
   await l2Dai.mint(signers.user1.address, INITIAL_TOTAL_L2_SUPPLY)
 
-  return { l2Dai, l1DAIWormholeBridgeMock, l2CrossDomainMessengerMock, l2DAIWormholeBridge, l1Dai }
+  return { l2Dai, l1DAIWormholeBridgeMock, l2CrossDomainMessengerMock, l2DAIWormholeBridge }
 }

@@ -20,17 +20,23 @@ pragma abicoder v2;
 import {iOVM_L1ERC20Bridge} from "@eth-optimism/contracts/iOVM/bridge/tokens/iOVM_L1ERC20Bridge.sol";
 import {iOVM_L2ERC20Bridge} from "@eth-optimism/contracts/iOVM/bridge/tokens/iOVM_L2ERC20Bridge.sol";
 import {OVM_CrossDomainEnabled} from "@eth-optimism/contracts/libraries/bridge/OVM_CrossDomainEnabled.sol";
-import {Address} from "@openzeppelin/contracts/utils/Address.sol";
-import {WormholeGUID, WormholeLib} from "../common/LibWormholeGUID.sol";
+import {WormholeGUID} from "../common/WormholeGUID.sol";
 
 interface WormholeRouter {
-  function requestMint(WormholeGUID memory wormholeGUID, uint256 maxFees) external; // @todo is it "memory"?
+  function requestMint(WormholeGUID calldata wormholeGUID, uint256 maxFees) external;
 
   function settle(bytes32 targetDomain, uint256 daiToFlush) external;
 }
 
+interface TokenLike {
+  function transferFrom(
+    address _from,
+    address _to,
+    uint256 _value
+  ) external returns (bool success);
+}
+
 contract L1DAIWormholeBridge is OVM_CrossDomainEnabled {
-  using WormholeLib for WormholeGUID;
   // --- Auth ---
   mapping(address => uint256) public wards;
 
@@ -45,7 +51,7 @@ contract L1DAIWormholeBridge is OVM_CrossDomainEnabled {
   }
 
   modifier auth() {
-    require(wards[msg.sender] == 1, "L1DAITokenBridge/not-authorized");
+    require(wards[msg.sender] == 1, "L1DAIWormholeBridge/not-authorized");
     _;
   }
 
@@ -53,15 +59,13 @@ contract L1DAIWormholeBridge is OVM_CrossDomainEnabled {
   event Deny(address indexed usr);
 
   address public immutable l1Token;
-  address public immutable l2DAITokenBridge;
-  address public immutable l2Token;
+  address public immutable l2DAIWormholeBridge;
   address public immutable escrow;
   WormholeRouter public immutable wormholeRouter;
 
   constructor(
     address _l1Token,
-    address _l2DAITokenBridge,
-    address _l2Token,
+    address _l2DAIWormholeBridge,
     address _l1messenger,
     address _escrow,
     address _wormholeRouter
@@ -70,22 +74,22 @@ contract L1DAIWormholeBridge is OVM_CrossDomainEnabled {
     emit Rely(msg.sender);
 
     l1Token = _l1Token;
-    l2DAITokenBridge = _l2DAITokenBridge;
-    l2Token = _l2Token;
+    l2DAIWormholeBridge = _l2DAIWormholeBridge;
     escrow = _escrow;
     wormholeRouter = WormholeRouter(_wormholeRouter);
   }
 
   function finalizeFlush(bytes32 targetDomain, uint256 daiToFlush)
     external
-    onlyFromCrossDomainAccount(l2DAITokenBridge)
+    onlyFromCrossDomainAccount(l2DAIWormholeBridge)
   {
+    TokenLike(l1Token).transferFrom(escrow, address(this), daiToFlush);
     wormholeRouter.settle(targetDomain, daiToFlush);
   }
 
   function finalizeRegisterWormhole(WormholeGUID calldata wormhole)
     external
-    onlyFromCrossDomainAccount(l2DAITokenBridge)
+    onlyFromCrossDomainAccount(l2DAIWormholeBridge)
   {
     wormholeRouter.requestMint(wormhole, 0);
   }
