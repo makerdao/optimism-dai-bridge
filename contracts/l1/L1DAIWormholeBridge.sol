@@ -37,27 +37,6 @@ interface TokenLike {
 }
 
 contract L1DAIWormholeBridge is OVM_CrossDomainEnabled {
-  // --- Auth ---
-  mapping(address => uint256) public wards;
-
-  function rely(address usr) external auth {
-    wards[usr] = 1;
-    emit Rely(usr);
-  }
-
-  function deny(address usr) external auth {
-    wards[usr] = 0;
-    emit Deny(usr);
-  }
-
-  modifier auth() {
-    require(wards[msg.sender] == 1, "L1DAIWormholeBridge/not-authorized");
-    _;
-  }
-
-  event Rely(address indexed usr);
-  event Deny(address indexed usr);
-
   address public immutable l1Token;
   address public immutable l2DAIWormholeBridge;
   address public immutable escrow;
@@ -70,9 +49,6 @@ contract L1DAIWormholeBridge is OVM_CrossDomainEnabled {
     address _escrow,
     address _wormholeRouter
   ) OVM_CrossDomainEnabled(_l1messenger) {
-    wards[msg.sender] = 1;
-    emit Rely(msg.sender);
-
     l1Token = _l1Token;
     l2DAIWormholeBridge = _l2DAIWormholeBridge;
     escrow = _escrow;
