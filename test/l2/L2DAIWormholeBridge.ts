@@ -12,18 +12,56 @@ const DEFAULT_XDOMAIN_GAS = 0
 const SOURCE_DOMAIN_NAME = ethers.utils.formatBytes32String('optimism-a')
 const TARGET_DOMAIN_NAME = ethers.utils.formatBytes32String('arbitrum-a')
 
+const errorMessages = {
+  daiInsufficientBalance: 'Dai/insufficient-balance',
+}
+
 describe('L2DAIWormholeBridge', () => {
   describe('initiateWormhole()', () => {
-    it('burns DAI immediately and marks it for future flush', async () => {
+    it('sends xchain message, burns DAI and marks it for future flush', async () => {
       const [_, l2MessengerImpersonator, user1] = await ethers.getSigners()
-      const { l2Dai, l2DAIWormholeBridge } = await setupTest({ l2MessengerImpersonator, user1 })
+      const { l2Dai, l2DAIWormholeBridge, l1DAIWormholeBridgeMock, l2CrossDomainMessengerMock } = await setupTest({
+        l2MessengerImpersonator,
+        user1,
+      })
+      const l2MessengerNonce = await l2CrossDomainMessengerMock.messageNonce()
 
-      await l2DAIWormholeBridge
+      const initTx = await l2DAIWormholeBridge
         .connect(user1)
         .initiateWormhole(TARGET_DOMAIN_NAME, user1.address, WORMHOLE_AMOUNT, user1.address)
+      const l2MessengerSendMessageCallData = l2CrossDomainMessengerMock.smocked.sendMessage.calls[0]
 
+      const wormhole = {
+        sourceDomain: SOURCE_DOMAIN_NAME,
+        targetDomain: TARGET_DOMAIN_NAME,
+        receiver: user1.address,
+        operator: user1.address,
+        amount: WORMHOLE_AMOUNT,
+        nonce: l2MessengerNonce,
+        timestamp: (await ethers.provider.getBlock(initTx.blockNumber as any)).timestamp,
+      }
       expect(await l2Dai.balanceOf(user1.address)).to.eq(INITIAL_TOTAL_L2_SUPPLY - WORMHOLE_AMOUNT)
+      expect(await l2Dai.totalSupply()).to.equal(INITIAL_TOTAL_L2_SUPPLY - WORMHOLE_AMOUNT)
       expect(await l2DAIWormholeBridge.batchedDaiToFlush(TARGET_DOMAIN_NAME)).to.eq(WORMHOLE_AMOUNT)
+      expect(l2MessengerSendMessageCallData._target).to.equal(l1DAIWormholeBridgeMock.address)
+      expect(l2MessengerSendMessageCallData._message).to.equal(
+        l1DAIWormholeBridgeMock.interface.encodeFunctionData('finalizeRegisterWormhole', [wormhole]),
+      )
+      await expect(initTx).to.emit(l2DAIWormholeBridge, 'WormholeInitialized').withArgs(Object.values(wormhole))
+    })
+
+    it('reverts when not enough funds', async () => {
+      const [_, l2MessengerImpersonator, user1, user2] = await ethers.getSigners()
+      const { l2DAIWormholeBridge } = await setupTest({
+        l2MessengerImpersonator,
+        user1,
+      })
+
+      await expect(
+        l2DAIWormholeBridge
+          .connect(user2)
+          .initiateWormhole(TARGET_DOMAIN_NAME, user2.address, WORMHOLE_AMOUNT, user2.address),
+      ).to.be.revertedWith(errorMessages.daiInsufficientBalance)
     })
   })
 
