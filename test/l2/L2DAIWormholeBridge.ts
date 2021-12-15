@@ -16,7 +16,7 @@ const errorMessages = {
   daiInsufficientBalance: 'Dai/insufficient-balance',
 }
 
-describe.only('L2DAIWormholeBridge', () => {
+describe('L2DAIWormholeBridge', () => {
   it('has correct public interface', async () => {
     await assertPublicMutableMethods('L2DAIWormholeBridge', [
       'initiateWormhole(bytes32,address,uint128,address)',
