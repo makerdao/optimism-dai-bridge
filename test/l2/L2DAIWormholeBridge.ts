@@ -6,9 +6,8 @@ import { ethers } from 'hardhat'
 import { Dai__factory, L2DAIWormholeBridge__factory } from '../../typechain-types'
 import { deployMock, deployOptimismContractMock } from '../helpers'
 
-const INITIAL_TOTAL_L2_SUPPLY = 3000
+const INITIAL_L2_DAI_SUPPLY = 3000
 const WORMHOLE_AMOUNT = 100
-const DEFAULT_XDOMAIN_GAS = 0
 const SOURCE_DOMAIN_NAME = ethers.utils.formatBytes32String('optimism-a')
 const TARGET_DOMAIN_NAME = ethers.utils.formatBytes32String('arbitrum-a')
 
@@ -64,8 +63,8 @@ describe('L2DAIWormholeBridge', () => {
         nonce: l2MessengerNonce,
         timestamp: (await ethers.provider.getBlock(initTx.blockNumber as any)).timestamp,
       }
-      expect(await l2Dai.balanceOf(user1.address)).to.eq(INITIAL_TOTAL_L2_SUPPLY - WORMHOLE_AMOUNT)
-      expect(await l2Dai.totalSupply()).to.equal(INITIAL_TOTAL_L2_SUPPLY - WORMHOLE_AMOUNT)
+      expect(await l2Dai.balanceOf(user1.address)).to.eq(INITIAL_L2_DAI_SUPPLY - WORMHOLE_AMOUNT)
+      expect(await l2Dai.totalSupply()).to.equal(INITIAL_L2_DAI_SUPPLY - WORMHOLE_AMOUNT)
       expect(await l2DAIWormholeBridge.batchedDaiToFlush(TARGET_DOMAIN_NAME)).to.eq(WORMHOLE_AMOUNT)
       expect(l2MessengerSendMessageCallData._target).to.equal(l1DAIWormholeBridgeMock.address)
       expect(l2MessengerSendMessageCallData._message).to.equal(
@@ -117,7 +116,7 @@ describe('L2DAIWormholeBridge', () => {
           WORMHOLE_AMOUNT * 2,
         ]),
       )
-      expect(xDomainMessengerCall._gasLimit).to.equal(DEFAULT_XDOMAIN_GAS)
+      expect(xDomainMessengerCall._gasLimit).to.equal(0)
       await expect(flushTx)
         .to.emit(l2DAIWormholeBridge, 'Flushed')
         .withArgs(TARGET_DOMAIN_NAME, WORMHOLE_AMOUNT * 2)
@@ -140,7 +139,7 @@ async function setupTest(signers: { l2MessengerImpersonator: SignerWithAddress; 
   ])
 
   await l2Dai.rely(l2DAIWormholeBridge.address)
-  await l2Dai.mint(signers.user1.address, INITIAL_TOTAL_L2_SUPPLY)
+  await l2Dai.mint(signers.user1.address, INITIAL_L2_DAI_SUPPLY)
 
   return { l2Dai, l1DAIWormholeBridgeMock, l2CrossDomainMessengerMock, l2DAIWormholeBridge }
 }

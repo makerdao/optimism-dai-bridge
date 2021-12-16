@@ -6,8 +6,7 @@ import { ethers } from 'hardhat'
 import { Dai__factory, L1DAIWormholeBridge__factory, L1Escrow__factory } from '../../typechain-types'
 import { deployAbstractMock, deployMock, deployOptimismContractMock } from '../helpers'
 
-const initialTotalL1Supply = 3000
-
+const INITIAL_ESCROW_BALANCE = 3000
 const SOURCE_DOMAIN_NAME = ethers.utils.formatBytes32String('optimism-a')
 const TARGET_DOMAIN_NAME = ethers.utils.formatBytes32String('arbitrum-a')
 const AMOUNT = 100
@@ -63,7 +62,7 @@ describe('L1DAIWormholeBridge', () => {
 
       expect(routerSettleCallData.targetDomain).to.equal(TARGET_DOMAIN_NAME)
       expect(routerSettleCallData.batchedDaiToFlush).to.equal(AMOUNT)
-      expect(await l1Dai.balanceOf(l1Escrow.address)).to.eq(initialTotalL1Supply - AMOUNT)
+      expect(await l1Dai.balanceOf(l1Escrow.address)).to.eq(INITIAL_ESCROW_BALANCE - AMOUNT)
       expect(await l1Dai.balanceOf(wormholeJoin.address)).to.eq(AMOUNT)
     })
   })
@@ -116,7 +115,7 @@ describe('L1DAIWormholeBridge', () => {
       wormholeRouterMock.address,
     ])
     await l1Escrow.approve(l1Dai.address, l1DAIWormholeBridge.address, ethers.constants.MaxUint256)
-    await l1Dai.mint(l1Escrow.address, initialTotalL1Supply)
+    await l1Dai.mint(l1Escrow.address, INITIAL_ESCROW_BALANCE)
 
     return {
       l1Dai,
