@@ -55,6 +55,7 @@ contract L1DAIWormholeBridge is OVM_CrossDomainEnabled {
     l2DAIWormholeBridge = _l2DAIWormholeBridge;
     escrow = _escrow;
     wormholeRouter = WormholeRouter(_wormholeRouter);
+    // Approve the router to pull DAI from this contract during settle() (after the DAI has been pulled by this contract from the escrow)
     TokenLike(_l1Token).approve(_wormholeRouter, type(uint256).max);
   }
 
@@ -62,7 +63,9 @@ contract L1DAIWormholeBridge is OVM_CrossDomainEnabled {
     external
     onlyFromCrossDomainAccount(l2DAIWormholeBridge)
   {
+    // Pull DAI from the escrow to this contract
     TokenLike(l1Token).transferFrom(escrow, address(this), daiToFlush);
+    // The router will pull the DAI from this contract
     wormholeRouter.settle(targetDomain, daiToFlush);
   }
 
