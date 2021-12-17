@@ -23,12 +23,14 @@ import {OVM_CrossDomainEnabled} from "@eth-optimism/contracts/libraries/bridge/O
 import {WormholeGUID} from "../common/WormholeGUID.sol";
 
 interface WormholeRouter {
-  function requestMint(WormholeGUID calldata wormholeGUID, uint256 maxFees) external;
+  function requestMint(WormholeGUID calldata wormholeGUID, uint256 maxFee) external;
 
-  function settle(bytes32 targetDomain, uint256 daiToFlush) external;
+  function settle(bytes32 targetDomain, uint256 batchedDaiToFlush) external;
 }
 
 interface TokenLike {
+  function approve(address, uint256) external;
+
   function transferFrom(
     address _from,
     address _to,
@@ -37,27 +39,6 @@ interface TokenLike {
 }
 
 contract L1DAIWormholeBridge is OVM_CrossDomainEnabled {
-  // --- Auth ---
-  mapping(address => uint256) public wards;
-
-  function rely(address usr) external auth {
-    wards[usr] = 1;
-    emit Rely(usr);
-  }
-
-  function deny(address usr) external auth {
-    wards[usr] = 0;
-    emit Deny(usr);
-  }
-
-  modifier auth() {
-    require(wards[msg.sender] == 1, "L1DAIWormholeBridge/not-authorized");
-    _;
-  }
-
-  event Rely(address indexed usr);
-  event Deny(address indexed usr);
-
   address public immutable l1Token;
   address public immutable l2DAIWormholeBridge;
   address public immutable escrow;
@@ -70,20 +51,21 @@ contract L1DAIWormholeBridge is OVM_CrossDomainEnabled {
     address _escrow,
     address _wormholeRouter
   ) OVM_CrossDomainEnabled(_l1messenger) {
-    wards[msg.sender] = 1;
-    emit Rely(msg.sender);
-
     l1Token = _l1Token;
     l2DAIWormholeBridge = _l2DAIWormholeBridge;
     escrow = _escrow;
     wormholeRouter = WormholeRouter(_wormholeRouter);
+    // Approve the router to pull DAI from this contract during settle() (after the DAI has been pulled by this contract from the escrow)
+    TokenLike(_l1Token).approve(_wormholeRouter, type(uint256).max);
   }
 
   function finalizeFlush(bytes32 targetDomain, uint256 daiToFlush)
     external
     onlyFromCrossDomainAccount(l2DAIWormholeBridge)
   {
+    // Pull DAI from the escrow to this contract
     TokenLike(l1Token).transferFrom(escrow, address(this), daiToFlush);
+    // The router will pull the DAI from this contract
     wormholeRouter.settle(targetDomain, daiToFlush);
   }
 

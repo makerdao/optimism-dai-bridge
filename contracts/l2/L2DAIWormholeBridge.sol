@@ -48,14 +48,15 @@ contract L2DAIWormholeBridge is OVM_CrossDomainEnabled {
     _;
   }
 
-  event Rely(address indexed usr);
-  event Deny(address indexed usr);
-
   address public immutable l2Token;
   address public immutable l1DAIWormholeBridge;
   bytes32 public immutable domain;
+  uint256 public isOpen = 1;
   mapping(bytes32 => uint256) public batchedDaiToFlush;
 
+  event Closed();
+  event Rely(address indexed usr);
+  event Deny(address indexed usr);
   event WormholeInitialized(WormholeGUID wormhole);
   event Flushed(bytes32 targetDomain, uint256 dai);
 
@@ -73,12 +74,21 @@ contract L2DAIWormholeBridge is OVM_CrossDomainEnabled {
     domain = _domain;
   }
 
+  function close() external auth {
+    isOpen = 0;
+
+    emit Closed();
+  }
+
   function initiateWormhole(
     bytes32 targetDomain,
     address receiver,
     uint128 amount,
     address operator
   ) external {
+    // Disallow initiating new wormhole transfer if bridge is closed
+    require(isOpen == 1, "L2DAIWormholeBridge/closed");
+
     WormholeGUID memory wormhole = WormholeGUID({
       sourceDomain: domain,
       targetDomain: targetDomain,
