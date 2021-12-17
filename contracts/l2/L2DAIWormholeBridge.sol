@@ -130,6 +130,7 @@ contract L2DAIWormholeBridge is OVM_CrossDomainEnabled {
   }
 
   function flush(bytes32 targetDomain) external {
+    // We do not check for valid domain because previously valid domains still need their DAI flushed
     uint256 daiToFlush = batchedDaiToFlush[targetDomain];
     require(daiToFlush > 0, "L2DAIWormholeBridge/zero-dai-flush");
 
