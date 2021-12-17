@@ -15,6 +15,7 @@ const errorMessages = {
   daiInsufficientBalance: 'Dai/insufficient-balance',
   notOwner: 'L2DAIWormholeBridge/not-authorized',
   bridgeClosed: 'L2DAIWormholeBridge/closed',
+  zeroDaiFlush: 'L2DAIWormholeBridge/zero-dai-flush',
 }
 
 describe('L2DAIWormholeBridge', () => {
@@ -182,6 +183,20 @@ describe('L2DAIWormholeBridge', () => {
       await expect(flushTx)
         .to.emit(l2DAIWormholeBridge, 'Flushed')
         .withArgs(TARGET_DOMAIN_NAME, WORMHOLE_AMOUNT * 2)
+    })
+    
+    it('cannot flush zero debt', async () => {
+      const [_, l2MessengerImpersonator, user1] = await ethers.getSigners()
+      const { l2DAIWormholeBridge } = await setupTest({
+        l2MessengerImpersonator,
+        user1,
+      })
+
+      expect(await l2DAIWormholeBridge.batchedDaiToFlush(TARGET_DOMAIN_NAME)).to.eq(0)
+
+      await expect(
+        l2DAIWormholeBridge.flush(TARGET_DOMAIN_NAME)
+      ).to.be.revertedWith(errorMessages.zeroDaiFlush)
     })
   })
 })
