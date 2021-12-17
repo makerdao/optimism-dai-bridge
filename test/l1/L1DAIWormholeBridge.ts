@@ -42,7 +42,7 @@ describe('L1DAIWormholeBridge', () => {
 
   describe('finalizeFlush', () => {
     it('calls the router to settle the dai debt', async () => {
-      const [_, l1MessengerImpersonator, routerImpersonator, wormholeJoin] = await ethers.getSigners()
+      const [_, l1MessengerImpersonator] = await ethers.getSigners()
       const {
         l1Dai,
         l1DAIWormholeBridge,
@@ -50,20 +50,15 @@ describe('L1DAIWormholeBridge', () => {
         l2DAIWormholeBridge,
         l1Escrow,
         wormholeRouterMock,
-      } = await setupTest({ l1MessengerImpersonator, routerImpersonator })
+      } = await setupTest({ l1MessengerImpersonator })
       l1CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l2DAIWormholeBridge.address)
 
       await waitForTx(l1DAIWormholeBridge.connect(l1MessengerImpersonator).finalizeFlush(TARGET_DOMAIN_NAME, AMOUNT))
       const routerSettleCallData = wormholeRouterMock.smocked.settle.calls[0]
-      await waitForTx(
-        // mock DAI transfer by router
-        l1Dai.connect(routerImpersonator).transferFrom(l1DAIWormholeBridge.address, wormholeJoin.address, AMOUNT),
-      )
 
       expect(routerSettleCallData.targetDomain).to.equal(TARGET_DOMAIN_NAME)
       expect(routerSettleCallData.batchedDaiToFlush).to.equal(AMOUNT)
       expect(await l1Dai.balanceOf(l1Escrow.address)).to.eq(INITIAL_ESCROW_BALANCE - AMOUNT)
-      expect(await l1Dai.balanceOf(wormholeJoin.address)).to.eq(AMOUNT)
     })
   })
 
@@ -93,13 +88,8 @@ describe('L1DAIWormholeBridge', () => {
     })
   })
 
-  async function setupTest(signers: {
-    l1MessengerImpersonator: SignerWithAddress
-    routerImpersonator?: SignerWithAddress
-  }) {
-    const wormholeRouterMock = await deployAbstractMock('WormholeRouter', {
-      address: await signers.routerImpersonator?.getAddress(),
-    })
+  async function setupTest(signers: { l1MessengerImpersonator: SignerWithAddress }) {
+    const wormholeRouterMock = await deployAbstractMock('WormholeRouter')
     const l2DAIWormholeBridge = await deployMock('L2DAIWormholeBridge')
     const l1CrossDomainMessengerMock = await deployOptimismContractMock(
       'OVM_L1CrossDomainMessenger',
