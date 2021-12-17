@@ -88,6 +88,8 @@ contract L2DAIWormholeBridge is OVM_CrossDomainEnabled {
     uint256 data
   ) external auth {
     if (what == "validDomains") {
+      require(data <= 1, "L2DAIWormholeBridge/invalid-data");
+
       validDomains[domain] = data;
     } else {
       revert("L2DAIWormholeBridge/file-unrecognized-param");
