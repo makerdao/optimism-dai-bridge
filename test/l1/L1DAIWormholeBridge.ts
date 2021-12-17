@@ -1,6 +1,7 @@
 import { assertPublicMutableMethods, getRandomAddress, simpleDeploy, waitForTx } from '@makerdao/hardhat-utils'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address'
 import { expect } from 'chai'
+import { BigNumber } from 'ethers'
 import { ethers } from 'hardhat'
 
 import { Dai__factory, L1DAIWormholeBridge__factory, L1Escrow__factory } from '../../typechain-types'
@@ -26,7 +27,7 @@ describe('L1DAIWormholeBridge', () => {
   })
 
   describe('constructor', () => {
-    it('assigns all variables properly', async () => {
+    it('sets all variables and approvals properly', async () => {
       const [l2DAIWormholeBridge, l1CrossDomainMessenger, l1Escrow, wormholeRouter] = await ethers.getSigners()
 
       const l1Dai = await simpleDeploy<Dai__factory>('Dai', [])
@@ -38,11 +39,14 @@ describe('L1DAIWormholeBridge', () => {
         wormholeRouter.address,
       ])
 
+      // Check that all variables have been assigned correctly
       expect(await l1DAITokenBridge.l1Token()).to.eq(l1Dai.address)
       expect(await l1DAITokenBridge.l2DAIWormholeBridge()).to.eq(l2DAIWormholeBridge.address)
       expect(await l1DAITokenBridge.escrow()).to.eq(l1Escrow.address)
       expect(await l1DAITokenBridge.messenger()).to.eq(l1CrossDomainMessenger.address)
       expect(await l1DAITokenBridge.wormholeRouter()).to.eq(wormholeRouter.address)
+      // Check that the wormholeRouter has been given infinite approval
+      expect(await l1Dai.allowance(l1DAITokenBridge.address, wormholeRouter.address)).to.eq(ethers.constants.MaxUint256)
     })
   })
 
