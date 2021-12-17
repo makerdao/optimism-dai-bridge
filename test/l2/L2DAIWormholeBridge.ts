@@ -8,13 +8,17 @@ import { deployMock, deployOptimismContractMock } from '../helpers'
 
 const INITIAL_L2_DAI_SUPPLY = 3000
 const WORMHOLE_AMOUNT = 100
+const FILE_VALID_DOMAINS = ethers.utils.formatBytes32String('validDomains')
 const SOURCE_DOMAIN_NAME = ethers.utils.formatBytes32String('optimism-a')
 const TARGET_DOMAIN_NAME = ethers.utils.formatBytes32String('arbitrum-a')
+const INVALID_DOMAIN_NAME = ethers.utils.formatBytes32String('invalid-domain')
 
 const errorMessages = {
   daiInsufficientBalance: 'Dai/insufficient-balance',
   notOwner: 'L2DAIWormholeBridge/not-authorized',
   bridgeClosed: 'L2DAIWormholeBridge/closed',
+  zeroDaiFlush: 'L2DAIWormholeBridge/zero-dai-flush',
+  invalidDomain: 'L2DAIWormholeBridge/invalid-domain',
 }
 
 describe('L2DAIWormholeBridge', () => {
@@ -23,6 +27,7 @@ describe('L2DAIWormholeBridge', () => {
       'rely(address)',
       'deny(address)',
       'close()',
+      'file(bytes32,bytes32,uint256)',
       'initiateWormhole(bytes32,address,uint128,address)',
       'flush(bytes32)',
     ])
@@ -51,7 +56,7 @@ describe('L2DAIWormholeBridge', () => {
       const [l2Messenger, l2Dai, l1DAIWormholeBridge] = await getRandomAddresses()
       return [l2Messenger, l2Dai, l1DAIWormholeBridge, SOURCE_DOMAIN_NAME]
     },
-    authedMethods: [(c) => c.close()],
+    authedMethods: [(c) => c.close(), (c) => c.file(FILE_VALID_DOMAINS, TARGET_DOMAIN_NAME, 1)],
   })
 
   describe('close()', () => {
@@ -148,6 +153,20 @@ describe('L2DAIWormholeBridge', () => {
           .initiateWormhole(TARGET_DOMAIN_NAME, user2.address, WORMHOLE_AMOUNT, user2.address),
       ).to.be.revertedWith(errorMessages.bridgeClosed)
     })
+
+    it('reverts when domain is not whitelisted', async () => {
+      const [_, l2MessengerImpersonator, user1, user2] = await ethers.getSigners()
+      const { l2DAIWormholeBridge } = await setupTest({
+        l2MessengerImpersonator,
+        user1,
+      })
+
+      await expect(
+        l2DAIWormholeBridge
+          .connect(user1)
+          .initiateWormhole(INVALID_DOMAIN_NAME, user2.address, WORMHOLE_AMOUNT, user2.address),
+      ).to.be.revertedWith(errorMessages.invalidDomain)
+    })
   })
 
   describe('flush()', () => {
@@ -183,6 +202,18 @@ describe('L2DAIWormholeBridge', () => {
         .to.emit(l2DAIWormholeBridge, 'Flushed')
         .withArgs(TARGET_DOMAIN_NAME, WORMHOLE_AMOUNT * 2)
     })
+
+    it('cannot flush zero debt', async () => {
+      const [_, l2MessengerImpersonator, user1] = await ethers.getSigners()
+      const { l2DAIWormholeBridge } = await setupTest({
+        l2MessengerImpersonator,
+        user1,
+      })
+
+      expect(await l2DAIWormholeBridge.batchedDaiToFlush(TARGET_DOMAIN_NAME)).to.eq(0)
+
+      await expect(l2DAIWormholeBridge.flush(TARGET_DOMAIN_NAME)).to.be.revertedWith(errorMessages.zeroDaiFlush)
+    })
   })
 })
 
@@ -202,6 +233,7 @@ async function setupTest(signers: { l2MessengerImpersonator: SignerWithAddress; 
 
   await l2Dai.rely(l2DAIWormholeBridge.address)
   await l2Dai.mint(signers.user1.address, INITIAL_L2_DAI_SUPPLY)
+  await l2DAIWormholeBridge.file(FILE_VALID_DOMAINS, TARGET_DOMAIN_NAME, 1)
 
   return { l2Dai, l1DAIWormholeBridgeMock, l2CrossDomainMessengerMock, l2DAIWormholeBridge }
 }
