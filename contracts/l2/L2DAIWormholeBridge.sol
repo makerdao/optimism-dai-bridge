@@ -30,6 +30,27 @@ interface Mintable {
 }
 
 contract L2DAIWormholeBridge is OVM_CrossDomainEnabled {
+  // --- Auth ---
+  mapping(address => uint256) public wards;
+
+  function rely(address usr) external auth {
+    wards[usr] = 1;
+    emit Rely(usr);
+  }
+
+  function deny(address usr) external auth {
+    wards[usr] = 0;
+    emit Deny(usr);
+  }
+
+  modifier auth() {
+    require(wards[msg.sender] == 1, "L2DAIWormholeBridge/not-authorized");
+    _;
+  }
+
+  event Rely(address indexed usr);
+  event Deny(address indexed usr);
+
   address public immutable l2Token;
   address public immutable l1DAIWormholeBridge;
   bytes32 public immutable domain;
@@ -44,6 +65,9 @@ contract L2DAIWormholeBridge is OVM_CrossDomainEnabled {
     address _l1DAIWormholeBridge,
     bytes32 _domain
   ) public OVM_CrossDomainEnabled(_l2CrossDomainMessenger) {
+    wards[msg.sender] = 1;
+    emit Rely(msg.sender);
+
     l2Token = _l2Token;
     l1DAIWormholeBridge = _l1DAIWormholeBridge;
     domain = _domain;
