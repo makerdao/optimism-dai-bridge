@@ -52,11 +52,13 @@ contract L2DAIWormholeBridge is OVM_CrossDomainEnabled {
   address public immutable l1DAIWormholeBridge;
   bytes32 public immutable domain;
   uint256 public isOpen = 1;
+  mapping(bytes32 => uint256) public validDomains;
   mapping(bytes32 => uint256) public batchedDaiToFlush;
 
   event Closed();
   event Rely(address indexed usr);
   event Deny(address indexed usr);
+  event File(bytes32 indexed what, bytes32 indexed domain, uint256 data);
   event WormholeInitialized(WormholeGUID wormhole);
   event Flushed(bytes32 targetDomain, uint256 dai);
 
@@ -80,6 +82,19 @@ contract L2DAIWormholeBridge is OVM_CrossDomainEnabled {
     emit Closed();
   }
 
+  function file(
+    bytes32 what,
+    bytes32 domain,
+    uint256 data
+  ) external auth {
+    if (what == "validDomains") {
+      validDomains[domain] = data;
+    } else {
+      revert("L2DAIWormholeBridge/file-unrecognized-param");
+    }
+    emit File(what, domain, data);
+  }
+
   function initiateWormhole(
     bytes32 targetDomain,
     address receiver,
@@ -88,6 +103,9 @@ contract L2DAIWormholeBridge is OVM_CrossDomainEnabled {
   ) external {
     // Disallow initiating new wormhole transfer if bridge is closed
     require(isOpen == 1, "L2DAIWormholeBridge/closed");
+
+    // Disallow initiating new wormhole transfer if targetDomain has not been whitelisted
+    require(validDomains[targetDomain] == 1, "L2DAIWormholeBridge/invalid-domain");
 
     WormholeGUID memory wormhole = WormholeGUID({
       sourceDomain: domain,
