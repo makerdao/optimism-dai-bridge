@@ -1,15 +1,21 @@
-import { assertPublicMutableMethods, simpleDeploy, waitForTx } from '@makerdao/hardhat-utils'
+import { assertPublicMutableMethods, getRandomAddress, simpleDeploy, waitForTx } from '@makerdao/hardhat-utils'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address'
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
 
 import { Dai__factory, L1DAIWormholeBridge__factory, L1Escrow__factory } from '../../typechain-types'
+import { WormholeGUIDStruct } from '../../typechain-types/L1DAIWormholeBridge'
 import { deployAbstractMock, deployMock, deployOptimismContractMock } from '../helpers'
 
 const INITIAL_ESCROW_BALANCE = 3000
 const SOURCE_DOMAIN_NAME = ethers.utils.formatBytes32String('optimism-a')
 const TARGET_DOMAIN_NAME = ethers.utils.formatBytes32String('arbitrum-a')
 const AMOUNT = 100
+
+const errorMessages = {
+  invalidMessenger: 'OVM_XCHAIN: messenger contract unauthenticated',
+  invalidXDomainMessageOriginator: 'OVM_XCHAIN: wrong sender of cross-domain message',
+}
 
 describe('L1DAIWormholeBridge', () => {
   it('has correct public interface', async () => {
@@ -60,23 +66,52 @@ describe('L1DAIWormholeBridge', () => {
       expect(routerSettleCallData.batchedDaiToFlush).to.equal(AMOUNT)
       expect(await l1Dai.balanceOf(l1Escrow.address)).to.eq(INITIAL_ESCROW_BALANCE - AMOUNT)
     })
+
+    it('reverts when not called by XDomainMessenger', async () => {
+      const [l1MessengerImpersonator, user] = await ethers.getSigners()
+      const { l1DAIWormholeBridge, l1CrossDomainMessengerMock, l2DAIWormholeBridge } = await setupTest({
+        l1MessengerImpersonator,
+      })
+      l1CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l2DAIWormholeBridge.address)
+
+      await expect(l1DAIWormholeBridge.connect(user).finalizeFlush(TARGET_DOMAIN_NAME, AMOUNT)).to.be.revertedWith(
+        errorMessages.invalidMessenger,
+      )
+    })
+
+    it('reverts when called by XDomainMessenger but not relaying a message from l2DAIWormholeBridge', async () => {
+      const [l1MessengerImpersonator, user] = await ethers.getSigners()
+      const { l1DAIWormholeBridge, l1CrossDomainMessengerMock } = await setupTest({
+        l1MessengerImpersonator,
+      })
+      l1CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => user.address)
+
+      await expect(
+        l1DAIWormholeBridge.connect(l1MessengerImpersonator).finalizeFlush(TARGET_DOMAIN_NAME, AMOUNT),
+      ).to.be.revertedWith(errorMessages.invalidXDomainMessageOriginator)
+    })
   })
 
   describe('finalizeRegisterWormhole', () => {
-    it('calls the router to request DAI', async () => {
-      const [_, l1MessengerImpersonator, user] = await ethers.getSigners()
-      const { l1DAIWormholeBridge, l1CrossDomainMessengerMock, l2DAIWormholeBridge, wormholeRouterMock } =
-        await setupTest({ l1MessengerImpersonator })
-      l1CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l2DAIWormholeBridge.address)
-      const wormhole = {
+    let wormhole: WormholeGUIDStruct
+    beforeEach(async () => {
+      const receiver = await getRandomAddress()
+      wormhole = {
         sourceDomain: SOURCE_DOMAIN_NAME,
         targetDomain: TARGET_DOMAIN_NAME,
-        receiver: user.address,
-        operator: user.address,
+        receiver: receiver,
+        operator: receiver,
         amount: AMOUNT,
         nonce: 0,
         timestamp: '1639583731',
       }
+    })
+
+    it('calls the router to request DAI', async () => {
+      const [l1MessengerImpersonator] = await ethers.getSigners()
+      const { l1DAIWormholeBridge, l1CrossDomainMessengerMock, l2DAIWormholeBridge, wormholeRouterMock } =
+        await setupTest({ l1MessengerImpersonator })
+      l1CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l2DAIWormholeBridge.address)
 
       await waitForTx(l1DAIWormholeBridge.connect(l1MessengerImpersonator).finalizeRegisterWormhole(wormhole))
       const routerSettleCallData = wormholeRouterMock.smocked.requestMint.calls[0]
@@ -85,6 +120,30 @@ describe('L1DAIWormholeBridge', () => {
         JSON.stringify(Object.values(wormhole).map((v: any) => v.toString())),
       )
       expect(routerSettleCallData.maxFee).to.equal(0)
+    })
+
+    it('reverts when not called by XDomainMessenger', async () => {
+      const [l1MessengerImpersonator, user] = await ethers.getSigners()
+      const { l1DAIWormholeBridge, l1CrossDomainMessengerMock, l2DAIWormholeBridge } = await setupTest({
+        l1MessengerImpersonator,
+      })
+      l1CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => l2DAIWormholeBridge.address)
+
+      await expect(l1DAIWormholeBridge.connect(user).finalizeRegisterWormhole(wormhole)).to.be.revertedWith(
+        errorMessages.invalidMessenger,
+      )
+    })
+
+    it('reverts when called by XDomainMessenger but not relaying a message from l2DAIWormholeBridge', async () => {
+      const [l1MessengerImpersonator, user] = await ethers.getSigners()
+      const { l1DAIWormholeBridge, l1CrossDomainMessengerMock } = await setupTest({
+        l1MessengerImpersonator,
+      })
+      l1CrossDomainMessengerMock.smocked.xDomainMessageSender.will.return.with(() => user.address)
+
+      await expect(
+        l1DAIWormholeBridge.connect(l1MessengerImpersonator).finalizeRegisterWormhole(wormhole),
+      ).to.be.revertedWith(errorMessages.invalidXDomainMessageOriginator)
     })
   })
 
