@@ -1,4 +1,4 @@
-import { assertPublicMutableMethods, simpleDeploy } from '@makerdao/hardhat-utils'
+import { assertPublicMutableMethods, getRandomAddresses, simpleDeploy, testAuth } from '@makerdao/hardhat-utils'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address'
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
@@ -13,11 +13,16 @@ const TARGET_DOMAIN_NAME = ethers.utils.formatBytes32String('arbitrum-a')
 
 const errorMessages = {
   daiInsufficientBalance: 'Dai/insufficient-balance',
+  notOwner: 'L2DAIWormholeBridge/not-authorized',
+  bridgeClosed: 'L2DAIWormholeBridge/closed',
 }
 
 describe('L2DAIWormholeBridge', () => {
   it('has correct public interface', async () => {
     await assertPublicMutableMethods('L2DAIWormholeBridge', [
+      'rely(address)',
+      'deny(address)',
+      'close()',
       'initiateWormhole(bytes32,address,uint128,address)',
       'flush(bytes32)',
     ])
@@ -37,6 +42,48 @@ describe('L2DAIWormholeBridge', () => {
       expect(await l2DAIWormholeBridge.messenger()).to.eq(l2Messenger.address)
       expect(await l2DAIWormholeBridge.l2Token()).to.eq(l2Dai.address)
       expect(await l2DAIWormholeBridge.l1DAIWormholeBridge()).to.eq(l1DAIWormholeBridge.address)
+    })
+  })
+
+  testAuth({
+    name: 'L2DAIWormholeBridge',
+    getDeployArgs: async () => {
+      const [l2Messenger, l2Dai, l1DAIWormholeBridge] = await getRandomAddresses()
+      return [l2Messenger, l2Dai, l1DAIWormholeBridge, SOURCE_DOMAIN_NAME]
+    },
+    authedMethods: [(c) => c.close()],
+  })
+
+  describe('close()', () => {
+    it('can be called by owner', async () => {
+      const [owner, l2MessengerImpersonator, user1] = await ethers.getSigners()
+      const { l2DAIWormholeBridge } = await setupTest({
+        l2MessengerImpersonator,
+        user1,
+      })
+      expect(await l2DAIWormholeBridge.isOpen()).to.be.eq(1)
+      const closeTx = await l2DAIWormholeBridge.connect(owner).close()
+      await expect(closeTx).to.emit(l2DAIWormholeBridge, 'Closed')
+      expect(await l2DAIWormholeBridge.isOpen()).to.be.eq(0)
+    })
+    it('can be called multiple times by the owner but nothing changes', async () => {
+      const [owner, l2MessengerImpersonator, user1] = await ethers.getSigners()
+      const { l2DAIWormholeBridge } = await setupTest({
+        l2MessengerImpersonator,
+        user1,
+      })
+      await l2DAIWormholeBridge.connect(owner).close()
+      expect(await l2DAIWormholeBridge.isOpen()).to.be.eq(0)
+      await l2DAIWormholeBridge.connect(owner).close()
+      expect(await l2DAIWormholeBridge.isOpen()).to.be.eq(0)
+    })
+    it('reverts when called not by the owner', async () => {
+      const [_owner, l2MessengerImpersonator, user1] = await ethers.getSigners()
+      const { l2DAIWormholeBridge } = await setupTest({
+        l2MessengerImpersonator,
+        user1,
+      })
+      await expect(l2DAIWormholeBridge.connect(user1).close()).to.be.revertedWith(errorMessages.notOwner)
     })
   })
 
@@ -85,6 +132,21 @@ describe('L2DAIWormholeBridge', () => {
           .connect(user2)
           .initiateWormhole(TARGET_DOMAIN_NAME, user2.address, WORMHOLE_AMOUNT, user2.address),
       ).to.be.revertedWith(errorMessages.daiInsufficientBalance)
+    })
+
+    it('reverts when bridge is closed', async () => {
+      const [owner, l2MessengerImpersonator, user1, user2] = await ethers.getSigners()
+      const { l2DAIWormholeBridge } = await setupTest({
+        l2MessengerImpersonator,
+        user1,
+      })
+      await l2DAIWormholeBridge.connect(owner).close()
+
+      await expect(
+        l2DAIWormholeBridge
+          .connect(user1)
+          .initiateWormhole(TARGET_DOMAIN_NAME, user2.address, WORMHOLE_AMOUNT, user2.address),
+      ).to.be.revertedWith(errorMessages.bridgeClosed)
     })
   })
 
