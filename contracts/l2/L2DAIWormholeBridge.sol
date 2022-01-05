@@ -60,7 +60,7 @@ contract L2DAIWormholeBridge is OVM_CrossDomainEnabled {
   event Deny(address indexed usr);
   event File(bytes32 indexed what, bytes32 indexed domain, uint256 data);
   event WormholeInitialized(WormholeGUID wormhole);
-  event Flushed(bytes32 targetDomain, uint256 dai);
+  event Flushed(bytes32 indexed targetDomain, uint256 dai);
 
   constructor(
     address _l2CrossDomainMessenger,
