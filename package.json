@@ -6,6 +6,7 @@
   "scripts": {
     "build": "hardhat compile",
     "clean": "hardhat clean && rm -rf artifacts cache crytic-export corpus",
+    "coverage": "hardhat coverage",
     "format": "prettier --check \"./**/*.{ts,sol}\"",
     "format:fix": "prettier --write \"./**/*.{ts,sol}\"",
     "lint": "eslint --ext .ts test test-e2e scripts optimism-helpers hardhat.config.ts",

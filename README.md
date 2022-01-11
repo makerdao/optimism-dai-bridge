@@ -137,6 +137,8 @@ Run `yarn test:fix` to run linting in fix mode, auto-formatting and unit tests.
 
 Running `yarn test` makes sure that contracts are compiled. Running `yarn test-e2e` doesn't.
 
+Run `yarn coverage` to run solidity-coverage.
+
 ## Fuzzing
 
 ### Install Echidna
@@ -144,6 +146,7 @@ Running `yarn test` makes sure that contracts are compiled. Running `yarn test-e
 - Precompiled Binaries (recommended)
 
 Before starting, make sure Slither is installed:
+
 ```
 $ pip3 install slither-analyzer
 ```
