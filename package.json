@@ -70,6 +70,7 @@
   "devDependencies": {
     "@eth-optimism/core-utils": "^0.7.0",
     "@eth-optimism/message-relayer": "^0.2.1",
-    "prettier-plugin-solidity": "^1.0.0-beta.18"
+    "prettier-plugin-solidity": "^1.0.0-beta.18",
+    "solidity-coverage": "^0.7.17"
   }
 }
