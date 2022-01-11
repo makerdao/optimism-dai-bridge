@@ -39,6 +39,7 @@ jobs:
       - run: yarn codechecks # compares gas report
         env: # Or as an environment variable
           CC_SECRET: ${{ secrets.CC_SECRET }}
+      - run: yarn coverage
 
   test-e2e:
     name: Tests E2E
