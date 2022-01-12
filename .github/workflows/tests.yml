@@ -39,6 +39,14 @@ jobs:
       - run: yarn codechecks # compares gas report
         env: # Or as an environment variable
           CC_SECRET: ${{ secrets.CC_SECRET }}
+      - run: yarn coverage
+      - name: Archive code coverage results
+        uses: actions/upload-artifact@v2
+        with:
+          name: code-coverage-artifacts
+          path: |
+            coverage
+            coverage.json
 
   test-e2e:
     name: Tests E2E

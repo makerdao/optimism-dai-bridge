@@ -19,6 +19,8 @@ const errorMessages = {
   bridgeClosed: 'L2DAIWormholeBridge/closed',
   zeroDaiFlush: 'L2DAIWormholeBridge/zero-dai-flush',
   invalidDomain: 'L2DAIWormholeBridge/invalid-domain',
+  unrecognizedParam: 'L2DAIWormholeBridge/file-unrecognized-param',
+  invalidData: 'L2DAIWormholeBridge/invalid-data',
 }
 
 describe('L2DAIWormholeBridge', () => {
@@ -57,6 +59,29 @@ describe('L2DAIWormholeBridge', () => {
       return [l2Messenger, l2Dai, l1DAIWormholeBridge, SOURCE_DOMAIN_NAME]
     },
     authedMethods: [(c) => c.close(), (c) => c.file(FILE_VALID_DOMAINS, TARGET_DOMAIN_NAME, 1)],
+  })
+
+  describe('file', () => {
+    it('disallows invalid "what"', async () => {
+      const [l2MessengerImpersonator, user1] = await ethers.getSigners()
+      const { l2DAIWormholeBridge } = await setupTest({
+        l2MessengerImpersonator,
+        user1,
+      })
+      await expect(
+        l2DAIWormholeBridge.file(ethers.utils.formatBytes32String('invalid'), TARGET_DOMAIN_NAME, 1),
+      ).to.be.revertedWith(errorMessages.unrecognizedParam)
+    })
+    it('disallows invalid data for "validDomains"', async () => {
+      const [l2MessengerImpersonator, user1] = await ethers.getSigners()
+      const { l2DAIWormholeBridge } = await setupTest({
+        l2MessengerImpersonator,
+        user1,
+      })
+      await expect(l2DAIWormholeBridge.file(FILE_VALID_DOMAINS, TARGET_DOMAIN_NAME, 666)).to.be.revertedWith(
+        errorMessages.invalidData,
+      )
+    })
   })
 
   describe('close()', () => {
