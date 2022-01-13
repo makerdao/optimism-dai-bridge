@@ -1,5 +1,5 @@
 {
-  "detectors_to_exclude": "pragma,naming-convention,solc-version,redundant-statements,shadowing-local,uninitialized-return,empty-functions,unused-return,missing-zero-check",
+  "detectors_to_exclude": "pragma,naming-convention,solc-version,redundant-statements,shadowing-local,uninitialized-return,empty-functions,unused-return,missing-zero-check,unchecked-transfer",
   "solc_disable_warnings": false,
   "filter_paths": "node_modules",
   "exclude_informational": true,
