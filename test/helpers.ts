@@ -37,3 +37,7 @@ export async function deployOptimismContractMock<T extends ContractFactory>(
   const factory = new ethers.ContractFactory(artifact.abi, artifact.bytecode) as any
   return await smockit(factory, opts)
 }
+
+export function addressToBytes32(addr: string): string {
+  return ethers.utils.hexlify(ethers.utils.zeroPad(addr, 32))
+}
