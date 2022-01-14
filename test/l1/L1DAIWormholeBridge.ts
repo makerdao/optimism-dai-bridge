@@ -5,7 +5,7 @@ import { ethers } from 'hardhat'
 
 import { Dai__factory, L1DAIWormholeBridge__factory, L1Escrow__factory } from '../../typechain-types'
 import { WormholeGUIDStruct } from '../../typechain-types/L1DAIWormholeBridge'
-import { deployAbstractMock, deployMock, deployOptimismContractMock } from '../helpers'
+import { addressToBytes32, deployAbstractMock, deployMock, deployOptimismContractMock } from '../helpers'
 
 const INITIAL_ESCROW_BALANCE = 3000
 const SOURCE_DOMAIN_NAME = ethers.utils.formatBytes32String('optimism-a')
@@ -21,7 +21,7 @@ describe('L1DAIWormholeBridge', () => {
   it('has correct public interface', async () => {
     await assertPublicMutableMethods('L1DAIWormholeBridge', [
       'finalizeFlush(bytes32,uint256)',
-      'finalizeRegisterWormhole((bytes32,bytes32,address,address,uint128,uint80,uint48))',
+      'finalizeRegisterWormhole((bytes32,bytes32,bytes32,bytes32,uint128,uint80,uint48))',
     ])
   })
 
@@ -102,8 +102,8 @@ describe('L1DAIWormholeBridge', () => {
       wormhole = {
         sourceDomain: SOURCE_DOMAIN_NAME,
         targetDomain: TARGET_DOMAIN_NAME,
-        receiver: receiver,
-        operator: receiver,
+        receiver: addressToBytes32(receiver),
+        operator: addressToBytes32(receiver),
         amount: AMOUNT,
         nonce: 0,
         timestamp: '1639583731',

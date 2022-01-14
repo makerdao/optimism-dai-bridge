@@ -4,7 +4,7 @@ import { expect } from 'chai'
 import { ethers } from 'hardhat'
 
 import { Dai__factory, L2DAIWormholeBridge__factory } from '../../typechain-types'
-import { deployMock, deployOptimismContractMock } from '../helpers'
+import { addressToBytes32, deployMock, deployOptimismContractMock } from '../helpers'
 
 const INITIAL_L2_DAI_SUPPLY = 3000
 const WORMHOLE_AMOUNT = 100
@@ -31,6 +31,7 @@ describe('L2DAIWormholeBridge', () => {
       'close()',
       'file(bytes32,bytes32,uint256)',
       'initiateWormhole(bytes32,address,uint128,address)',
+      'initiateWormhole(bytes32,bytes32,uint128,bytes32)',
       'flush(bytes32)',
     ])
   })
@@ -117,7 +118,7 @@ describe('L2DAIWormholeBridge', () => {
     })
   })
 
-  describe('initiateWormhole()', () => {
+  describe('initiateWormhole(bytes32,address,uint128,address)', () => {
     it('sends xchain message, burns DAI and marks it for future flush', async () => {
       const [_, l2MessengerImpersonator, user1] = await ethers.getSigners()
       const { l2Dai, l2DAIWormholeBridge, l1DAIWormholeBridgeMock, l2CrossDomainMessengerMock } = await setupTest({
@@ -128,14 +129,19 @@ describe('L2DAIWormholeBridge', () => {
 
       const initTx = await l2DAIWormholeBridge
         .connect(user1)
-        .initiateWormhole(TARGET_DOMAIN_NAME, user1.address, WORMHOLE_AMOUNT, user1.address)
+        ['initiateWormhole(bytes32,address,uint128,address)'](
+          TARGET_DOMAIN_NAME,
+          user1.address,
+          WORMHOLE_AMOUNT,
+          user1.address,
+        )
       const l2MessengerSendMessageCallData = l2CrossDomainMessengerMock.smocked.sendMessage.calls[0]
 
       const wormhole = {
         sourceDomain: SOURCE_DOMAIN_NAME,
         targetDomain: TARGET_DOMAIN_NAME,
-        receiver: user1.address,
-        operator: user1.address,
+        receiver: addressToBytes32(user1.address),
+        operator: addressToBytes32(user1.address),
         amount: WORMHOLE_AMOUNT,
         nonce: l2MessengerNonce,
         timestamp: (await ethers.provider.getBlock(initTx.blockNumber as any)).timestamp,
@@ -160,7 +166,12 @@ describe('L2DAIWormholeBridge', () => {
       await expect(
         l2DAIWormholeBridge
           .connect(user2)
-          .initiateWormhole(TARGET_DOMAIN_NAME, user2.address, WORMHOLE_AMOUNT, user2.address),
+          ['initiateWormhole(bytes32,address,uint128,address)'](
+            TARGET_DOMAIN_NAME,
+            user2.address,
+            WORMHOLE_AMOUNT,
+            user2.address,
+          ),
       ).to.be.revertedWith(errorMessages.daiInsufficientBalance)
     })
 
@@ -175,7 +186,12 @@ describe('L2DAIWormholeBridge', () => {
       await expect(
         l2DAIWormholeBridge
           .connect(user1)
-          .initiateWormhole(TARGET_DOMAIN_NAME, user2.address, WORMHOLE_AMOUNT, user2.address),
+          ['initiateWormhole(bytes32,address,uint128,address)'](
+            TARGET_DOMAIN_NAME,
+            user2.address,
+            WORMHOLE_AMOUNT,
+            user2.address,
+          ),
       ).to.be.revertedWith(errorMessages.bridgeClosed)
     })
 
@@ -189,8 +205,52 @@ describe('L2DAIWormholeBridge', () => {
       await expect(
         l2DAIWormholeBridge
           .connect(user1)
-          .initiateWormhole(INVALID_DOMAIN_NAME, user2.address, WORMHOLE_AMOUNT, user2.address),
+          ['initiateWormhole(bytes32,address,uint128,address)'](
+            INVALID_DOMAIN_NAME,
+            user2.address,
+            WORMHOLE_AMOUNT,
+            user2.address,
+          ),
       ).to.be.revertedWith(errorMessages.invalidDomain)
+    })
+  })
+
+  describe('initiateWormhole(bytes32,bytes32,uint128,bytes32)', () => {
+    it('sends xchain message, burns DAI and marks it for future flush', async () => {
+      const [_, l2MessengerImpersonator, user1] = await ethers.getSigners()
+      const { l2Dai, l2DAIWormholeBridge, l1DAIWormholeBridgeMock, l2CrossDomainMessengerMock } = await setupTest({
+        l2MessengerImpersonator,
+        user1,
+      })
+      const l2MessengerNonce = await l2CrossDomainMessengerMock.messageNonce()
+
+      const initTx = await l2DAIWormholeBridge
+        .connect(user1)
+        ['initiateWormhole(bytes32,bytes32,uint128,bytes32)'](
+          TARGET_DOMAIN_NAME,
+          addressToBytes32(user1.address),
+          WORMHOLE_AMOUNT,
+          addressToBytes32(user1.address),
+        )
+      const l2MessengerSendMessageCallData = l2CrossDomainMessengerMock.smocked.sendMessage.calls[0]
+
+      const wormhole = {
+        sourceDomain: SOURCE_DOMAIN_NAME,
+        targetDomain: TARGET_DOMAIN_NAME,
+        receiver: addressToBytes32(user1.address),
+        operator: addressToBytes32(user1.address),
+        amount: WORMHOLE_AMOUNT,
+        nonce: l2MessengerNonce,
+        timestamp: (await ethers.provider.getBlock(initTx.blockNumber as any)).timestamp,
+      }
+      expect(await l2Dai.balanceOf(user1.address)).to.eq(INITIAL_L2_DAI_SUPPLY - WORMHOLE_AMOUNT)
+      expect(await l2Dai.totalSupply()).to.equal(INITIAL_L2_DAI_SUPPLY - WORMHOLE_AMOUNT)
+      expect(await l2DAIWormholeBridge.batchedDaiToFlush(TARGET_DOMAIN_NAME)).to.eq(WORMHOLE_AMOUNT)
+      expect(l2MessengerSendMessageCallData._target).to.equal(l1DAIWormholeBridgeMock.address)
+      expect(l2MessengerSendMessageCallData._message).to.equal(
+        l1DAIWormholeBridgeMock.interface.encodeFunctionData('finalizeRegisterWormhole', [wormhole]),
+      )
+      await expect(initTx).to.emit(l2DAIWormholeBridge, 'WormholeInitialized').withArgs(Object.values(wormhole))
     })
   })
 
@@ -205,10 +265,20 @@ describe('L2DAIWormholeBridge', () => {
       // init two wormholes
       await l2DAIWormholeBridge
         .connect(user1)
-        .initiateWormhole(TARGET_DOMAIN_NAME, user1.address, WORMHOLE_AMOUNT, user1.address)
+        ['initiateWormhole(bytes32,address,uint128,address)'](
+          TARGET_DOMAIN_NAME,
+          user1.address,
+          WORMHOLE_AMOUNT,
+          user1.address,
+        )
       await l2DAIWormholeBridge
         .connect(user1)
-        .initiateWormhole(TARGET_DOMAIN_NAME, user1.address, WORMHOLE_AMOUNT, user1.address)
+        ['initiateWormhole(bytes32,address,uint128,address)'](
+          TARGET_DOMAIN_NAME,
+          user1.address,
+          WORMHOLE_AMOUNT,
+          user1.address,
+        )
       expect(await l2DAIWormholeBridge.batchedDaiToFlush(TARGET_DOMAIN_NAME)).to.eq(WORMHOLE_AMOUNT * 2)
 
       const flushTx = await l2DAIWormholeBridge.flush(TARGET_DOMAIN_NAME)
