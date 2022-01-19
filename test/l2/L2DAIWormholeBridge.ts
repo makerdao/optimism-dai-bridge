@@ -30,6 +30,7 @@ describe('L2DAIWormholeBridge', () => {
       'deny(address)',
       'close()',
       'file(bytes32,bytes32,uint256)',
+      'initiateWormhole(bytes32,address,uint128)',
       'initiateWormhole(bytes32,address,uint128,address)',
       'initiateWormhole(bytes32,bytes32,uint128,bytes32)',
       'flush(bytes32)',
@@ -239,6 +240,40 @@ describe('L2DAIWormholeBridge', () => {
         targetDomain: TARGET_DOMAIN_NAME,
         receiver: addressToBytes32(user1.address),
         operator: addressToBytes32(user1.address),
+        amount: WORMHOLE_AMOUNT,
+        nonce: l2MessengerNonce,
+        timestamp: (await ethers.provider.getBlock(initTx.blockNumber as any)).timestamp,
+      }
+      expect(await l2Dai.balanceOf(user1.address)).to.eq(INITIAL_L2_DAI_SUPPLY - WORMHOLE_AMOUNT)
+      expect(await l2Dai.totalSupply()).to.equal(INITIAL_L2_DAI_SUPPLY - WORMHOLE_AMOUNT)
+      expect(await l2DAIWormholeBridge.batchedDaiToFlush(TARGET_DOMAIN_NAME)).to.eq(WORMHOLE_AMOUNT)
+      expect(l2MessengerSendMessageCallData._target).to.equal(l1DAIWormholeBridgeMock.address)
+      expect(l2MessengerSendMessageCallData._message).to.equal(
+        l1DAIWormholeBridgeMock.interface.encodeFunctionData('finalizeRegisterWormhole', [wormhole]),
+      )
+      await expect(initTx).to.emit(l2DAIWormholeBridge, 'WormholeInitialized').withArgs(Object.values(wormhole))
+    })
+  })
+
+  describe('initiateWormhole(bytes32,address,uint128)', () => {
+    it('sends xchain message, burns DAI and marks it for future flush', async () => {
+      const [_, l2MessengerImpersonator, user1] = await ethers.getSigners()
+      const { l2Dai, l2DAIWormholeBridge, l1DAIWormholeBridgeMock, l2CrossDomainMessengerMock } = await setupTest({
+        l2MessengerImpersonator,
+        user1,
+      })
+      const l2MessengerNonce = await l2CrossDomainMessengerMock.messageNonce()
+
+      const initTx = await l2DAIWormholeBridge
+        .connect(user1)
+        ['initiateWormhole(bytes32,address,uint128)'](TARGET_DOMAIN_NAME, user1.address, WORMHOLE_AMOUNT)
+      const l2MessengerSendMessageCallData = l2CrossDomainMessengerMock.smocked.sendMessage.calls[0]
+
+      const wormhole = {
+        sourceDomain: SOURCE_DOMAIN_NAME,
+        targetDomain: TARGET_DOMAIN_NAME,
+        receiver: addressToBytes32(user1.address),
+        operator: addressToBytes32(ethers.constants.AddressZero),
         amount: WORMHOLE_AMOUNT,
         nonce: l2MessengerNonce,
         timestamp: (await ethers.provider.getBlock(initTx.blockNumber as any)).timestamp,
