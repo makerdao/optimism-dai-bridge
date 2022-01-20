@@ -100,6 +100,14 @@ contract L2DAIWormholeBridge is OVM_CrossDomainEnabled {
   function initiateWormhole(
     bytes32 targetDomain,
     address receiver,
+    uint128 amount
+  ) external {
+    return _initiateWormhole(targetDomain, addressToBytes32(receiver), amount, 0);
+  }
+
+  function initiateWormhole(
+    bytes32 targetDomain,
+    address receiver,
     uint128 amount,
     address operator
   ) external {
