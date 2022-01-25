@@ -122,7 +122,8 @@ describe('L1DAIWormholeBridge', () => {
       expect(JSON.stringify(routerSettleCallData.wormholeGUID.map((v: any) => v.toString()))).to.equal(
         JSON.stringify(Object.values(wormhole).map((v: any) => v.toString())),
       )
-      expect(routerSettleCallData.maxFee).to.equal(0)
+      expect(routerSettleCallData.maxFeePercentage).to.equal(0)
+      expect(routerSettleCallData.operatorFee).to.equal(0)
     })
 
     it('reverts when not called by XDomainMessenger', async () => {
