@@ -23,11 +23,7 @@ import {OVM_CrossDomainEnabled} from "@eth-optimism/contracts/libraries/bridge/O
 import {WormholeGUID} from "../common/WormholeGUID.sol";
 
 interface WormholeRouter {
-  function requestMint(
-    WormholeGUID calldata wormholeGUID,
-    uint256 maxFeePercentage,
-    uint256 operatorFee
-  ) external;
+  function requestMint(WormholeGUID calldata wormholeGUID, uint256 maxFeePercentage) external;
 
   function settle(bytes32 targetDomain, uint256 batchedDaiToFlush) external;
 }
@@ -77,6 +73,6 @@ contract L1DAIWormholeBridge is OVM_CrossDomainEnabled {
     external
     onlyFromCrossDomainAccount(l2DAIWormholeBridge)
   {
-    wormholeRouter.requestMint(wormhole, 0, 0);
+    wormholeRouter.requestMint(wormhole, 0);
   }
 }
