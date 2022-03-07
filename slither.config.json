@@ -1,0 +1,10 @@
+{
+  "detectors_to_exclude": "pragma,naming-convention,solc-version,redundant-statements,shadowing-local,uninitialized-return,empty-functions,unused-return,missing-zero-check",
+  "solc_disable_warnings": false,
+  "filter_paths": "node_modules",
+  "exclude_informational": true,
+  "exclude_low": false,
+  "exclude_medium": false,
+  "exclude_high": false,
+  "disable_color": false
+}
