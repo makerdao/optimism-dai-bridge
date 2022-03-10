@@ -41,9 +41,9 @@ describe('L1DAIWormholeBridge', () => {
       // Check that all variables have been assigned correctly
       expect(await l1DAITokenBridge.l1Token()).to.eq(l1Dai.address)
       expect(await l1DAITokenBridge.l2DAIWormholeBridge()).to.eq(l2DAIWormholeBridge.address)
-      expect(await l1DAITokenBridge.escrow()).to.eq(l1Escrow.address)
+      expect(await l1DAITokenBridge.l1Escrow()).to.eq(l1Escrow.address)
       expect(await l1DAITokenBridge.messenger()).to.eq(l1CrossDomainMessenger.address)
-      expect(await l1DAITokenBridge.wormholeRouter()).to.eq(wormholeRouter.address)
+      expect(await l1DAITokenBridge.l1WormholeRouter()).to.eq(wormholeRouter.address)
       // Check that the wormholeRouter has been given infinite approval
       expect(await l1Dai.allowance(l1DAITokenBridge.address, wormholeRouter.address)).to.eq(ethers.constants.MaxUint256)
     })

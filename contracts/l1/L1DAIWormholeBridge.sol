@@ -45,8 +45,8 @@ interface TokenLike {
 contract L1DAIWormholeBridge is OVM_CrossDomainEnabled {
   address public immutable l1Token;
   address public immutable l2DAIWormholeBridge;
-  address public immutable escrow;
-  WormholeRouter public immutable wormholeRouter;
+  address public immutable l1Escrow;
+  WormholeRouter public immutable l1WormholeRouter;
 
   constructor(
     address _l1Token,
@@ -57,8 +57,8 @@ contract L1DAIWormholeBridge is OVM_CrossDomainEnabled {
   ) OVM_CrossDomainEnabled(_l1messenger) {
     l1Token = _l1Token;
     l2DAIWormholeBridge = _l2DAIWormholeBridge;
-    escrow = _escrow;
-    wormholeRouter = WormholeRouter(_wormholeRouter);
+    l1Escrow = _escrow;
+    l1WormholeRouter = WormholeRouter(_wormholeRouter);
     // Approve the router to pull DAI from this contract during settle() (after the DAI has been pulled by this contract from the escrow)
     TokenLike(_l1Token).approve(_wormholeRouter, type(uint256).max);
   }
@@ -68,15 +68,15 @@ contract L1DAIWormholeBridge is OVM_CrossDomainEnabled {
     onlyFromCrossDomainAccount(l2DAIWormholeBridge)
   {
     // Pull DAI from the escrow to this contract
-    TokenLike(l1Token).transferFrom(escrow, address(this), daiToFlush);
+    TokenLike(l1Token).transferFrom(l1Escrow, address(this), daiToFlush);
     // The router will pull the DAI from this contract
-    wormholeRouter.settle(targetDomain, daiToFlush);
+    l1WormholeRouter.settle(targetDomain, daiToFlush);
   }
 
   function finalizeRegisterWormhole(WormholeGUID calldata wormhole)
     external
     onlyFromCrossDomainAccount(l2DAIWormholeBridge)
   {
-    wormholeRouter.requestMint(wormhole, 0, 0);
+    l1WormholeRouter.requestMint(wormhole, 0, 0);
   }
 }
