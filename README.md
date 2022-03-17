@@ -1,5 +1,5 @@
 [![Lint](https://github.com/makerdao/optimism-dai-bridge/actions/workflows/lint.yml/badge.svg)](https://github.com/makerdao/optimism-dai-bridge/actions/workflows/lint.yml)
-[![Check](https://github.com/makerdao/optimism-dai-bridge/actions/workflows/check.yml/badge.svg)](https://github.com/makerdao/optimism-dai-bridge/actions/workflows/check.yml)
+[![Slither](https://github.com/makerdao/optimism-dai-bridge/actions/workflows/slither.yml/badge.svg)](https://github.com/makerdao/optimism-dai-bridge/actions/workflows/slither.yml)
 [![Tests](https://github.com/makerdao/optimism-dai-bridge/actions/workflows/tests.yml/badge.svg)](https://github.com/makerdao/optimism-dai-bridge/actions/workflows/tests.yml)
 [![Fuzz](https://github.com/makerdao/optimism-dai-bridge/actions/workflows/fuzz.yml/badge.svg)](https://github.com/makerdao/optimism-dai-bridge/actions/workflows/fuzz.yml)
 
