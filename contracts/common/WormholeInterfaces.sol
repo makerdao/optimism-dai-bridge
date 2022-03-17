@@ -28,27 +28,27 @@ interface IL1WormholeRouter {
   function settle(bytes32 targetDomain, uint256 batchedDaiToFlush) external;
 }
 
-interface IL1WormholeBridge {
+interface IL1WormholeGateway {
   function l1Token() external view returns (address);
 
   function l1Escrow() external view returns (address);
 
   function l1WormholeRouter() external view returns (IL1WormholeRouter);
 
-  function l2WormholeBridge() external view returns (address);
+  function l2WormholeGateway() external view returns (address);
 
   function finalizeFlush(bytes32 targetDomain, uint256 daiToFlush) external;
 
   function finalizeRegisterWormhole(WormholeGUID calldata wormhole) external;
 }
 
-interface IL2WormholeBridge {
+interface IL2WormholeGateway {
   event WormholeInitialized(WormholeGUID wormhole);
   event Flushed(bytes32 indexed targetDomain, uint256 dai);
 
   function l2Token() external view returns (address);
 
-  function l1WormholeBridge() external view returns (address);
+  function l1WormholeGateway() external view returns (address);
 
   function domain() external view returns (bytes32);
 

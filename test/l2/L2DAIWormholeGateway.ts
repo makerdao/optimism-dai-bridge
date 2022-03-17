@@ -3,7 +3,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
 
-import { Dai__factory, L2DAIWormholeBridge__factory } from '../../typechain-types'
+import { Dai__factory, L2DAIWormholeGateway__factory } from '../../typechain-types'
 import { addressToBytes32, deployMock, deployOptimismContractMock } from '../helpers'
 
 const INITIAL_L2_DAI_SUPPLY = 3000
@@ -15,17 +15,17 @@ const INVALID_DOMAIN_NAME = ethers.utils.formatBytes32String('invalid-domain')
 
 const errorMessages = {
   daiInsufficientBalance: 'Dai/insufficient-balance',
-  notOwner: 'L2DAIWormholeBridge/not-authorized',
-  bridgeClosed: 'L2DAIWormholeBridge/closed',
-  zeroDaiFlush: 'L2DAIWormholeBridge/zero-dai-flush',
-  invalidDomain: 'L2DAIWormholeBridge/invalid-domain',
-  unrecognizedParam: 'L2DAIWormholeBridge/file-unrecognized-param',
-  invalidData: 'L2DAIWormholeBridge/invalid-data',
+  notOwner: 'L2DAIWormholeGateway/not-authorized',
+  bridgeClosed: 'L2DAIWormholeGateway/closed',
+  zeroDaiFlush: 'L2DAIWormholeGateway/zero-dai-flush',
+  invalidDomain: 'L2DAIWormholeGateway/invalid-domain',
+  unrecognizedParam: 'L2DAIWormholeGateway/file-unrecognized-param',
+  invalidData: 'L2DAIWormholeGateway/invalid-data',
 }
 
-describe('L2DAIWormholeBridge', () => {
+describe('L2DAIWormholeGateway', () => {
   it('has correct public interface', async () => {
-    await assertPublicMutableMethods('L2DAIWormholeBridge', [
+    await assertPublicMutableMethods('L2DAIWormholeGateway', [
       'rely(address)',
       'deny(address)',
       'close()',
@@ -39,26 +39,26 @@ describe('L2DAIWormholeBridge', () => {
 
   describe('constructor', () => {
     it('assigns all variables properly', async () => {
-      const [l2Messenger, l2Dai, l1DAIWormholeBridge] = await ethers.getSigners()
+      const [l2Messenger, l2Dai, l1DAIWormholeGateway] = await ethers.getSigners()
 
-      const l2DAIWormholeBridge = await simpleDeploy<L2DAIWormholeBridge__factory>('L2DAIWormholeBridge', [
+      const l2DAIWormholeGateway = await simpleDeploy<L2DAIWormholeGateway__factory>('L2DAIWormholeGateway', [
         l2Messenger.address,
         l2Dai.address,
-        l1DAIWormholeBridge.address,
+        l1DAIWormholeGateway.address,
         SOURCE_DOMAIN_NAME,
       ])
 
-      expect(await l2DAIWormholeBridge.messenger()).to.eq(l2Messenger.address)
-      expect(await l2DAIWormholeBridge.l2Token()).to.eq(l2Dai.address)
-      expect(await l2DAIWormholeBridge.l1WormholeBridge()).to.eq(l1DAIWormholeBridge.address)
+      expect(await l2DAIWormholeGateway.messenger()).to.eq(l2Messenger.address)
+      expect(await l2DAIWormholeGateway.l2Token()).to.eq(l2Dai.address)
+      expect(await l2DAIWormholeGateway.l1WormholeGateway()).to.eq(l1DAIWormholeGateway.address)
     })
   })
 
   testAuth({
-    name: 'L2DAIWormholeBridge',
+    name: 'L2DAIWormholeGateway',
     getDeployArgs: async () => {
-      const [l2Messenger, l2Dai, l1DAIWormholeBridge] = await getRandomAddresses()
-      return [l2Messenger, l2Dai, l1DAIWormholeBridge, SOURCE_DOMAIN_NAME]
+      const [l2Messenger, l2Dai, l1DAIWormholeGateway] = await getRandomAddresses()
+      return [l2Messenger, l2Dai, l1DAIWormholeGateway, SOURCE_DOMAIN_NAME]
     },
     authedMethods: [(c) => c.close(), (c) => c.file(FILE_VALID_DOMAINS, TARGET_DOMAIN_NAME, 1)],
   })
@@ -66,21 +66,21 @@ describe('L2DAIWormholeBridge', () => {
   describe('file', () => {
     it('disallows invalid "what"', async () => {
       const [l2MessengerImpersonator, user1] = await ethers.getSigners()
-      const { l2DAIWormholeBridge } = await setupTest({
+      const { l2DAIWormholeGateway } = await setupTest({
         l2MessengerImpersonator,
         user1,
       })
       await expect(
-        l2DAIWormholeBridge.file(ethers.utils.formatBytes32String('invalid'), TARGET_DOMAIN_NAME, 1),
+        l2DAIWormholeGateway.file(ethers.utils.formatBytes32String('invalid'), TARGET_DOMAIN_NAME, 1),
       ).to.be.revertedWith(errorMessages.unrecognizedParam)
     })
     it('disallows invalid data for "validDomains"', async () => {
       const [l2MessengerImpersonator, user1] = await ethers.getSigners()
-      const { l2DAIWormholeBridge } = await setupTest({
+      const { l2DAIWormholeGateway } = await setupTest({
         l2MessengerImpersonator,
         user1,
       })
-      await expect(l2DAIWormholeBridge.file(FILE_VALID_DOMAINS, TARGET_DOMAIN_NAME, 666)).to.be.revertedWith(
+      await expect(l2DAIWormholeGateway.file(FILE_VALID_DOMAINS, TARGET_DOMAIN_NAME, 666)).to.be.revertedWith(
         errorMessages.invalidData,
       )
     })
@@ -89,46 +89,46 @@ describe('L2DAIWormholeBridge', () => {
   describe('close()', () => {
     it('can be called by owner', async () => {
       const [owner, l2MessengerImpersonator, user1] = await ethers.getSigners()
-      const { l2DAIWormholeBridge } = await setupTest({
+      const { l2DAIWormholeGateway } = await setupTest({
         l2MessengerImpersonator,
         user1,
       })
-      expect(await l2DAIWormholeBridge.isOpen()).to.be.eq(1)
-      const closeTx = await l2DAIWormholeBridge.connect(owner).close()
-      await expect(closeTx).to.emit(l2DAIWormholeBridge, 'Closed')
-      expect(await l2DAIWormholeBridge.isOpen()).to.be.eq(0)
+      expect(await l2DAIWormholeGateway.isOpen()).to.be.eq(1)
+      const closeTx = await l2DAIWormholeGateway.connect(owner).close()
+      await expect(closeTx).to.emit(l2DAIWormholeGateway, 'Closed')
+      expect(await l2DAIWormholeGateway.isOpen()).to.be.eq(0)
     })
     it('can be called multiple times by the owner but nothing changes', async () => {
       const [owner, l2MessengerImpersonator, user1] = await ethers.getSigners()
-      const { l2DAIWormholeBridge } = await setupTest({
+      const { l2DAIWormholeGateway } = await setupTest({
         l2MessengerImpersonator,
         user1,
       })
-      await l2DAIWormholeBridge.connect(owner).close()
-      expect(await l2DAIWormholeBridge.isOpen()).to.be.eq(0)
-      await l2DAIWormholeBridge.connect(owner).close()
-      expect(await l2DAIWormholeBridge.isOpen()).to.be.eq(0)
+      await l2DAIWormholeGateway.connect(owner).close()
+      expect(await l2DAIWormholeGateway.isOpen()).to.be.eq(0)
+      await l2DAIWormholeGateway.connect(owner).close()
+      expect(await l2DAIWormholeGateway.isOpen()).to.be.eq(0)
     })
     it('reverts when called not by the owner', async () => {
       const [_owner, l2MessengerImpersonator, user1] = await ethers.getSigners()
-      const { l2DAIWormholeBridge } = await setupTest({
+      const { l2DAIWormholeGateway } = await setupTest({
         l2MessengerImpersonator,
         user1,
       })
-      await expect(l2DAIWormholeBridge.connect(user1).close()).to.be.revertedWith(errorMessages.notOwner)
+      await expect(l2DAIWormholeGateway.connect(user1).close()).to.be.revertedWith(errorMessages.notOwner)
     })
   })
 
   describe('initiateWormhole(bytes32,address,uint128,address)', () => {
     it('sends xchain message, burns DAI and marks it for future flush', async () => {
       const [_, l2MessengerImpersonator, user1] = await ethers.getSigners()
-      const { l2Dai, l2DAIWormholeBridge, l1DAIWormholeBridgeMock, l2CrossDomainMessengerMock } = await setupTest({
+      const { l2Dai, l2DAIWormholeGateway, l1DAIWormholeBridgeMock, l2CrossDomainMessengerMock } = await setupTest({
         l2MessengerImpersonator,
         user1,
       })
       const l2MessengerNonce = await l2CrossDomainMessengerMock.messageNonce()
 
-      const initTx = await l2DAIWormholeBridge
+      const initTx = await l2DAIWormholeGateway
         .connect(user1)
         ['initiateWormhole(bytes32,address,uint128,address)'](
           TARGET_DOMAIN_NAME,
@@ -149,23 +149,23 @@ describe('L2DAIWormholeBridge', () => {
       }
       expect(await l2Dai.balanceOf(user1.address)).to.eq(INITIAL_L2_DAI_SUPPLY - WORMHOLE_AMOUNT)
       expect(await l2Dai.totalSupply()).to.equal(INITIAL_L2_DAI_SUPPLY - WORMHOLE_AMOUNT)
-      expect(await l2DAIWormholeBridge.batchedDaiToFlush(TARGET_DOMAIN_NAME)).to.eq(WORMHOLE_AMOUNT)
+      expect(await l2DAIWormholeGateway.batchedDaiToFlush(TARGET_DOMAIN_NAME)).to.eq(WORMHOLE_AMOUNT)
       expect(l2MessengerSendMessageCallData._target).to.equal(l1DAIWormholeBridgeMock.address)
       expect(l2MessengerSendMessageCallData._message).to.equal(
         l1DAIWormholeBridgeMock.interface.encodeFunctionData('finalizeRegisterWormhole', [wormhole]),
       )
-      await expect(initTx).to.emit(l2DAIWormholeBridge, 'WormholeInitialized').withArgs(Object.values(wormhole))
+      await expect(initTx).to.emit(l2DAIWormholeGateway, 'WormholeInitialized').withArgs(Object.values(wormhole))
     })
 
     it('reverts when not enough funds', async () => {
       const [_, l2MessengerImpersonator, user1, user2] = await ethers.getSigners()
-      const { l2DAIWormholeBridge } = await setupTest({
+      const { l2DAIWormholeGateway } = await setupTest({
         l2MessengerImpersonator,
         user1,
       })
 
       await expect(
-        l2DAIWormholeBridge
+        l2DAIWormholeGateway
           .connect(user2)
           ['initiateWormhole(bytes32,address,uint128,address)'](
             TARGET_DOMAIN_NAME,
@@ -178,14 +178,14 @@ describe('L2DAIWormholeBridge', () => {
 
     it('reverts when bridge is closed', async () => {
       const [owner, l2MessengerImpersonator, user1, user2] = await ethers.getSigners()
-      const { l2DAIWormholeBridge } = await setupTest({
+      const { l2DAIWormholeGateway } = await setupTest({
         l2MessengerImpersonator,
         user1,
       })
-      await l2DAIWormholeBridge.connect(owner).close()
+      await l2DAIWormholeGateway.connect(owner).close()
 
       await expect(
-        l2DAIWormholeBridge
+        l2DAIWormholeGateway
           .connect(user1)
           ['initiateWormhole(bytes32,address,uint128,address)'](
             TARGET_DOMAIN_NAME,
@@ -198,13 +198,13 @@ describe('L2DAIWormholeBridge', () => {
 
     it('reverts when domain is not whitelisted', async () => {
       const [_, l2MessengerImpersonator, user1, user2] = await ethers.getSigners()
-      const { l2DAIWormholeBridge } = await setupTest({
+      const { l2DAIWormholeGateway } = await setupTest({
         l2MessengerImpersonator,
         user1,
       })
 
       await expect(
-        l2DAIWormholeBridge
+        l2DAIWormholeGateway
           .connect(user1)
           ['initiateWormhole(bytes32,address,uint128,address)'](
             INVALID_DOMAIN_NAME,
@@ -219,13 +219,13 @@ describe('L2DAIWormholeBridge', () => {
   describe('initiateWormhole(bytes32,bytes32,uint128,bytes32)', () => {
     it('sends xchain message, burns DAI and marks it for future flush', async () => {
       const [_, l2MessengerImpersonator, user1] = await ethers.getSigners()
-      const { l2Dai, l2DAIWormholeBridge, l1DAIWormholeBridgeMock, l2CrossDomainMessengerMock } = await setupTest({
+      const { l2Dai, l2DAIWormholeGateway, l1DAIWormholeBridgeMock, l2CrossDomainMessengerMock } = await setupTest({
         l2MessengerImpersonator,
         user1,
       })
       const l2MessengerNonce = await l2CrossDomainMessengerMock.messageNonce()
 
-      const initTx = await l2DAIWormholeBridge
+      const initTx = await l2DAIWormholeGateway
         .connect(user1)
         ['initiateWormhole(bytes32,bytes32,uint128,bytes32)'](
           TARGET_DOMAIN_NAME,
@@ -246,25 +246,25 @@ describe('L2DAIWormholeBridge', () => {
       }
       expect(await l2Dai.balanceOf(user1.address)).to.eq(INITIAL_L2_DAI_SUPPLY - WORMHOLE_AMOUNT)
       expect(await l2Dai.totalSupply()).to.equal(INITIAL_L2_DAI_SUPPLY - WORMHOLE_AMOUNT)
-      expect(await l2DAIWormholeBridge.batchedDaiToFlush(TARGET_DOMAIN_NAME)).to.eq(WORMHOLE_AMOUNT)
+      expect(await l2DAIWormholeGateway.batchedDaiToFlush(TARGET_DOMAIN_NAME)).to.eq(WORMHOLE_AMOUNT)
       expect(l2MessengerSendMessageCallData._target).to.equal(l1DAIWormholeBridgeMock.address)
       expect(l2MessengerSendMessageCallData._message).to.equal(
         l1DAIWormholeBridgeMock.interface.encodeFunctionData('finalizeRegisterWormhole', [wormhole]),
       )
-      await expect(initTx).to.emit(l2DAIWormholeBridge, 'WormholeInitialized').withArgs(Object.values(wormhole))
+      await expect(initTx).to.emit(l2DAIWormholeGateway, 'WormholeInitialized').withArgs(Object.values(wormhole))
     })
   })
 
   describe('initiateWormhole(bytes32,address,uint128)', () => {
     it('sends xchain message, burns DAI and marks it for future flush', async () => {
       const [_, l2MessengerImpersonator, user1] = await ethers.getSigners()
-      const { l2Dai, l2DAIWormholeBridge, l1DAIWormholeBridgeMock, l2CrossDomainMessengerMock } = await setupTest({
+      const { l2Dai, l2DAIWormholeGateway, l1DAIWormholeBridgeMock, l2CrossDomainMessengerMock } = await setupTest({
         l2MessengerImpersonator,
         user1,
       })
       const l2MessengerNonce = await l2CrossDomainMessengerMock.messageNonce()
 
-      const initTx = await l2DAIWormholeBridge
+      const initTx = await l2DAIWormholeGateway
         .connect(user1)
         ['initiateWormhole(bytes32,address,uint128)'](TARGET_DOMAIN_NAME, user1.address, WORMHOLE_AMOUNT)
       const l2MessengerSendMessageCallData = l2CrossDomainMessengerMock.smocked.sendMessage.calls[0]
@@ -280,25 +280,25 @@ describe('L2DAIWormholeBridge', () => {
       }
       expect(await l2Dai.balanceOf(user1.address)).to.eq(INITIAL_L2_DAI_SUPPLY - WORMHOLE_AMOUNT)
       expect(await l2Dai.totalSupply()).to.equal(INITIAL_L2_DAI_SUPPLY - WORMHOLE_AMOUNT)
-      expect(await l2DAIWormholeBridge.batchedDaiToFlush(TARGET_DOMAIN_NAME)).to.eq(WORMHOLE_AMOUNT)
+      expect(await l2DAIWormholeGateway.batchedDaiToFlush(TARGET_DOMAIN_NAME)).to.eq(WORMHOLE_AMOUNT)
       expect(l2MessengerSendMessageCallData._target).to.equal(l1DAIWormholeBridgeMock.address)
       expect(l2MessengerSendMessageCallData._message).to.equal(
         l1DAIWormholeBridgeMock.interface.encodeFunctionData('finalizeRegisterWormhole', [wormhole]),
       )
-      await expect(initTx).to.emit(l2DAIWormholeBridge, 'WormholeInitialized').withArgs(Object.values(wormhole))
+      await expect(initTx).to.emit(l2DAIWormholeGateway, 'WormholeInitialized').withArgs(Object.values(wormhole))
     })
   })
 
   describe('flush()', () => {
     it('flushes batched debt', async () => {
       const [_, l2MessengerImpersonator, user1] = await ethers.getSigners()
-      const { l2DAIWormholeBridge, l2CrossDomainMessengerMock, l1DAIWormholeBridgeMock } = await setupTest({
+      const { l2DAIWormholeGateway, l2CrossDomainMessengerMock, l1DAIWormholeBridgeMock } = await setupTest({
         l2MessengerImpersonator,
         user1,
       })
 
       // init two wormholes
-      await l2DAIWormholeBridge
+      await l2DAIWormholeGateway
         .connect(user1)
         ['initiateWormhole(bytes32,address,uint128,address)'](
           TARGET_DOMAIN_NAME,
@@ -306,7 +306,7 @@ describe('L2DAIWormholeBridge', () => {
           WORMHOLE_AMOUNT,
           user1.address,
         )
-      await l2DAIWormholeBridge
+      await l2DAIWormholeGateway
         .connect(user1)
         ['initiateWormhole(bytes32,address,uint128,address)'](
           TARGET_DOMAIN_NAME,
@@ -314,12 +314,12 @@ describe('L2DAIWormholeBridge', () => {
           WORMHOLE_AMOUNT,
           user1.address,
         )
-      expect(await l2DAIWormholeBridge.batchedDaiToFlush(TARGET_DOMAIN_NAME)).to.eq(WORMHOLE_AMOUNT * 2)
+      expect(await l2DAIWormholeGateway.batchedDaiToFlush(TARGET_DOMAIN_NAME)).to.eq(WORMHOLE_AMOUNT * 2)
 
-      const flushTx = await l2DAIWormholeBridge.flush(TARGET_DOMAIN_NAME)
+      const flushTx = await l2DAIWormholeGateway.flush(TARGET_DOMAIN_NAME)
       const xDomainMessengerCall = l2CrossDomainMessengerMock.smocked.sendMessage.calls[0]
 
-      expect(await l2DAIWormholeBridge.batchedDaiToFlush(TARGET_DOMAIN_NAME)).to.eq(0)
+      expect(await l2DAIWormholeGateway.batchedDaiToFlush(TARGET_DOMAIN_NAME)).to.eq(0)
       expect(xDomainMessengerCall._target).to.equal(l1DAIWormholeBridgeMock.address)
       expect(xDomainMessengerCall._message).to.equal(
         l1DAIWormholeBridgeMock.interface.encodeFunctionData('finalizeFlush', [
@@ -329,20 +329,20 @@ describe('L2DAIWormholeBridge', () => {
       )
       expect(xDomainMessengerCall._gasLimit).to.equal(0)
       await expect(flushTx)
-        .to.emit(l2DAIWormholeBridge, 'Flushed')
+        .to.emit(l2DAIWormholeGateway, 'Flushed')
         .withArgs(TARGET_DOMAIN_NAME, WORMHOLE_AMOUNT * 2)
     })
 
     it('cannot flush zero debt', async () => {
       const [_, l2MessengerImpersonator, user1] = await ethers.getSigners()
-      const { l2DAIWormholeBridge } = await setupTest({
+      const { l2DAIWormholeGateway } = await setupTest({
         l2MessengerImpersonator,
         user1,
       })
 
-      expect(await l2DAIWormholeBridge.batchedDaiToFlush(TARGET_DOMAIN_NAME)).to.eq(0)
+      expect(await l2DAIWormholeGateway.batchedDaiToFlush(TARGET_DOMAIN_NAME)).to.eq(0)
 
-      await expect(l2DAIWormholeBridge.flush(TARGET_DOMAIN_NAME)).to.be.revertedWith(errorMessages.zeroDaiFlush)
+      await expect(l2DAIWormholeGateway.flush(TARGET_DOMAIN_NAME)).to.be.revertedWith(errorMessages.zeroDaiFlush)
     })
   })
 })
@@ -353,17 +353,17 @@ async function setupTest(signers: { l2MessengerImpersonator: SignerWithAddress; 
     { address: await signers.l2MessengerImpersonator.getAddress() }, // This allows us to use an ethers override {from: Mock__OVM_L2CrossDomainMessenger.address} to mock calls
   )
   const l2Dai = await simpleDeploy<Dai__factory>('Dai', [])
-  const l1DAIWormholeBridgeMock = await deployMock('L1DAIWormholeBridge')
-  const l2DAIWormholeBridge = await simpleDeploy<L2DAIWormholeBridge__factory>('L2DAIWormholeBridge', [
+  const l1DAIWormholeBridgeMock = await deployMock('L1DAIWormholeGateway')
+  const l2DAIWormholeGateway = await simpleDeploy<L2DAIWormholeGateway__factory>('L2DAIWormholeGateway', [
     l2CrossDomainMessengerMock.address,
     l2Dai.address,
     l1DAIWormholeBridgeMock.address,
     SOURCE_DOMAIN_NAME,
   ])
 
-  await l2Dai.rely(l2DAIWormholeBridge.address)
+  await l2Dai.rely(l2DAIWormholeGateway.address)
   await l2Dai.mint(signers.user1.address, INITIAL_L2_DAI_SUPPLY)
-  await l2DAIWormholeBridge.file(FILE_VALID_DOMAINS, TARGET_DOMAIN_NAME, 1)
+  await l2DAIWormholeGateway.file(FILE_VALID_DOMAINS, TARGET_DOMAIN_NAME, 1)
 
-  return { l2Dai, l1DAIWormholeBridgeMock, l2CrossDomainMessengerMock, l2DAIWormholeBridge }
+  return { l2Dai, l1DAIWormholeBridgeMock, l2CrossDomainMessengerMock, l2DAIWormholeGateway }
 }

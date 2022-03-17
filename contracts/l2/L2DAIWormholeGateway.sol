@@ -21,8 +21,7 @@ import {iOVM_L2ERC20Bridge} from "@eth-optimism/contracts/iOVM/bridge/tokens/iOV
 import {OVM_CrossDomainEnabled} from "@eth-optimism/contracts/libraries/bridge/OVM_CrossDomainEnabled.sol";
 import {OVM_L2CrossDomainMessenger} from "@eth-optimism/contracts/OVM/bridge/messaging/OVM_L2CrossDomainMessenger.sol";
 import {WormholeGUID, addressToBytes32} from "../common/WormholeGUID.sol";
-import {IL2WormholeBridge} from "../common/WormholeInterfaces.sol";
-import {L1DAIWormholeBridge} from "../l1/L1DAIWormholeBridge.sol";
+import {IL1WormholeGateway, IL2WormholeGateway} from "../common/WormholeInterfaces.sol";
 
 interface Mintable {
   function mint(address usr, uint256 wad) external;
@@ -30,7 +29,7 @@ interface Mintable {
   function burn(address usr, uint256 wad) external;
 }
 
-contract L2DAIWormholeBridge is OVM_CrossDomainEnabled, IL2WormholeBridge {
+contract L2DAIWormholeGateway is OVM_CrossDomainEnabled, IL2WormholeGateway {
   // --- Auth ---
   mapping(address => uint256) public wards;
 
@@ -45,12 +44,12 @@ contract L2DAIWormholeBridge is OVM_CrossDomainEnabled, IL2WormholeBridge {
   }
 
   modifier auth() {
-    require(wards[msg.sender] == 1, "L2DAIWormholeBridge/not-authorized");
+    require(wards[msg.sender] == 1, "L2DAIWormholeGateway/not-authorized");
     _;
   }
 
   address public immutable override l2Token;
-  address public immutable override l1WormholeBridge;
+  address public immutable override l1WormholeGateway;
   bytes32 public immutable override domain;
   uint256 public isOpen = 1;
   mapping(bytes32 => uint256) public validDomains;
@@ -64,14 +63,14 @@ contract L2DAIWormholeBridge is OVM_CrossDomainEnabled, IL2WormholeBridge {
   constructor(
     address _l2CrossDomainMessenger,
     address _l2Token,
-    address _l1WormholeBridge,
+    address _l1WormholeGateway,
     bytes32 _domain
   ) OVM_CrossDomainEnabled(_l2CrossDomainMessenger) {
     wards[msg.sender] = 1;
     emit Rely(msg.sender);
 
     l2Token = _l2Token;
-    l1WormholeBridge = _l1WormholeBridge;
+    l1WormholeGateway = _l1WormholeGateway;
     domain = _domain;
   }
 
@@ -87,11 +86,11 @@ contract L2DAIWormholeBridge is OVM_CrossDomainEnabled, IL2WormholeBridge {
     uint256 data
   ) external auth {
     if (what == "validDomains") {
-      require(data <= 1, "L2DAIWormholeBridge/invalid-data");
+      require(data <= 1, "L2DAIWormholeGateway/invalid-data");
 
       validDomains[domain] = data;
     } else {
-      revert("L2DAIWormholeBridge/file-unrecognized-param");
+      revert("L2DAIWormholeGateway/file-unrecognized-param");
     }
     emit File(what, domain, data);
   }
@@ -134,11 +133,11 @@ contract L2DAIWormholeBridge is OVM_CrossDomainEnabled, IL2WormholeBridge {
     uint128 amount,
     bytes32 operator
   ) private {
-    // Disallow initiating new wormhole transfer if bridge is closed
-    require(isOpen == 1, "L2DAIWormholeBridge/closed");
+    // Disallow initiating new wormhole transfer if gateway is closed
+    require(isOpen == 1, "L2DAIWormholeGateway/closed");
 
     // Disallow initiating new wormhole transfer if targetDomain has not been whitelisted
-    require(validDomains[targetDomain] == 1, "L2DAIWormholeBridge/invalid-domain");
+    require(validDomains[targetDomain] == 1, "L2DAIWormholeGateway/invalid-domain");
 
     WormholeGUID memory wormhole = WormholeGUID({
       sourceDomain: domain,
@@ -154,10 +153,10 @@ contract L2DAIWormholeBridge is OVM_CrossDomainEnabled, IL2WormholeBridge {
     Mintable(l2Token).burn(msg.sender, amount);
 
     bytes memory message = abi.encodeWithSelector(
-      L1DAIWormholeBridge.finalizeRegisterWormhole.selector,
+      IL1WormholeGateway.finalizeRegisterWormhole.selector,
       wormhole
     );
-    sendCrossDomainMessage(l1WormholeBridge, 0, message);
+    sendCrossDomainMessage(l1WormholeGateway, 0, message);
 
     emit WormholeInitialized(wormhole);
   }
@@ -165,16 +164,16 @@ contract L2DAIWormholeBridge is OVM_CrossDomainEnabled, IL2WormholeBridge {
   function flush(bytes32 targetDomain) external override {
     // We do not check for valid domain because previously valid domains still need their DAI flushed
     uint256 daiToFlush = batchedDaiToFlush[targetDomain];
-    require(daiToFlush > 0, "L2DAIWormholeBridge/zero-dai-flush");
+    require(daiToFlush > 0, "L2DAIWormholeGateway/zero-dai-flush");
 
     batchedDaiToFlush[targetDomain] = 0;
 
     bytes memory message = abi.encodeWithSelector(
-      L1DAIWormholeBridge.finalizeFlush.selector,
+      IL1WormholeGateway.finalizeFlush.selector,
       targetDomain,
       daiToFlush
     );
-    sendCrossDomainMessage(l1WormholeBridge, 0, message);
+    sendCrossDomainMessage(l1WormholeGateway, 0, message);
 
     emit Flushed(targetDomain, daiToFlush);
   }
