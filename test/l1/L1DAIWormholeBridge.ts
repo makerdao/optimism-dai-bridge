@@ -40,7 +40,7 @@ describe('L1DAIWormholeBridge', () => {
 
       // Check that all variables have been assigned correctly
       expect(await l1DAITokenBridge.l1Token()).to.eq(l1Dai.address)
-      expect(await l1DAITokenBridge.l2DAIWormholeBridge()).to.eq(l2DAIWormholeBridge.address)
+      expect(await l1DAITokenBridge.l2WormholeBridge()).to.eq(l2DAIWormholeBridge.address)
       expect(await l1DAITokenBridge.l1Escrow()).to.eq(l1Escrow.address)
       expect(await l1DAITokenBridge.messenger()).to.eq(l1CrossDomainMessenger.address)
       expect(await l1DAITokenBridge.l1WormholeRouter()).to.eq(wormholeRouter.address)
@@ -152,7 +152,7 @@ describe('L1DAIWormholeBridge', () => {
   })
 
   async function setupTest(signers: { l1MessengerImpersonator: SignerWithAddress }) {
-    const wormholeRouterMock = await deployAbstractMock('WormholeRouter')
+    const wormholeRouterMock = await deployAbstractMock('L1WormholeRouter')
     const l2DAIWormholeBridge = await deployMock('L2DAIWormholeBridge')
     const l1CrossDomainMessengerMock = await deployOptimismContractMock(
       'OVM_L1CrossDomainMessenger',
