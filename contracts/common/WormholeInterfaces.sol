@@ -18,7 +18,7 @@ pragma solidity >=0.7.6;
 pragma abicoder v2;
 import {WormholeGUID} from "./WormholeGUID.sol";
 
-interface L1WormholeRouter {
+interface IL1WormholeRouter {
   function requestMint(
     WormholeGUID calldata wormholeGUID,
     uint256 maxFeePercentage,
@@ -33,7 +33,7 @@ interface IL1WormholeBridge {
 
   function l1Escrow() external view returns (address);
 
-  function l1WormholeRouter() external view returns (L1WormholeRouter);
+  function l1WormholeRouter() external view returns (IL1WormholeRouter);
 
   function l2WormholeBridge() external view returns (address);
 

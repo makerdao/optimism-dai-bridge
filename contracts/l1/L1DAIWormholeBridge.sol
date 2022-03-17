@@ -21,7 +21,7 @@ import {iOVM_L1ERC20Bridge} from "@eth-optimism/contracts/iOVM/bridge/tokens/iOV
 import {iOVM_L2ERC20Bridge} from "@eth-optimism/contracts/iOVM/bridge/tokens/iOVM_L2ERC20Bridge.sol";
 import {OVM_CrossDomainEnabled} from "@eth-optimism/contracts/libraries/bridge/OVM_CrossDomainEnabled.sol";
 import {WormholeGUID} from "../common/WormholeGUID.sol";
-import {IL1WormholeBridge, L1WormholeRouter} from "../common/WormholeInterfaces.sol";
+import {IL1WormholeBridge, IL1WormholeRouter} from "../common/WormholeInterfaces.sol";
 
 interface TokenLike {
   function approve(address, uint256) external returns (bool);
@@ -37,7 +37,7 @@ contract L1DAIWormholeBridge is OVM_CrossDomainEnabled, IL1WormholeBridge {
   address public immutable override l1Token;
   address public immutable override l2WormholeBridge;
   address public immutable override l1Escrow;
-  L1WormholeRouter public immutable override l1WormholeRouter;
+  IL1WormholeRouter public immutable override l1WormholeRouter;
 
   constructor(
     address _l1Token,
@@ -49,7 +49,7 @@ contract L1DAIWormholeBridge is OVM_CrossDomainEnabled, IL1WormholeBridge {
     l1Token = _l1Token;
     l2WormholeBridge = _l2WormholeBridge;
     l1Escrow = _l1Escrow;
-    l1WormholeRouter = L1WormholeRouter(_l1WormholeRouter);
+    l1WormholeRouter = IL1WormholeRouter(_l1WormholeRouter);
     // Approve the router to pull DAI from this contract during settle() (after the DAI has been pulled by this contract from the escrow)
     TokenLike(_l1Token).approve(_l1WormholeRouter, type(uint256).max);
   }

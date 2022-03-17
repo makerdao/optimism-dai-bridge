@@ -152,7 +152,7 @@ describe('L1DAIWormholeBridge', () => {
   })
 
   async function setupTest(signers: { l1MessengerImpersonator: SignerWithAddress }) {
-    const wormholeRouterMock = await deployAbstractMock('L1WormholeRouter')
+    const wormholeRouterMock = await deployAbstractMock('IL1WormholeRouter')
     const l2DAIWormholeBridge = await deployMock('L2DAIWormholeBridge')
     const l1CrossDomainMessengerMock = await deployOptimismContractMock(
       'OVM_L1CrossDomainMessenger',
