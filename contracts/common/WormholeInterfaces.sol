@@ -42,9 +42,35 @@ interface IL1WormholeBridge {
   function finalizeRegisterWormhole(WormholeGUID calldata wormhole) external;
 }
 
-// interface L2WormholeBridge {
-//     function l2Token() external returns(address);
-//     function l1WormholeBridge() external returns(address);
-//     function domain() external returns(bytes32);
+interface IL2WormholeBridge {
+  event WormholeInitialized(WormholeGUID wormhole);
+  event Flushed(bytes32 indexed targetDomain, uint256 dai);
 
-// }
+  function l2Token() external view returns (address);
+
+  function l1WormholeBridge() external view returns (address);
+
+  function domain() external view returns (bytes32);
+
+  function initiateWormhole(
+    bytes32 targetDomain,
+    address receiver,
+    uint128 amount
+  ) external;
+
+  function initiateWormhole(
+    bytes32 targetDomain,
+    address receiver,
+    uint128 amount,
+    address operator
+  ) external;
+
+  function initiateWormhole(
+    bytes32 targetDomain,
+    bytes32 receiver,
+    uint128 amount,
+    bytes32 operator
+  ) external;
+
+  function flush(bytes32 targetDomain) external;
+}

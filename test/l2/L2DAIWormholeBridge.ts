@@ -50,7 +50,7 @@ describe('L2DAIWormholeBridge', () => {
 
       expect(await l2DAIWormholeBridge.messenger()).to.eq(l2Messenger.address)
       expect(await l2DAIWormholeBridge.l2Token()).to.eq(l2Dai.address)
-      expect(await l2DAIWormholeBridge.l1DAIWormholeBridge()).to.eq(l1DAIWormholeBridge.address)
+      expect(await l2DAIWormholeBridge.l1WormholeBridge()).to.eq(l1DAIWormholeBridge.address)
     })
   })
 
