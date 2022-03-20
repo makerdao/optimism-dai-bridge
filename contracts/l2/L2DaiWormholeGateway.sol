@@ -29,7 +29,7 @@ interface Mintable {
   function burn(address usr, uint256 wad) external;
 }
 
-contract L2DAIWormholeGateway is OVM_CrossDomainEnabled, IL2WormholeGateway {
+contract L2DaiWormholeGateway is OVM_CrossDomainEnabled, IL2WormholeGateway {
   // --- Auth ---
   mapping(address => uint256) public wards;
 
@@ -44,7 +44,7 @@ contract L2DAIWormholeGateway is OVM_CrossDomainEnabled, IL2WormholeGateway {
   }
 
   modifier auth() {
-    require(wards[msg.sender] == 1, "L2DAIWormholeGateway/not-authorized");
+    require(wards[msg.sender] == 1, "L2DaiWormholeGateway/not-authorized");
     _;
   }
 
@@ -86,11 +86,11 @@ contract L2DAIWormholeGateway is OVM_CrossDomainEnabled, IL2WormholeGateway {
     uint256 data
   ) external auth {
     if (what == "validDomains") {
-      require(data <= 1, "L2DAIWormholeGateway/invalid-data");
+      require(data <= 1, "L2DaiWormholeGateway/invalid-data");
 
       validDomains[domain] = data;
     } else {
-      revert("L2DAIWormholeGateway/file-unrecognized-param");
+      revert("L2DaiWormholeGateway/file-unrecognized-param");
     }
     emit File(what, domain, data);
   }
@@ -134,10 +134,10 @@ contract L2DAIWormholeGateway is OVM_CrossDomainEnabled, IL2WormholeGateway {
     bytes32 operator
   ) private {
     // Disallow initiating new wormhole transfer if gateway is closed
-    require(isOpen == 1, "L2DAIWormholeGateway/closed");
+    require(isOpen == 1, "L2DaiWormholeGateway/closed");
 
     // Disallow initiating new wormhole transfer if targetDomain has not been whitelisted
-    require(validDomains[targetDomain] == 1, "L2DAIWormholeGateway/invalid-domain");
+    require(validDomains[targetDomain] == 1, "L2DaiWormholeGateway/invalid-domain");
 
     WormholeGUID memory wormhole = WormholeGUID({
       sourceDomain: domain,
@@ -164,7 +164,7 @@ contract L2DAIWormholeGateway is OVM_CrossDomainEnabled, IL2WormholeGateway {
   function flush(bytes32 targetDomain) external override {
     // We do not check for valid domain because previously valid domains still need their DAI flushed
     uint256 daiToFlush = batchedDaiToFlush[targetDomain];
-    require(daiToFlush > 0, "L2DAIWormholeGateway/zero-dai-flush");
+    require(daiToFlush > 0, "L2DaiWormholeGateway/zero-dai-flush");
 
     batchedDaiToFlush[targetDomain] = 0;
 
