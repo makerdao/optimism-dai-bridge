@@ -33,7 +33,7 @@ interface TokenLike {
   ) external returns (bool success);
 }
 
-contract L1DAIWormholeGateway is OVM_CrossDomainEnabled, IL1WormholeGateway {
+contract L1DaiWormholeGateway is OVM_CrossDomainEnabled, IL1WormholeGateway {
   address public immutable override l1Token;
   address public immutable override l2WormholeGateway;
   address public immutable override l1Escrow;
