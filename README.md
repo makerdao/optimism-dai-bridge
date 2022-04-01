@@ -2,6 +2,7 @@
 [![Check](https://github.com/makerdao/optimism-dai-bridge/actions/workflows/check.yml/badge.svg)](https://github.com/makerdao/optimism-dai-bridge/actions/workflows/check.yml)
 [![Tests](https://github.com/makerdao/optimism-dai-bridge/actions/workflows/tests.yml/badge.svg)](https://github.com/makerdao/optimism-dai-bridge/actions/workflows/tests.yml)
 [![Fuzz](https://github.com/makerdao/optimism-dai-bridge/actions/workflows/fuzz.yml/badge.svg)](https://github.com/makerdao/optimism-dai-bridge/actions/workflows/fuzz.yml)
+[![Twitter](https://img.shields.io/twitter/follow/MakerDAO.svg?logo=twitter)](https://twitter.com/MakerDAO)
 
 # Optimism Dai Bridge
 
