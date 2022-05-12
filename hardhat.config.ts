@@ -4,6 +4,7 @@ import '@nomiclabs/hardhat-ethers'
 import '@nomiclabs/hardhat-waffle'
 import '@nomiclabs/hardhat-web3'
 import '@typechain/hardhat'
+import 'solidity-coverage'
 
 import { HardhatUserConfig } from 'hardhat/config'
 

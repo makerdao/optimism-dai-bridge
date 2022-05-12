@@ -6,6 +6,7 @@
   "scripts": {
     "build": "hardhat compile",
     "clean": "hardhat clean && rm -rf artifacts cache crytic-export corpus",
+    "coverage": "hardhat coverage && istanbul check-coverage --branches 97 --lines 99",
     "format": "prettier --check \"./**/*.{ts,sol}\"",
     "format:fix": "prettier --write \"./**/*.{ts,sol}\"",
     "lint": "eslint --ext .ts test test-e2e scripts optimism-helpers hardhat.config.ts",
@@ -70,6 +71,8 @@
   "devDependencies": {
     "@eth-optimism/core-utils": "^0.7.0",
     "@eth-optimism/message-relayer": "^0.2.1",
-    "prettier-plugin-solidity": "^1.0.0-beta.18"
+    "istanbul": "^0.4.5",
+    "prettier-plugin-solidity": "^1.0.0-beta.18",
+    "solidity-coverage": "^0.7.17"
   }
 }

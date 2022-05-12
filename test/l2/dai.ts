@@ -1,5 +1,6 @@
 import { assertPublicMutableMethods, getRandomAddresses, testAuth } from '@makerdao/hardhat-utils'
 import { expect } from 'chai'
+import { hexConcat, hexZeroPad, keccak256, toUtf8Bytes } from 'ethers/lib/utils'
 import { ethers, web3 } from 'hardhat'
 
 import { Dai, Dai__factory } from '../../typechain-types'
@@ -28,6 +29,19 @@ describe('Dai', () => {
 
     it('returns the decimals', async () => {
       expect(await dai.decimals()).to.be.eq(18)
+    })
+
+    it('returns the correct domain separator', async () => {
+      const eip721DomainHash = keccak256(
+        toUtf8Bytes('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)'),
+      )
+      const nameHash = keccak256(toUtf8Bytes('Dai Stablecoin'))
+      const versionHash = keccak256(toUtf8Bytes('2'))
+      const chainId = hexZeroPad((await dai.deploymentChainId()).toHexString(), 32)
+      const contractAddress = hexZeroPad(dai.address, 32)
+      const domainSeparator = keccak256(hexConcat([eip721DomainHash, nameHash, versionHash, chainId, contractAddress]))
+
+      expect(await dai.DOMAIN_SEPARATOR()).to.be.eq(domainSeparator)
     })
 
     describe('with a positive balance', async () => {

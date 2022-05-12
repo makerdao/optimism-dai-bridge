@@ -1,11 +1,16 @@
 [![Lint](https://github.com/makerdao/optimism-dai-bridge/actions/workflows/lint.yml/badge.svg)](https://github.com/makerdao/optimism-dai-bridge/actions/workflows/lint.yml)
-[![Check](https://github.com/makerdao/optimism-dai-bridge/actions/workflows/check.yml/badge.svg)](https://github.com/makerdao/optimism-dai-bridge/actions/workflows/check.yml)
+[![Slither](https://github.com/makerdao/optimism-dai-bridge/actions/workflows/slither.yml/badge.svg)](https://github.com/makerdao/optimism-dai-bridge/actions/workflows/slither.yml)
 [![Tests](https://github.com/makerdao/optimism-dai-bridge/actions/workflows/tests.yml/badge.svg)](https://github.com/makerdao/optimism-dai-bridge/actions/workflows/tests.yml)
 [![Fuzz](https://github.com/makerdao/optimism-dai-bridge/actions/workflows/fuzz.yml/badge.svg)](https://github.com/makerdao/optimism-dai-bridge/actions/workflows/fuzz.yml)
 
 # Optimism Dai Bridge
 
 Optimism Dai and upgradable token bridge
+
+## Security
+
+Smart contracts stored in this repository are part of the bug bounty. To disclose any vulnerability please refer to the
+[bug bounty page](https://immunefi.com/bounty/makerdao/).
 
 ## Contracts
 
@@ -137,6 +142,8 @@ Run `yarn test:fix` to run linting in fix mode, auto-formatting and unit tests.
 
 Running `yarn test` makes sure that contracts are compiled. Running `yarn test-e2e` doesn't.
 
+Run `yarn coverage` to run solidity-coverage.
+
 ## Fuzzing
 
 ### Install Echidna
@@ -144,6 +151,7 @@ Running `yarn test` makes sure that contracts are compiled. Running `yarn test-e
 - Precompiled Binaries (recommended)
 
 Before starting, make sure Slither is installed:
+
 ```
 $ pip3 install slither-analyzer
 ```
