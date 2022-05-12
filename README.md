@@ -7,6 +7,11 @@
 
 Optimism Dai and upgradable token bridge
 
+## Security
+
+Smart contracts stored in this repository are part of the bug bounty. To disclose any vulnerability please refer to the
+[bug bounty page](https://immunefi.com/bounty/makerdao/).
+
 ## Contracts
 
 - `dai.sol` - Improved DAI contract.
